@@ -122,7 +122,6 @@ private:
 	void AddSentence(const CString &input, const CString &dual, int64 r1, int64 r2, char major, char minor, char score950122);
 	void AddSelections(const CString &input, const CString &dual, const row &r);
 	void CalculateScore(const CString &s, char &major, char &minor);
-	void Check(int r, char &major, char &minor);
 	void Calc(const CString &s, bool bRev, int memberOffset, int memberSize, CeOperation op, char &major, char &minor);
 	int CalculateScore950219(LPCSTR sentence);
 	bool IsSelfOrSumOfDigitsMajor(int n);

@@ -320,14 +320,6 @@ CString Ct2_2Dlg::Separated(const CString &input)
 	return s;
 }
 
-void Ct2_2Dlg::Check(int r, char &major, char &minor)
-{
-	if (IsMajor(r))
-		major++;
-	else if (IsMinor(r))
-		minor++;
-}
-
 #define CALC(s, bRev, member, op, major, minor)\
 	Calc(s, bRev, offsetof(letterSpec, member), sizeof(((letterSpec *)0)->member), op, major, minor)
 
@@ -366,7 +358,7 @@ void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSiz
 		}
 		r %= 28;
 	}
-	Check(r, major, minor);
+	CheckScore(r, major, minor);
 }
 
 void Ct2_2Dlg::CalculateScore(const CString &s, char &major, char &minor)
@@ -555,19 +547,30 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	}
 	char nMax = (len-1)/4+1;
 	pos -= 4;
-	major = minor = 0;
+	char major2 = 0, minor2 = 0;
 	if (j == 4)
 	{
-		if (HasScore951021(n, nMax, major, minor))
-			return true;
+		if (HasScore951021(n, nMax, major2, minor2))
+		{
+			major = max(major, major2);
+			major = max(minor, minor2);
+		}
 	}
 	else
 	{
-		HasScore951021(n, nMax, major, minor);
+		if (HasScore951021(n, nMax, major2, minor2))
+		{
+			major = max(major, major2);
+			major = max(minor, minor2);
+		}
 		// 7/21
 		for (; j<4; j++)
 			n[pos/4] += col[pos+j-len];
-		HasScore951021(n, nMax, major, minor);
+		if (HasScore951021(n, nMax, major2, minor2))
+		{
+			major = max(major, major2);
+			major = max(minor, minor2);
+		}
 		// 7/23
 		CString lastPart = sentence+pos;
 		if (!bReverse)
@@ -581,18 +584,24 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 		for (j=0; j<len; j++)
 			n[pos/4] += col[pos+j];
 		// 7/24
-		HasScore951021(n, nMax, major, minor);
+		if (HasScore951021(n, nMax, major2, minor2))
+		{
+			major = max(major, major2);
+			major = max(minor, minor2);
+		}
 		// 7/25
 		if (j < 4)
 		{
 			for (; j<4; j++)
 				n[pos/4] += col[j-len];
-			HasScore951021(n, nMax, major, minor);
+			if (HasScore951021(n, nMax, major2, minor2))
+			{
+				major = max(major, major2);
+				major = max(minor, minor2);
+			}
 		}
-		if (major || minor)
-			return true;
 	}
-	return false;
+	return major || minor;
 }
 
 void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, int64 r2, char major, char minor, char score950122)
@@ -623,11 +632,13 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 		return;
 
 	sRow.major951021 = sRow.minor951021 = 0;
-	if (!HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false) &&
-		!HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true))
-		return;
-	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
-	d_sentences.insert(sRow);
+	HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
+	HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
+	if (sRow.major951021 || sRow.minor951021)
+	{
+		CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
+		d_sentences.insert(sRow);
+	}
 }
 
 void Ct2_2Dlg::AddSelections(const CString &input, const CString &dual, const row &row)
