@@ -1,0 +1,303 @@
+﻿
+// t2_2Dlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "t2_2.h"
+#include "t2_2Dlg.h"
+#include "afxdialogex.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+#define wm_init WM_USER
+
+// CAboutDlg dialog used for App About
+
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg();
+
+// Dialog Data
+	enum { IDD = IDD_ABOUTBOX };
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+// Implementation
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg dialog
+
+
+
+
+Ct2_2Dlg::Ct2_2Dlg(CWnd* pParent /*=NULL*/)
+	: CDialogEx(Ct2_2Dlg::IDD, pParent)
+{
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void Ct2_2Dlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(Ct2_2Dlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_COMMAND(wm_init, OnInit)
+	ON_BN_CLICKED(IDC_GO, &Ct2_2Dlg::OnBnClickedGo)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg message handlers
+
+BOOL Ct2_2Dlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Add "About..." menu item to system menu.
+
+	// IDM_ABOUTBOX must be in the system command range.
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
+
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != NULL)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// Set the icon for this dialog.  The framework does this automatically
+	//  when the application's main window is not a dialog
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	// TODO: Add extra initialization here
+	PostMessage(WM_COMMAND, wm_init);
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void Ct2_2Dlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
+}
+
+// If you add a minimize button to your dialog, you will need the code below
+//  to draw the icon.  For MFC applications using the document/view model,
+//  this is automatically done for you by the framework.
+
+void Ct2_2Dlg::OnPaint()
+{
+	if (IsIconic())
+	{
+		CPaintDC dc(this); // device context for painting
+
+		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+
+		// Center icon in client rectangle
+		int cxIcon = GetSystemMetrics(SM_CXICON);
+		int cyIcon = GetSystemMetrics(SM_CYICON);
+		CRect rect;
+		GetClientRect(&rect);
+		int x = (rect.Width() - cxIcon + 1) / 2;
+		int y = (rect.Height() - cyIcon + 1) / 2;
+
+		// Draw the icon
+		dc.DrawIcon(x, y, m_hIcon);
+	}
+	else
+	{
+		CDialogEx::OnPaint();
+	}
+}
+
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
+HCURSOR Ct2_2Dlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+void Ct2_2Dlg::OnInit()
+{
+	LoadDataFile();
+}
+
+void Ct2_2Dlg::LoadDataFile()
+{
+	FILE *fp = fopen("t2.out", "r");
+	if (!fp)
+	{
+		AfxMessageBox("can't open t2.out");
+		EndModalLoop(1);
+		return;
+	}
+	char buf[80];
+	int set = -1;
+	row r;
+	while (fgets(buf, sizeof(buf), fp))
+	{
+		if (buf[0] == '-')
+		{
+			set++;
+		}
+		else
+		{
+			sscanf(buf, "%I64d %I64d", &r.n[0], &r.n[1]);
+			d_pairs[set].push_back(r);
+		}
+	}
+	fclose(fp);
+	GetDlgItem(IDC_INIT)->ShowWindow(SW_HIDE);
+}
+
+void Ct2_2Dlg::RemoveDuplicates(CString &input)
+{
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		if (output.Find(input[i]) == -1)
+			output += input[i];
+	}
+	input = output;
+}
+
+void Ct2_2Dlg::Expand(CString &input)
+{
+	const struct 
+	{
+		char c;
+		char expandedForm[4];
+	} table[] =
+	{
+		'ا', "الف",
+		'ب', "با",
+		'ج', "جیم",
+		'د', "دال",
+		'ه', "ها",
+		'و', "واو",
+		'ز', "زا",
+		'ح', "حا",
+		'ط', "طا",
+		'ی', "یا",
+		'ک', "کاف",
+		'ل', "لام",
+		'م', "میم",
+		'ن', "نون",
+		'س', "سین",
+		'ع', "عین",
+		'ف', "فا",
+		'ص', "صاد",
+		'ق', "قاف",
+		'ر', "را",
+		'ش', "شین",
+		'ت', "تا",
+		'ث', "ثا",
+		'خ', "خا",
+		'ذ', "ذال",
+		'ض', "ضاد",
+		'ظ', "ظا",
+		'غ', "غین",
+	};
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				output += table[j].expandedForm;
+				break;
+			}
+	input = output;
+}
+
+void Ct2_2Dlg::ImproveInput(CString &input)
+{
+	CString improved;
+	RemoveDuplicates(input);
+	Expand(input);
+	RemoveDuplicates(input);
+}
+
+void Ct2_2Dlg::CalculateDual(const CString &input, CString &dual)
+{
+	const struct 
+	{
+		char c;
+		char dual;
+	} table[] =
+	{
+		'ا', 'س',
+		'ب', 'ع',
+		'ج', 'ف',
+		'د', 'ص',
+		'ه', 'ق',
+		'و', 'ر',
+		'ز', 'ش',
+		'ح', 'ت',
+		'ط', 'ث',
+		'ی', 'خ',
+		'ک', 'ذ',
+		'ل', 'ض',
+		'م', 'ظ',
+		'ن', 'غ',
+	};
+	dual.Empty();
+	for (int i = 0; i < input.GetLength(); i++)
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				dual += table[j].dual;
+				break;
+			}
+			else if (input[i] == table[j].dual)
+			{
+				dual += table[j].c;
+				break;
+			}
+}
+
+void Ct2_2Dlg::OnBnClickedGo()
+{
+	CString input, dual;
+	GetDlgItemText(IDC_INPUT, input);
+	ImproveInput(input);
+	CalculateDual(input, dual);
+}
+

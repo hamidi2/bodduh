@@ -1,0 +1,344 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <afx.h>
+
+#define output printf
+//#define output no_printf
+
+using namespace std;
+
+typedef unsigned char byte;
+typedef __int64 int64;
+
+map<int64, byte> _sets[14];
+FILE *_fp[28];
+
+void no_printf(const char * /*fmt*/, ...)
+{
+}
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void add(byte n[], byte iSet, byte iSumMinusOne)
+{
+	int64 r = 0;
+	for (int i = 0; i <= iSet; i++)
+		r = r * 10 + n[i];
+	_sets[iSet][r] = iSumMinusOne + 1;
+}
+
+void openFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		char fn[80];
+		sprintf(fn, "sum-%02d.dat", i + 1);
+		_fp[i] = fopen(fn, "w");
+		if (!_fp[i])
+		{
+			fprintf(stderr, "fatal: cannot create file %s\n", fn);
+			exit(1);
+		}
+	}
+}
+
+void closeFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		//fprintf(_fp[i], "---\n");
+		fclose(_fp[i]);
+	}
+}
+
+void write(int sumMinusOne, const char *key, int major, int minor)
+{
+	fprintf(_fp[sumMinusOne], "%s\t%d,%d\n", key, major, minor);
+}
+
+void addPairs(int64 r1, int64 r2, int sumMinusOne, int major, int minor)
+{
+	string key, first, second;
+	char buf[15];
+	sprintf(buf, "%I64d", r1);
+	first = buf;
+	sprintf(buf, "%I64d", r2);
+	second = buf;
+	key = first + ' ' + second;
+	try
+	{
+		write(sumMinusOne, key.c_str(), major, minor);
+		reverse(first.begin(), first.end());
+		reverse(second.begin(), second.end());
+		key = first + ' ' + second;
+		write(sumMinusOne, key.c_str(), major, minor);
+	}
+	catch (std::exception e)
+	{
+		fprintf(stderr, "exception: %s\n", e.what());
+		exit(1);
+	}
+}
+
+int64 rev(int64 n)
+{
+	int64 r = 0;
+	while (n)
+	{
+		r = r * 10 + n % 10;
+		n /= 10;
+	}
+	return r;
+}
+
+int64 sum(int64 op1, int64 op2)
+{
+	return op1 + op2;
+}
+
+int64 diff(int64 op1, int64 op2)
+{
+	char buf[80] = {};
+	int i = 0;
+	while (op1)
+	{
+		buf[i++] = '0' + abs((op1 % 10) - (op2 % 10));
+		op1 /= 10;
+		op2 /= 10;
+	}
+	buf[i] = 0;
+	int64 r;
+	sscanf(strrev(buf), "%I64d", &r);
+	return r;
+}
+
+int sumDigits(int64 i)
+{
+	int r = 0;
+	while (i)
+	{
+		r += i % 10;
+		i /= 10;
+	}
+	return r;
+}
+
+void check(int64 op1, int64 op2/*, char *const desc*/, int &major, int &minor)
+{
+	const int mod1[] = {8, 11, 17, 20};
+	const int mod2[] = {2, 26, 30, 35, 38, 44, 47, 54};
+	//desc[0] = 0;
+
+	int64 revOp1 = rev(op1), revOp2 = rev(op2);
+	int modOp1 = op1 % 28;
+	int modOp2 = op2 % 28;
+	int modRevOp1 = revOp1 % 28;
+	int modRevOp2 = revOp2 % 28;
+
+	int modSum = modOp1 + modOp2, modRevSum = modRevOp1 + modRevOp2;
+	int modDiff = abs(modOp1 - modOp2), modRevDiff = abs(modRevOp1 - modRevOp2);
+
+	major = minor = 0;
+
+	// step 1
+	for (int iMod = 0; iMod < _countof(mod1); iMod++)
+	{
+		if (modSum == mod1[iMod])
+			major++;
+		if (modRevSum == mod1[iMod])
+			major++;
+		if (modDiff == mod1[iMod])
+			major++;
+		if (modRevDiff == mod1[iMod])
+			major++;
+	}
+	if (modSum % 28 == 0)
+		major++;
+	if (modRevSum % 28 == 0)
+		major++;
+	if (op1 != op2)
+	{
+		if (modDiff % 28 == 0)
+			major++;
+		if (modRevDiff % 28 == 0)
+			major++;
+	}
+
+	// step 2
+	for (int iMod = 0; iMod < _countof(mod2); iMod++)
+	{
+		if (modSum == mod2[iMod])
+			minor++;
+		if (modRevSum == mod2[iMod])
+			minor++;
+		if (modDiff == mod2[iMod])
+			minor++;
+		if (modRevDiff == mod2[iMod])
+			minor++;
+	}
+
+	// step 3
+	int64 step3Numbers[] =
+	{
+		sum(op1, op2), diff(op1, op2),
+		sum(revOp1, revOp2), diff(revOp1, revOp2),
+	};
+	for (int iStep3Number = 0; iStep3Number < _countof(step3Numbers); iStep3Number++)
+	{
+		for (iMod = 0; iMod < _countof(mod1); iMod++)
+		{
+			if (mod1[iMod] == step3Numbers[iStep3Number] % 28)
+				major++;
+			if (mod1[iMod] == rev(step3Numbers[iStep3Number]) % 28)
+				major++;
+		}
+		if (step3Numbers[iStep3Number] % 28 == 0 && step3Numbers[iStep3Number] != 0)
+			major++;
+		if (rev(step3Numbers[iStep3Number]) % 28 == 0 && rev(step3Numbers[iStep3Number]) != 0)
+			major++;
+		for (iMod = 0; iMod < 2; iMod++)
+		{
+			if (mod2[iMod] == step3Numbers[iStep3Number] % 28)
+				minor++;
+			if (mod2[iMod] == rev(step3Numbers[iStep3Number]) % 28)
+				minor++;
+		}
+	}
+
+	// step 4
+	for (int iStep3Number = 0; iStep3Number < _countof(step3Numbers); iStep3Number++)
+	{
+		int modSumDigits = sumDigits(step3Numbers[iStep3Number]) % 28;
+		for (iMod = 0; iMod < _countof(mod1); iMod++)
+		{
+			if (modSumDigits == mod1[iMod])
+			{
+				major++;
+				break;
+			}
+		}
+		if (iMod == _countof(mod1))
+		{
+			if (modSumDigits == 0)
+				major++;
+			else
+			{
+				for (iMod = 0; iMod < 2; iMod++)
+				{
+					if (modSumDigits == mod2[iMod])
+					{
+						minor++;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	//printf("%I64d %I64d\t%d,%d\n", op1, op2, major, minor);
+}
+
+bool match(int64 r1, int64 r2, char *const desc, int iSet, bool bSameSet, int &major, int &minor)
+{
+	check(r1, r2, major, minor);
+	if (major || minor)
+		return true;
+	if (!bSameSet)  // not same number of digits
+	{
+		const int64 powersOfTen[] =
+		{
+			10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000,
+			100000000000, 1000000000000, 10000000000000
+		};
+		int64 r3 = r2 + (r2 % 10) * powersOfTen[iSet-1];
+		check(r1, r3, major, minor);
+		if (major || minor)
+			return true;
+	}
+	return false;
+}
+
+void makePairs()
+{
+	for (int iSumMinusOne = 0; iSumMinusOne < 14; iSumMinusOne++)
+	{
+		byte n[14];
+		memset(&n, 0, sizeof(n));
+		int sum = 0;
+		for (int i = 0; ;)
+		{
+			if (n[i] == 6)
+			{
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+				continue;
+			}
+			else
+			{
+				ASSERT(n[i] < 6);
+				n[i]++;
+				sum++;
+			}
+			if (sum < iSumMinusOne + 1)
+			{
+				if (i < _countof(n) - 1)
+					i++;
+			}
+			else
+			{
+				ASSERT(sum == iSumMinusOne + 1);
+				if (n[0] > 2)
+					break;
+				if (n[i] <= 2)
+				{
+					add(n, i, iSumMinusOne);
+				}
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+			}
+		}
+	}
+	char desc[80];
+	int major, minor;
+	for (int iSet = 0; iSet < 14; iSet++)  // iSet may be replace with iNumDigitsMinusOne
+	{
+		fprintf(stderr, "number of digits=%d\n", iSet + 1);
+		for (auto i1Row = _sets[iSet].begin(); i1Row != _sets[iSet].end(); i1Row++)
+		{
+			for (auto i2Row = next(i1Row); i2Row != _sets[iSet].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, true, major, minor))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, major, minor);
+			if (iSet == 0)
+				continue;
+			for (auto i2Row = _sets[iSet-1].begin(); i2Row != _sets[iSet-1].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, false, major, minor))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, major, minor);
+		}
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	openFiles();
+	makePairs();
+	closeFiles();
+	//int major, minor;
+	//check(131, 162, major, minor);
+	return 0;
+}
+

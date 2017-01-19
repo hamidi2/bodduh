@@ -1,0 +1,460 @@
+﻿
+// t2_2Dlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "t2_2.h"
+#include "t2_2Dlg.h"
+#include "afxdialogex.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+#define wm_init WM_USER
+
+// CAboutDlg dialog used for App About
+
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg();
+
+// Dialog Data
+	enum { IDD = IDD_ABOUTBOX };
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+// Implementation
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg dialog
+
+
+
+
+Ct2_2Dlg::Ct2_2Dlg(CWnd* pParent /*=NULL*/)
+	: CDialogEx(Ct2_2Dlg::IDD, pParent)
+{
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void Ct2_2Dlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(Ct2_2Dlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_COMMAND(wm_init, OnInit)
+	ON_BN_CLICKED(IDC_GO, &Ct2_2Dlg::OnBnClickedGo)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg message handlers
+
+BOOL Ct2_2Dlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Add "About..." menu item to system menu.
+
+	// IDM_ABOUTBOX must be in the system command range.
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
+
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != NULL)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// Set the icon for this dialog.  The framework does this automatically
+	//  when the application's main window is not a dialog
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	// TODO: Add extra initialization here
+	PostMessage(WM_COMMAND, wm_init);
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void Ct2_2Dlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
+}
+
+// If you add a minimize button to your dialog, you will need the code below
+//  to draw the icon.  For MFC applications using the document/view model,
+//  this is automatically done for you by the framework.
+
+void Ct2_2Dlg::OnPaint()
+{
+	if (IsIconic())
+	{
+		CPaintDC dc(this); // device context for painting
+
+		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+
+		// Center icon in client rectangle
+		int cxIcon = GetSystemMetrics(SM_CXICON);
+		int cyIcon = GetSystemMetrics(SM_CYICON);
+		CRect rect;
+		GetClientRect(&rect);
+		int x = (rect.Width() - cxIcon + 1) / 2;
+		int y = (rect.Height() - cyIcon + 1) / 2;
+
+		// Draw the icon
+		dc.DrawIcon(x, y, m_hIcon);
+	}
+	else
+	{
+		CDialogEx::OnPaint();
+	}
+}
+
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
+HCURSOR Ct2_2Dlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+//---------------------------------------------------------------------------------------------------------------
+void Ct2_2Dlg::RemoveDuplicates(CString &input)
+{
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		if (output.Find(input[i]) == -1)
+			output += input[i];
+	}
+	input = output;
+}
+
+void Ct2_2Dlg::Expand(CString &input)
+{
+	const struct 
+	{
+		char c;
+		char expandedForm[4];
+	} table[] =
+	{
+		'ا', "الف",
+		'ب', "با",
+		'ج', "جيم",
+		'د', "دال",
+		'ه', "ها",
+		'و', "واو",
+		'ز', "زا",
+		'ح', "حا",
+		'ط', "طا",
+		'ي', "يا",
+		'ک', "کاف",
+		'ل', "لام",
+		'م', "ميم",
+		'ن', "نون",
+		'س', "سين",
+		'ع', "عين",
+		'ف', "فا",
+		'ص', "صاد",
+		'ق', "قاف",
+		'ر', "را",
+		'ش', "شين",
+		'ت', "تا",
+		'ث', "ثا",
+		'خ', "خا",
+		'ذ', "ذال",
+		'ض', "ضاد",
+		'ظ', "ظا",
+		'غ', "غين",
+	};
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				output += table[j].expandedForm;
+				break;
+			}
+			input = output;
+}
+
+void Ct2_2Dlg::CalculateDual(const CString &input, CString &dual)
+{
+	const struct 
+	{
+		char c;
+		char dual;
+	} table[] =
+	{
+		'ا', 'س',
+		'ب', 'ع',
+		'ج', 'ف',
+		'د', 'ص',
+		'ه', 'ق',
+		'و', 'ر',
+		'ز', 'ش',
+		'ح', 'ت',
+		'ط', 'ث',
+		'ي', 'خ',
+		'ک', 'ذ',
+		'ل', 'ض',
+		'م', 'ظ',
+		'ن', 'غ',
+	};
+	dual.Empty();
+	for (int i = 0; i < input.GetLength(); i++)
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				dual += table[j].dual;
+				break;
+			}
+			else if (input[i] == table[j].dual)
+			{
+				dual += table[j].c;
+				break;
+			}
+}
+
+//---------------------------------------------------------------------------------------------------------------
+void Ct2_2Dlg::OnInit()
+{
+	memset(d_pairReady, 0, sizeof(d_pairReady));
+	d_iPairWanted = -1;
+	d_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	d_bThTerminate = false;
+	_beginthread(th_LoadDataFile, 0, this);
+}
+
+void Ct2_2Dlg::th_LoadDataFile(void *p)
+{
+	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
+	for (int i = 3; i < 28; i++)
+	{
+		char buf[80];
+		sprintf(buf, "loading pairs of sum %d", i + 1);
+		pThis->SetDlgItemText(IDC_STATUS, buf);
+		sprintf(buf, "sum-%02d.dat", i + 1);
+		FILE *fp = fopen(buf, "r");
+		if (!fp)
+		{
+			CString s;
+			s.Format("can't open %s", buf);
+			AfxMessageBox(s);
+			pThis->EndModalLoop(1);
+			_endthread();
+			return;
+		}
+		row r;
+		while (fgets(buf, sizeof(buf), fp))
+		{
+			sscanf(buf, "%I64d %I64d", &r.n[0], &r.n[1]);
+			pThis->d_pair[i].push_back(r);
+			if (pThis->d_bThTerminate)
+				break;
+		}
+		if (pThis->d_bThTerminate)
+		{
+			fclose(fp);
+			SetEvent(pThis->d_hEvent);
+			_endthread();
+			return;
+		}
+		pThis->d_pairReady[i] = true;
+		if (pThis->d_iPairWanted >= 0 && pThis->d_iPairWanted <= i)
+			SetEvent(pThis->d_hEvent);
+		fclose(fp);
+	}
+	pThis->SetDlgItemText(IDC_STATUS, "");
+	_endthread();
+}
+
+CString Ct2_2Dlg::Separated(const CString &input)
+{
+	CString s;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		s += input[i];
+		s += ' ';
+	}
+	return s;
+}
+
+void Ct2_2Dlg::OnBnClickedGo()
+{
+	GetDlgItem(IDC_GO)->EnableWindow(FALSE);
+	CString input, dual;
+	GetDlgItemText(IDC_INPUT, input);
+	FILE *fp = fopen(input + ".txt", "wt");
+	if (!fp)
+	{
+		AfxMessageBox("couldn't open output file");
+		return;
+	}
+
+	int maxLen = 0;
+	fprintf(fp, "original question:        %s\n", input);	maxLen = max(maxLen, input.GetLength());
+	input.Remove(' ');
+	fprintf(fp, "spaces removed:           %s\n", input);
+	RemoveDuplicates(input);
+	fprintf(fp, "duplicates removed:       %s\n", input);
+	Expand(input);
+	fprintf(fp, "expanded:                 %s\n", input);	maxLen = max(maxLen, input.GetLength());
+	RemoveDuplicates(input);
+	CString s = Separated(input);
+	fprintf(fp, "duplicates removed again: %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	CalculateDual(input, dual);
+	fprintf(fp, "dual calculated:          %s\n", Separated(dual));
+	s.Empty();
+	for (int i = 0; i < (45 - 19) + maxLen + 2; i++)
+		s += '-';
+	fprintf(fp, "%s\n", s);
+
+	int len = input.GetLength(), iPair = len - 1;
+	if (!d_pairReady[iPair])
+	{
+		d_iPairWanted = iPair;
+		WaitForSingleObject(d_hEvent, INFINITE);
+	}
+	for (auto it = d_pair[iPair].begin(); it != d_pair[iPair].end(); it++)
+	{
+		CString s;
+		int64 r1, r2;
+		int i;
+
+		r1 = it->n[0], r2 = it->n[1];
+		s.Format("1 %I64d %I64d\t", r1, r2);
+		i = 0;
+		do
+		{
+			if (r1)
+			{
+				s += input.Mid(i, r1 % 10);
+				i += r1 % 10;
+				r1 /= 10;
+			}
+			if (r2)
+			{
+				s += dual.Mid(i, r2 % 10);
+				i += r2 % 10;
+				r2 /= 10;
+			}
+		} while (r1 || r2);
+		fprintf(fp, "%s\n", s);
+
+		r1 = it->n[0], r2 = it->n[1];
+		s.Format("2 %I64d %I64d\t", r1, r2);
+		i = 0;
+		do
+		{
+			if (r1)
+			{
+				s += dual.Mid(i, r1 % 10);
+				i += r1 % 10;
+				r1 /= 10;
+			}
+			if (r2)
+			{
+				s += input.Mid(i, r2 % 10);
+				i += r2 % 10;
+				r2 /= 10;
+			}
+		} while (r1 || r2);
+		fprintf(fp, "%s\n", s);
+
+		r1 = it->n[1], r2 = it->n[0];
+		s.Format("3 %I64d %I64d\t", r1, r2);
+		i = 0;
+		do
+		{
+			if (r1)
+			{
+				s += input.Mid(i, r1 % 10);
+				i += r1 % 10;
+				r1 /= 10;
+			}
+			if (r2)
+			{
+				s += dual.Mid(i, r2 % 10);
+				i += r2 % 10;
+				r2 /= 10;
+			}
+		} while (r1 || r2);
+		fprintf(fp, "%s\n", s);
+
+		r1 = it->n[1], r2 = it->n[0];
+		s.Format("4 %I64d %I64d\t", r1, r2);
+		i = 0;
+		do
+		{
+			if (r1)
+			{
+				s += dual.Mid(i, r1 % 10);
+				i += r1 % 10;
+				r1 /= 10;
+			}
+			if (r2)
+			{
+				s += input.Mid(i, r2 % 10);
+				i += r2 % 10;
+				r2 /= 10;
+			}
+		} while (r1 || r2);
+		fprintf(fp, "%s\n", s);
+	}
+	fclose(fp);
+	GetDlgItem(IDC_GO)->EnableWindow(TRUE);
+}
+
+void Ct2_2Dlg::OnOK()
+{
+	OnBnClickedGo();
+}
+
+void Ct2_2Dlg::OnCancel()
+{
+	//if (AfxMessageBox("Are you sure you want to exit?", MB_YESNOCANCEL | MB_ICONQUESTION) == IDYES)
+	{
+		d_bThTerminate = true;
+		WaitForSingleObject(d_hEvent, 0);
+		__super::OnCancel();
+	}
+}
+

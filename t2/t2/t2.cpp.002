@@ -1,0 +1,197 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <vector>
+
+using namespace std;
+
+typedef unsigned char byte;
+typedef __int64 int64;
+
+struct row
+{
+	byte n[14];
+};
+
+struct Pair
+{
+	row r[2];
+	char desc[80];
+};
+
+vector<row> _sets[14];
+vector<Pair> _pairs[14];
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void ASSERT(bool cond)
+{
+	if (cond)
+		return;
+	puts("unexpected condition");
+	exit(1);
+}
+
+void add(byte n[], byte i)
+{
+	row r;
+	memcpy(r.n, n, sizeof(r.n));
+	_sets[i].push_back(r);
+}
+
+void print(byte n[], byte i)
+{
+	printf("%d", n[0]);
+	for (int j = 1; j < i; j++)
+		printf("/%d", n[j]);
+	if (n[j])
+		printf("/%d", n[j]);
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		usage();
+		return 0;
+	}
+	int _sum = atoi(argv[1]);
+	if (_sum <= 0 || _sum > 14)
+	{
+		printf("invalid number %d\n", _sum);
+		return 1;
+	}
+	byte n[14];
+	memset(&n, 0, sizeof(n));
+	int sum = 0;
+	for (int i = 0; ;)
+	{
+		if (n[i] == 6)
+		{
+			if (i == 0)
+				break;
+			sum -= n[i];
+			n[i] = 0;
+			i--;
+			continue;
+		}
+		else
+		{
+			ASSERT(n[i] < 6);
+			n[i]++;
+			sum++;
+		}
+		if (sum < _sum)
+		{
+			if (i < _countof(n) - 1)
+				i++;
+		}
+		else
+		{
+			ASSERT(sum == _sum);
+			if (n[0] > 2)
+				break;
+			if (n[i] <= 2)
+			{
+				add(n, i);
+			}
+			if (i == 0)
+				break;
+			sum -= n[i];
+			n[i] = 0;
+			i--;
+		}
+	}
+	for (int iSet = 0; iSet < 14; iSet++)
+	{
+		for (int i1Row = 0; i1Row < _sets[iSet].size(); i1Row++)
+		{
+			int64 op1 = 0;
+			for (int iDigit = 0; iDigit <= iSet; iDigit++)
+				op1 = (op1 * 10) + _sets[iSet][i1Row].n[iDigit];
+			for (int i2Row = i1Row + 1; i2Row < _sets[iSet].size(); i2Row++)
+			{
+				int64 op2 = 0;
+				for (int iDigit = 0; iDigit <= iSet; iDigit++)
+					op2 = (op2 * 10) + _sets[iSet][i2Row].n[iDigit];
+				int64 rDiff = op1 - op2, rSum = op1 + op2;
+				if (rDiff < 0)
+					rDiff = -rDiff;
+				int64 modDiff = rDiff % 28, modSum = rSum % 28;
+				int mods[] = {0, 8, 11, 17, 20};
+				for (int iMods = 0; iMods < _countof(mods); iMods++)
+				{
+					if (modDiff == mods[iMods] || modSum == mods[iMods])
+					{
+						Pair p;
+						p.r[0] = _sets[iSet][i1Row];
+						p.r[1] = _sets[iSet][i2Row];
+						if (modDiff == mods[iMods])
+							sprintf(p.desc, "|%I64d-%I64d|=%I64d, %%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff);
+						else
+							sprintf(p.desc, "%I64d+%I64d=%I64d, %%28=%I64d", op1, op2, op1+op2, modSum);
+						_pairs[iSet].push_back(p);
+					}
+				}
+			}
+			if (i1Row == 0)
+				continue;
+			for (i2Row = 0; i2Row < _sets[iSet-1].size(); i2Row++)
+			{
+				int64 op2 = 0, op3 = _sets[iSet-1][i2Row].n[iSet-1];
+				for (int iDigit = 0; iDigit <= iSet-1; iDigit++)
+				{
+					op2 = (op2 * 10) + _sets[iSet-1][i2Row].n[iDigit];
+					op3 = (op3 * 10) + _sets[iSet-1][i2Row].n[iDigit];
+				}
+				int64 rDiff2 = op1 - op2, rSum2 = op1 + op2;
+				int64 rDiff3 = op1 - op3, rSum3 = op1 + op3;
+				if (rDiff2 < 0)
+					rDiff2 = -rDiff2;
+				if (rDiff3 < 0)
+					rDiff3 = -rDiff3;
+				int64 modDiff2 = rDiff2 % 28, modSum2 = rSum2 % 28;
+				int64 modDiff3 = rDiff3 % 28, modSum3 = rSum3 % 28;
+				int mods[] = {0, 8, 11, 17, 20};
+				for (int iMods = 0; iMods < _countof(mods); iMods++)
+				{
+					if (modDiff2 == mods[iMods] || modSum2 == mods[iMods] ||
+						modDiff3 == mods[iMods] || modSum3 == mods[iMods])
+					{
+						Pair p;
+						p.r[0] = _sets[iSet][i1Row];
+						p.r[1] = _sets[iSet-1][i2Row];
+						if (modDiff2 == mods[iMods])
+							sprintf(p.desc, "|%I64d-%I64d|=%I64d, %%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff2);
+						else if (modSum2 == mods[iMods])
+							sprintf(p.desc, "%I64d+%I64d=%I64d, %%28=%I64d", op1, op2, op1+op2, modSum2);
+						else if (modDiff3 == mods[iMods])
+							sprintf(p.desc, "|%I64d-%I64d|=%I64d, %%28=%I64d", op1, op3, (op1 > op3) ? op1-op3 : op3-op1, modDiff3);
+						else
+							sprintf(p.desc, "%I64d+%I64d=%I64d, %%28=%I64d", op1, op3, op1+op3, modSum3);
+						_pairs[iSet].push_back(p);
+					}
+				}
+			}
+		}
+	}
+
+	for (iSet = 0; iSet < 14; iSet++)
+	{
+		for (int iRow = 0; iRow < _pairs[iSet].size(); iRow++)
+		{
+			print(_pairs[iSet][iRow].r[0].n, iSet);
+			printf("  ");
+			print(_pairs[iSet][iRow].r[1].n, iSet);
+			printf("  %s\n", _pairs[iSet][iRow].desc);
+		}
+	}
+
+	return 0;
+}
+

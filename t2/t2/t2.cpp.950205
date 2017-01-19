@@ -1,0 +1,612 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <set>
+#include <map>
+#include <afx.h>
+#include <iostream>
+
+#define output printf
+//#define output no_printf
+
+using namespace std;
+
+typedef unsigned char byte;
+typedef __int64 int64;
+
+map<int64, byte> _sets[14];
+FILE *_fp[28];
+
+void no_printf(const char * /*fmt*/, ...)
+{
+}
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void add(byte n[], byte iSet, byte iSumMinusOne)
+{
+	int64 r = 0;
+	for (int i = 0; i <= iSet; i++)
+		r = r * 10 + n[i];
+	_sets[iSet][r] = iSumMinusOne + 1;
+}
+
+void openFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		char fn[80];
+		sprintf(fn, "sum-%02d.dat", i + 1);
+		_fp[i] = fopen(fn, "w");
+		if (!_fp[i])
+		{
+			fprintf(stderr, "fatal: cannot create file %s\n", fn);
+			exit(1);
+		}
+	}
+}
+
+void closeFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		//fprintf(_fp[i], "---\n");
+		fclose(_fp[i]);
+	}
+}
+
+/*
+CString charToScore950122Str(char score950122)
+{
+	CString s;
+	for (int i = 0; i < 6; i++)
+	{
+		s.AppendFormat("%d", score950122 & 1);
+		score950122 >>= 1;
+	}
+	return s.MakeReverse();
+}
+
+char score950122StrToChar(LPCSTR str)
+{
+	char r = 0;
+	for (; *str; str++)
+		r = (r << 1) | (*str - '0');
+	return r;
+}
+*/
+
+void addPairs(
+	int64 r1, int64 r2, int sumMinusOne, int major, int minor, int iSet, bool bSameSet,
+	const string &digitJoin, const string &digitJoinRev, int digitJoinMod28, int digitJoinRevMod28)
+{
+	try
+	{
+		fprintf(_fp[sumMinusOne], "%I64d %I64d %d %d %s %s %d %d %d %d\n", r1, r2, iSet + 1, bSameSet,
+			digitJoin.c_str(), digitJoinRev.c_str(), digitJoinMod28, digitJoinRevMod28, major, minor);
+	}
+	catch (std::exception e)
+	{
+		fprintf(stderr, "exception: %s\n", e.what());
+		exit(1);
+	}
+}
+
+int64 rev(int64 n)
+{
+	int64 r = 0;
+	while (n)
+	{
+		r = r * 10 + n % 10;
+		n /= 10;
+	}
+	return r;
+}
+
+int64 sum(int64 op1, int64 op2)
+{
+	return op1 + op2;
+}
+
+int64 diff(int64 op1, int64 op2)
+{
+	char buf[80] = {};
+	int i = 0;
+	while (op1)
+	{
+		buf[i++] = '0' + (int) abs((op1 % 10) - (op2 % 10));
+		op1 /= 10;
+		op2 /= 10;
+	}
+	buf[i] = 0;
+	int64 r;
+	sscanf(_strrev(buf), "%I64d", &r);
+	return r;
+}
+
+int64 abjadRev(int64 n)
+{
+	char src[80], dest[80] = "";
+	sprintf(src, "%I64d", n);
+	int pos = strlen(src) - 1;
+	do 
+	{
+		if (src[pos] != '0')
+		{
+			strcat(dest, src + pos);
+			src[pos] = 0;
+		}
+		pos--;
+	} while (pos != -1);
+	int64 r = 0;
+	sscanf(dest, "%I64d", &r);
+	return r;
+}
+
+bool isMajor(int64 n)
+{
+	if (n == 0)
+		return false;
+	int mod = n % 28;
+	const int mods[] = {0, 8, 11, 17, 20};
+	for (int i = 0; i < _countof(mods); i++)
+		if (mod == mods[i])
+			return true;
+	return false;
+}
+
+bool isMajor(LPCSTR str, int &mod)
+{
+	int strLen = strlen(str);
+	if (strLen > 18)  // an int64 may hold until 18 decimal digits.
+	{
+		char buf[80] = "";
+		buf[18] = 0;
+		int strPos = 0;
+		int64 r;
+		while (true)
+		{
+			int bufLen = strlen(buf);
+			strncpy(buf + bufLen, str + strPos, 18 - bufLen);
+			strPos += 18 - bufLen;
+			sscanf(buf, "%I64d", &r);
+			if (strPos >= strLen)
+			{
+				mod = r % 28;
+				return isMajor(r);
+			}
+			else
+			{
+				r %= 28;
+				sprintf(buf, "%I64d", r);
+			}
+		}
+	}
+	else
+	{
+		int64 r;
+		sscanf(str, "%I64d", &r);
+		mod = r % 28;
+		return isMajor(r);
+	}
+}
+
+bool isMinor(int mod, bool isMod)
+{
+	const int mods[] = {2, 26, 30, 35, 38, 44, 47, 54};
+	int max = isMod ? 2 : _countof(mods);
+	for (int i = 0; i < max; i++)
+		if (mod == mods[i])
+			return true;
+	return false;
+}
+
+void removeDuplicates(const int64 i_ar[], int i_count, int64 o_ar[], int &o_count)
+{
+	memcpy(o_ar, i_ar, i_count * sizeof(int64));
+	o_count = i_count;
+	for (int i = 0; i < o_count; i++)
+		for (int j = i + 1; j < o_count;)
+			if (o_ar[i] == o_ar[j])
+			{
+				if (j + 1 < o_count)
+					memcpy(o_ar + j, o_ar + j + 1, (o_count - j - 1) * sizeof(int64));
+				o_count--;
+				o_ar[o_count] = 0;
+			}
+			else
+			{
+				j++;
+			}
+}
+
+bool canPair(int64 r1, int64 r2, string &digitJoin, string &digitJoinRev, int &digitJoinMod28, int &digitJoinRevMod28)
+{
+	char buf[80];
+	int64 debug_r1 = r1, debug_r2 = r2;
+	int pos = -1;
+	while (r1)
+	{
+		buf[++pos] = '0' + r1 % 10;
+		r1 /= 10;
+		buf[++pos] = '0' + r2 % 10;
+		r2 /= 10;
+	}
+	if (buf[pos] != '0')
+		pos++;
+	buf[pos] = 0;
+	digitJoinRev = buf;
+	bool bRet = isMajor(buf, digitJoinRevMod28);
+	_strrev(buf);
+	digitJoin = buf;
+	bRet = isMajor(buf, digitJoinMod28) || bRet;
+	return bRet;
+}
+
+bool canPair(const string &s1, const string &s2, string &digitJoin, string &digitJoinRev, int &digitJoinMod28, int &digitJoinRevMod28)
+{
+	int64 r1, r2;
+	sscanf(s1.c_str(), "%I64d", &r1);
+	sscanf(s2.c_str(), "%I64d", &r2);
+	return canPair(r1, r2, digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28);
+}
+
+void check(int64 op1, int64 op2, int &major, int &minor)
+{
+	major = minor = 0;
+	int i;
+
+	// step1
+	int64 op[] = { op1, op2, rev(op1), rev(op2) };
+	int max = (op[0] == op[2] && op[1] == op[3]) ? 2 : 4;
+	int mod[4];
+	for (i = 0; i < max; i++)
+		mod[i] = op[i] % 28;
+	int step1[] = { mod[0] + mod[1], abs(mod[0] - mod[1]), mod[2] + mod[3], abs(mod[2] - mod[3]) };
+	for (i = 0; i < max; i++)
+		if (isMajor(step1[i]))
+			major++;
+		else if (isMinor(step1[i], false))
+			minor++;
+
+	// step2
+	int64 step2[8] = { sum(op[0], op[1]), diff(op[0], op[1]), 0, 0, sum(op[2], op[3]), diff(op[2], op[3]) };
+	for (i = 0; i < max; i++)
+		step2[i + i/2 * 2 + 2] = abjadRev(step2[i + i/2 * 2]);
+	// remove duplicates
+	int64 step2_unique[8];
+	int max2;
+	removeDuplicates(step2, max * 2, step2_unique, max2);
+	// ~
+	for (i = 0; i < max2; i++)
+	{
+		if (isMajor(step2_unique[i]))
+			major++;
+		else if (isMinor(step2_unique[i] % 28, true))
+			minor++;
+	}
+
+	//printf("%I64d %I64d\t%d,%d\n", op1, op2, major, minor);
+}
+
+void divide(LPCSTR dividend, int divisor, string &quotient, int &remainder)
+{
+	const int maxNumDigits = 18;  // an int64 may hold until 18 decimal digits.
+	int64 r;
+	int len = strlen(dividend);
+	char buf[80];
+	quotient = "";
+	if (len > maxNumDigits)
+	{
+		int pos = 0;
+		strncpy(buf, dividend, maxNumDigits);
+		buf[maxNumDigits] = 0;
+		pos += maxNumDigits;
+		while (true)
+		{
+			sscanf(buf, "%I64d", &r);
+			if (pos >= len)
+				break;
+			sprintf(buf, "%I64d", r / divisor);
+			quotient += buf;
+			r %= divisor;
+			sprintf(buf, "%I64d%c", r, dividend[pos++]);
+		}
+	}
+	else
+	{
+		sscanf(dividend, "%I64d", &r);
+	}
+	remainder = r % divisor;
+	sprintf(buf, "%I64d", r / divisor);
+	quotient += buf;
+}
+
+void append(char &score950122, bool digit)
+{
+	score950122 = (score950122 << 1) | digit;
+}
+
+int sumOfDigits(LPCSTR str)
+{
+	int r = 0;
+	for (; *str; str++)
+		r += *str - '0';
+	return r;
+}
+
+int sumOfDigits(int n)
+{
+	int r = 0;
+	while (n)
+	{
+		r += n % 10;
+		n /= 10;
+	}
+	return r;
+}
+
+void rev(string &str)
+{
+	reverse(str.begin(), str.end());
+}
+
+char calcScore950122(const string &r)
+{
+	const int factors[] = {28, 28*9, 28*28};
+	string k, k2, k3;
+	int n, n2, n3, n4, i;
+	char score950122 = 0;
+	bool bIsMajor;
+
+	for (i = 0; i < _countof(factors); i++)
+	{
+		divide(r.c_str(), factors[i], k, n);
+		int sod = sumOfDigits(k.c_str());
+		while (!(bIsMajor = isMajor(sod)) && sod >= 28)
+			sod = sumOfDigits(sod);
+		append(score950122, bIsMajor);
+		divide(k.c_str(), 28, k2, n2);
+		rev(k);
+		divide(k.c_str(), 28, k3, n3);
+		n %= 28;
+		n4 = n + n2 + n3;
+		bIsMajor = true;
+		if (!isMajor(n4))
+		{
+			if (!isMajor(n + abs(n2 - n3)))
+			{
+				do
+				{
+					n4 = sumOfDigits(n4);
+					bIsMajor = isMajor(n4);
+				} while (!bIsMajor && n4 >= 28);
+			}
+		}
+		append(score950122, bIsMajor);
+	}
+	return score950122;
+}
+
+bool match(int64 r1, int64 r2, int iSet, bool bSameSet, int &major, int &minor, string &digitJoin, string &digitJoinRev, int &digitJoinMod28, int &digitJoinRevMod28)
+{
+	if (!canPair(r1, r2, digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28))
+		return false;
+	check(r1, r2, major, minor);
+	if (major || minor)
+		return true;
+	if (!bSameSet)  // not same number of digits
+	{
+		const int64 powersOfTen[] =
+		{
+			10,
+			100,
+			1000,
+			10000,
+			100000,
+			1000000,
+			10000000,
+			100000000,
+			1000000000,
+			10000000000,
+			100000000000,
+			1000000000000,
+			10000000000000,
+		};
+		int64 r3 = r2 + (r2 % 10) * powersOfTen[iSet-1];
+		check(r1, r3, major, minor);
+		if (major || minor)
+			return true;
+	}
+	return false;
+}
+
+void makePairs()
+{
+	fprintf(stderr, "\ncreating database...\n");
+	for (int iSumMinusOne = 0; iSumMinusOne < 14; iSumMinusOne++)
+	{
+		byte n[14];
+		memset(&n, 0, sizeof(n));
+		int sum = 0;
+		for (int i = 0; ;)
+		{
+			if (n[i] == 6)
+			{
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+				continue;
+			}
+			else
+			{
+				ASSERT(n[i] < 6);
+				n[i]++;
+				sum++;
+			}
+			if (sum < iSumMinusOne + 1)
+			{
+				if (i < _countof(n) - 1)
+					i++;
+			}
+			else
+			{
+				ASSERT(sum == iSumMinusOne + 1);
+				if (n[0] > 2)
+					break;
+				if (n[i] <= 2)
+				{
+					add(n, i, iSumMinusOne);
+				}
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+			}
+		}
+	}
+	string digitJoin, digitJoinRev;
+	int digitJoinMod28, digitJoinRevMod28, major, minor;
+	for (int iSet = 0; iSet < 14; iSet++)  // iSet may be replaced with iNumDigitsMinusOne
+	{
+		fprintf(stderr, "number of digits=%d\n", iSet + 1);
+		for (auto i1Row = _sets[iSet].begin(); i1Row != _sets[iSet].end(); i1Row++)
+		{
+			for (auto i2Row = next(i1Row); i2Row != _sets[iSet].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, iSet, true, major, minor,
+					digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, major, minor, iSet, true,
+					digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28);
+			if (iSet == 0)
+				continue;
+			for (auto i2Row = _sets[iSet-1].begin(); i2Row != _sets[iSet-1].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, iSet, false, major, minor,
+					digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, major, minor, iSet, false,
+					digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28);
+		}
+	}
+}
+
+void refineDB()
+{
+	fprintf(stderr, "\nrefining database...\n");
+	struct score
+	{
+		int numDigits;
+		bool bSameSet;
+		string digitJoin, digitJoinRev;
+		int digitJoinMod28, digitJoinRevMod28;
+		int major, minor;
+		char score950122;
+	};
+	map<string, score> db;
+	for (int i = 0; i < 28; i++)
+	{
+		fprintf(stderr, "sum=%d\n", i+1);
+		char fn[80];
+		sprintf(fn, "sum-%02d.dat", i + 1);
+		FILE *fp = fopen(fn, "r");
+		if (!fp)
+		{
+			fprintf(stderr, "fatal: cannot open input file %s\n", fn);
+			exit(1);
+		}
+		char buf[80];
+		string r1, r2, key1, key2, digitJoin, digitJoinRev;
+		int digitJoinMod28, digitJoinRevMod28, major, minor, numDigits;
+		bool bSameSet;
+		while (fgets(buf, sizeof(buf), fp))
+		{
+			stringstream s(buf);
+			s >> r1 >> r2 >> numDigits >> bSameSet >> digitJoin >> digitJoinRev >> digitJoinMod28 >> digitJoinRevMod28 >> major >> minor;
+			key1 = r1 + " " + r2;
+			if (db.find(key1) == db.end())
+			{
+				db[key1].major = major;
+				db[key1].minor = minor;
+				db[key1].numDigits = numDigits;
+				db[key1].bSameSet = bSameSet;
+				db[key1].digitJoin = digitJoin;
+				db[key1].digitJoinRev = digitJoinRev;
+				db[key1].digitJoinMod28 = digitJoinMod28;
+				db[key1].digitJoinRevMod28 = digitJoinRevMod28;
+				db[key1].score950122 = calcScore950122(digitJoin);
+			}
+			else
+			{
+				db[key1].major += major;
+				db[key1].minor += minor;
+			}
+			reverse(r1.begin(), r1.end());
+			reverse(r2.begin(), r2.end());
+			if (canPair(r1, r2, digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28))
+			{
+				key2 = r1 + " " + r2;
+				if (key1 != key2)
+				{
+					if (db.find(key2) == db.end())
+					{
+						db[key2].major = major;
+						db[key2].minor = minor;
+						db[key2].numDigits = numDigits;
+						db[key2].bSameSet = bSameSet;
+						db[key2].digitJoin = digitJoin;
+						db[key2].digitJoinRev = digitJoinRev;
+						db[key2].digitJoinMod28 = digitJoinMod28;
+						db[key2].digitJoinRevMod28 = digitJoinRevMod28;
+						db[key2].score950122 = calcScore950122(digitJoin);
+					}
+					else
+					{
+						db[key2].major += major;
+						db[key2].minor += minor;
+					}
+				}
+			}
+		}
+		fclose(fp);
+		sprintf(fn, "sum-%02d.db", i + 1);
+		fp = fopen(fn, "w");
+		if (!fp)
+		{
+			fprintf(stderr, "fatal: cannot open output file %s\n", fn);
+			exit(1);
+		}
+		for (auto it = db.begin(); it != db.end(); it++)
+			fprintf(fp, "%s %d %d %s %s %d %d %d %d %d\n", it->first.c_str(), it->second.numDigits, it->second.bSameSet, it->second.digitJoin.c_str(), it->second.digitJoinRev.c_str(), it->second.digitJoinMod28, it->second.digitJoinRevMod28, it->second.major, it->second.minor, it->second.score950122);
+		fclose(fp);
+		db.clear();
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	openFiles();
+	makePairs();
+	closeFiles();
+	refineDB();
+
+	//int score950122 = calcScore950122("11111311112");
+	//cout << score950122 << endl;
+
+/*
+	string quotient;
+	int remainder;
+	divide("8428060", 28, quotient, remainder);
+*/
+
+	return 0;
+}
+

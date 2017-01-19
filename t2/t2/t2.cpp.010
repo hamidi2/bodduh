@@ -1,0 +1,207 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <string>
+#include <vector>
+#include <map>
+
+//#define output printf
+#define output no_printf
+
+using namespace std;
+
+typedef unsigned char byte;
+typedef __int64 int64;
+
+struct row
+{
+	byte n[14];
+};
+
+map<row, byte> _sets[14];
+map<string, string> _pairs[28];
+
+void no_printf(const char * /*fmt*/, ...)
+{
+}
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void ASSERT(bool cond)
+{
+	if (cond)
+		return;
+	puts("unexpected condition");
+	exit(1);
+}
+
+void add(byte n[], byte iSet, byte iSumMinusOne)
+{
+	row r;
+	memcpy(r.n, n, sizeof(r.n));
+	_sets[iSet][r] = iSumMinusOne;
+}
+
+void addPairs(const row &r1, const row &r2, int iSet, int iSumMinusOne, const char desc[80], bool bSameSet)
+{
+	string key, first, second;
+	for (int i = 0; i <= iSet; i++)
+		first += '0' + r1.n[i];
+	for (i = 0; i <= iSet - (bSameSet ? 0 : 1); i++)
+		second += '0' + r2.n[i];
+	key = first + ' ' + second;
+	if (_pairs[iSet].find(key) == _pairs[iSet].end())
+		_pairs[iSet][key] = desc;
+	reverse(first.begin(), first.end());
+	reverse(second.begin(), second.end());
+	key = first + ' ' + second;
+	if (_pairs[iSet].find(key) == _pairs[iSet].end())
+		_pairs[iSet][key] = desc;
+}
+
+bool check(int64 op1, int64 op2, char *const desc)
+{
+	const int mods[] = {8, 11, 17, 20};
+	int64 rDiff = op1 - op2, rSum = op1 + op2;
+	if (rDiff < 0)
+		rDiff = -rDiff;
+	int64 modDiff = rDiff % 28, modSum = rSum % 28;
+	for (int iMods = 0; iMods < _countof(mods); iMods++)
+	{
+		if (modDiff == mods[iMods] || modSum == mods[iMods])
+		{
+			if (modDiff == mods[iMods])
+				sprintf(desc, "|%I64d-%I64d|=%I64d\t%%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff);
+			else
+				sprintf(desc, "%I64d+%I64d=%I64d\t%%28=%I64d", op1, op2, op1+op2, modSum);
+			break;
+		}
+	}
+	if (!desc[0] && modSum == 0)
+		sprintf(desc, "%I64d+%I64d=%I64d\t%%28=%I64d", op1, op2, op1+op2, modSum);
+	if (!desc[0] && modDiff == 0 && rDiff != 0)
+		sprintf(desc, "|%I64d-%I64d|=%I64d\t%%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff);
+	return desc[0] != 0;
+}
+
+bool match(const row &row1, const row &row2, char *const desc, int iSet, bool bSameSet)
+{
+	int64 op1 = 0;
+	for (int iDigit = 0; iDigit <= iSet; iDigit++)
+		op1 = (op1 * 10) + row1.n[iDigit];
+	if (bSameSet)  // same number of digits
+	{
+		int64 op2 = 0;
+		for (iDigit = 0; iDigit <= iSet; iDigit++)
+			op2 = (op2 * 10) + row2.n[iDigit];
+		if (check(op1, op2, desc))
+			return true;
+	}
+	else
+	{
+		int64 op2 = 0, op3 = row2.n[iSet-1];
+		for (int iDigit = 0; iDigit <= iSet-1; iDigit++)
+		{
+			op2 = (op2 * 10) + row2.n[iDigit];
+			op3 = (op3 * 10) + row2.n[iDigit];
+		}
+		if (check(op1, op2, desc) || check(op1, op3, desc))
+			return true;
+	}
+	return false;
+}
+
+void makePairs()
+{
+	for (int iSumMinusOne = 0; iSumMinusOne < 14; iSumMinusOne++)
+	{
+		fprintf(stderr, "calculating sum %d\n", iSumMinusOne + 1);
+		byte n[14];
+		memset(&n, 0, sizeof(n));
+		int sum = 0;
+		for (int i = 0; ;)
+		{
+			if (n[i] == 6)
+			{
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+				continue;
+			}
+			else
+			{
+				ASSERT(n[i] < 6);
+				n[i]++;
+				sum++;
+			}
+			if (sum < iSumMinusOne + 1)
+			{
+				if (i < _countof(n) - 1)
+					i++;
+			}
+			else
+			{
+				ASSERT(sum == iSumMinusOne + 1);
+				if (n[0] > 2)
+					break;
+				if (n[i] <= 2)
+				{
+					add(n, i, iSumMinusOne);
+				}
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+			}
+		}
+	}
+	char desc[80] = {};
+	for (int iSet = 1; iSet <= iSumMinusOne; iSet++)  // iSet may be replace with iNumDigitsMinusOne
+	{
+		for (auto i1Row = _sets[iSet].begin(); i1Row != _sets[iSet].end(); i1Row++)
+		{
+			for (auto i2Row = i1Row; i2Row != _sets[iSet].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, true))
+					addPairs(i1Row->first, i2Row->first, iSet, i1Row->second + i2Row->second + 1, desc, true);
+			for (auto i2Row = _sets[iSet-1].begin(); i2Row != _sets[iSet-1].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, false))
+					addPairs(i1Row->first, i2Row->first, iSet, i1Row->second + i2Row->second + 1, desc, false);
+		}
+		output("digits=%d\n", iSet + 1);
+		for (auto it = _pairs[iSet].begin(); it != _pairs[iSet].end(); it++)
+			output("%s\t%s\n", it->first.c_str(), it->second.c_str());
+		output("\n");
+	}
+	output("---------------------------------------------------------\n");
+	// make data file
+	//FILE *fp = fopen("t2.out", "wt");
+	//if (!fp)
+	//{
+	//	fprintf(stderr, "cannot open output file\n");
+	//	return;
+	//}
+	//fprintf(stderr, "making data file\n");
+	//for (int iSumMinusOne = 0; iSumMinusOne < 14; iSumMinusOne++)
+	//{
+	//	fprintf(fp, "--- %d\n", iSumMinusOne + 1);
+	//	for (int iSet = 0; iSet <= iSumMinusOne; iSet++)
+	//		for (auto it = _pairs[iSumMinusOne][iSet].begin(); it != _pairs[iSumMinusOne][iSet].end(); it++)
+	//			fprintf(fp, "%s\n", it->first.c_str());
+	//}
+	//fclose(fp);
+}
+
+int main(int argc, char* argv[])
+{
+	makePairs();
+	return 0;
+}
+

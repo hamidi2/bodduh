@@ -1,0 +1,539 @@
+﻿
+// t2_2Dlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "t2_2.h"
+#include "t2_2Dlg.h"
+#include "afxdialogex.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+#define wm_init WM_USER
+
+// CAboutDlg dialog used for App About
+
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg();
+
+// Dialog Data
+	enum { IDD = IDD_ABOUTBOX };
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+// Implementation
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg dialog
+
+
+
+
+Ct2_2Dlg::Ct2_2Dlg(CWnd* pParent /*=NULL*/)
+	: CDialogEx(Ct2_2Dlg::IDD, pParent)
+{
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void Ct2_2Dlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(Ct2_2Dlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_COMMAND(wm_init, OnInit)
+	ON_BN_CLICKED(IDC_GO, &Ct2_2Dlg::OnBnClickedGo)
+END_MESSAGE_MAP()
+
+
+// Ct2_2Dlg message handlers
+
+BOOL Ct2_2Dlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Add "About..." menu item to system menu.
+
+	// IDM_ABOUTBOX must be in the system command range.
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
+
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != NULL)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// Set the icon for this dialog.  The framework does this automatically
+	//  when the application's main window is not a dialog
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	// TODO: Add extra initialization here
+	PostMessage(WM_COMMAND, wm_init);
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void Ct2_2Dlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
+}
+
+// If you add a minimize button to your dialog, you will need the code below
+//  to draw the icon.  For MFC applications using the document/view model,
+//  this is automatically done for you by the framework.
+
+void Ct2_2Dlg::OnPaint()
+{
+	if (IsIconic())
+	{
+		CPaintDC dc(this); // device context for painting
+
+		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+
+		// Center icon in client rectangle
+		int cxIcon = GetSystemMetrics(SM_CXICON);
+		int cyIcon = GetSystemMetrics(SM_CYICON);
+		CRect rect;
+		GetClientRect(&rect);
+		int x = (rect.Width() - cxIcon + 1) / 2;
+		int y = (rect.Height() - cyIcon + 1) / 2;
+
+		// Draw the icon
+		dc.DrawIcon(x, y, m_hIcon);
+	}
+	else
+	{
+		CDialogEx::OnPaint();
+	}
+}
+
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
+HCURSOR Ct2_2Dlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+//---------------------------------------------------------------------------------------------------------------
+const static struct CTable
+{
+	char c;
+	char dual;
+	char expandedForm[4];
+	char order;
+	char orderRev[3];
+	short abjad;
+	char abjadRev[5];
+	char abjadRow;
+} table[] =
+{
+	'ا', 'س', "الف",  1,  "1",    1,    "1", 1,
+	'ب', 'ع', "با",   2,  "2",    2,    "2", 1,
+	'ج', 'ف', "جيم",  3,  "3",    3,    "3", 1,
+	'د', 'ص', "دال",  4,  "4",    4,    "4", 1,
+	'ه', 'ق', "ها",   5,  "5",    5,    "5", 2,
+	'و', 'ر', "واو",  6,  "6",    6,    "6", 2,
+	'ز', 'ش', "زا",   7,  "7",    7,    "7", 2,
+	'ح', 'ت', "حا",   8,  "8",    8,    "8", 2,
+	'ط', 'ث', "طا",   9,  "9",    9,    "9", 3,
+	'ي', 'خ', "يا",  10, "01",   10,   "01", 3,
+	'ک', 'ذ', "کاف", 11, "11",   20,   "02", 3,
+	'ل', 'ض', "لام",  12, "21",   30,   "03", 3,
+	'م', 'ظ', "ميم", 13, "31",   40,   "04", 4,
+	'ن', 'غ', "نون", 14, "41",   50,   "05", 4,
+	'س', 'ا', "سين", 15, "51",   60,   "06", 4,
+	'ع', 'ب', "عين", 16, "61",   70,   "07", 4,
+	'ف', 'ج', "فا",  17, "71",   80,   "08", 5,
+	'ص', 'د', "صاد", 18, "81",   90,   "09", 5,
+	'ق', 'ه', "قاف", 19, "91",  100,  "001", 5,
+	'ر', 'و', "را",  20, "02",  200,  "002", 5,
+	'ش', 'ز', "شين", 21, "12",  300,  "003", 6,
+	'ت', 'ح', "تا",  22, "22",  400,  "004", 6,
+	'ث', 'ط', "ثا",  23, "32",  500,  "005", 6,
+	'خ', 'ي', "خا",  24, "42",  600,  "006", 6,
+	'ذ', 'ک', "ذال", 25, "52",  700,  "007", 7,
+	'ض', 'ل', "ضاد", 26, "62",  800,  "008", 7,
+	'ظ', 'م', "ظا",  27, "72",  900,  "009", 7,
+	'غ', 'ن', "غين", 28, "82", 1000, "0001", 7,
+};
+
+void Ct2_2Dlg::RemoveDuplicates(CString &input)
+{
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		if (output.Find(input[i]) == -1)
+			output += input[i];
+	}
+	input = output;
+}
+
+void Ct2_2Dlg::Expand(CString &input)
+{
+	CString output;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				output += table[j].expandedForm;
+				break;
+			}
+	}
+	input = output;
+}
+
+void Ct2_2Dlg::CalculateDual(const CString &input, CString &dual)
+{
+	dual.Empty();
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+			{
+				dual += table[j].dual;
+				break;
+			}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------
+void Ct2_2Dlg::OnInit()
+{
+	for (int i = 0; i < 28; i++)
+		memset(d_pairsSpec[i].maxLen, 0, sizeof(d_pairsSpec[i].maxLen));
+	d_iPairWanted = -1;
+	d_rowNumber = 1;
+	d_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	d_bThTerminate = false;
+	_beginthread(th_LoadDataFiles, 0, this);
+}
+
+void Ct2_2Dlg::th_LoadDataFiles(void *p)
+{
+	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
+	for (int i = 13; i < 14; i++)
+	{
+		char buf[80];
+		sprintf(buf, "loading pairs of sum %d", i + 1);
+		pThis->SetDlgItemText(IDC_STATUS, buf);
+		sprintf(buf, "sum-%02d.db", i + 1);
+		FILE *fp = fopen(buf, "r");
+		if (!fp)
+		{
+			CString s;
+			s.Format("can't open %s", buf);
+			AfxMessageBox(s);
+			pThis->EndModalLoop(1);
+			_endthread();
+			return;
+		}
+		row r;
+		int bSameSet;
+		char digitJoin[80], digitJoinRev[80];
+		while (fgets(buf, sizeof(buf), fp))
+		{
+			sscanf(buf, "%I64d %I64d %d %d %s %s %d %d %d %d", &r.n[0], &r.n[1], &r.numDigits, &bSameSet,
+				digitJoin, digitJoinRev, &r.digitJoinMod28, &r.digitJoinRevMod28, &r.major, &r.minor);
+			r.bSameSet = bSameSet ? true : false;
+			r.digitJoin = digitJoin;
+			r.digitJoinRev = digitJoinRev;
+			pThis->d_pairsSpec[i].pairs.push_back(r);
+			pThis->d_pairsSpec[i].maxLen[0] = max(pThis->d_pairsSpec[i].maxLen[0], r.numDigits);
+			pThis->d_pairsSpec[i].maxLen[1] = max(pThis->d_pairsSpec[i].maxLen[1], bSameSet ? r.numDigits : r.numDigits - 1);
+			pThis->d_pairsSpec[i].maxLen[2] = max(pThis->d_pairsSpec[i].maxLen[2], (int) strlen(digitJoin));
+			if (pThis->d_bThTerminate)
+				break;
+		}
+		if (pThis->d_bThTerminate)
+		{
+			fclose(fp);
+			SetEvent(pThis->d_hEvent);
+			_endthread();
+			return;
+		}
+		if (pThis->d_iPairWanted >= 0 && pThis->d_iPairWanted <= i)
+			SetEvent(pThis->d_hEvent);
+		fclose(fp);
+	}
+	pThis->SetDlgItemText(IDC_STATUS, "");
+	_endthread();
+}
+
+CString Ct2_2Dlg::Separated(const CString &input)
+{
+	CString s;
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		s += input[i];
+		s += ' ';
+	}
+	return s;
+}
+
+bool Ct2_2Dlg::IsMajor(int mod)
+{
+	const int mods[] = {0, 8, 11, 17, 20};
+	for (int i = 0; i < _countof(mods); i++)
+		if (mod == mods[i])
+			return true;
+	return false;
+}
+
+bool Ct2_2Dlg::IsMinor(int mod)
+{
+	const int mods[] = {2, 26/*, 30, 35, 38, 44, 47, 54*/};
+	for (int i = 0; i < _countof(mods); i++)
+		if (mod == mods[i])
+			return true;
+	return false;
+}
+
+void Ct2_2Dlg::Check(int r, int &major, int &minor)
+{
+	if (IsMajor(r))
+		major++;
+	else if (IsMinor(r))
+		minor++;
+}
+
+#define CALC(s, bRev, member, op, major, minor)\
+	Calc(s, bRev, offsetof(CTable, member), sizeof(((CTable *)0)->member), op, major, minor)
+
+void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSize, CeOperation op, int &major, int &minor)
+{
+	int begin = bRev ? s.GetLength() - 1 : 0;
+	int end = bRev ? -1 : s.GetLength();
+	int step = bRev ? -1 : 1;
+	int r = (op == opMul) ? 1 : 0;
+	for (int i = begin; i != end; i += step)
+	{
+		for (int j = 0; j < _countof(table); j++)
+			if (s[i] == table[j].c)
+			{
+				if (op != opSeqRev)  // integral member
+				{
+					int member = 0;
+					memcpy(&member, (char *)(table + j) + memberOffset, memberSize);
+					switch (op)
+					{
+					case opAdd:
+						r += member % 28;
+						break;
+					case opMul:
+						r *= member % 28;
+						break;
+					case opSeq:
+						CString seq;
+						seq.Format("%d%d", r, member);
+						r = atoi(seq);
+						break;
+					}
+				}
+				else  // non-integral member (string)
+				{
+					CString seq;
+					seq.Format("%d%s", r, (char *)(table + j) + memberOffset);
+					r = atoi(seq);
+				}
+				r %= 28;
+				break;
+			}
+	}
+	Check(r, major, minor);
+}
+
+void Ct2_2Dlg::CalculateScore(const CString &s, int &major, int &minor)
+{
+	major = minor = 0;
+
+	CALC(s, false, order   , opAdd,    major, minor);  // جمع ابجد صغیر
+	CALC(s, false, abjad   , opAdd,    major, minor);  // جمع ابجد کبیر
+	CALC(s, false, order   , opMul,    major, minor);  // ضرب ابجد صغیر
+	CALC(s, false, abjad   , opMul,    major, minor);  // ضرب ابجد کبیر
+
+	CALC(s, true , order   , opSeq,    major, minor);  // کنار هم گذاشتن ابجد صغیر
+	CALC(s, true , abjad   , opSeq,    major, minor);  // کنار هم گذاشتن ابجد کبیر
+	CALC(s, false, order   , opSeq,    major, minor);  // معکوس عددی کنار هم گذاشتن ابجد صغیر
+	CALC(s, false, abjad   , opSeq,    major, minor);  // معکوس عددی کنار هم گذاشتن ابجد کبیر
+	CALC(s, false, orderRev, opSeqRev, major, minor);  // معکوس رقمی کنار هم گذاشتن ابجد صغیر
+	CALC(s, false, abjadRev, opSeqRev, major, minor);  // معکوس رقمی کنار هم گذاشتن ابجد کبیر
+
+	CALC(s, false, abjadRow, opAdd,    major, minor);  // جمع ردیف جدول ابجد
+	CALC(s, false, abjadRow, opMul,    major, minor);  // ضرب ردیف جدول ابجد
+	CALC(s, true , abjadRow, opSeq,    major, minor);  // رشتهٔ حاصل از کنار هم گذاشتن ردیف جدول ابجد
+	CALC(s, false, abjadRow, opSeq,    major, minor);  // عکس رشتهٔ حاصل از کنار هم گذاشتن ردیف جدول ابجد
+}
+
+void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, int64 r2, const string &digitJoin, const string &digitJoinRev, int digitJoinMod28, int digitJoinRevMod28, int major, int minor)
+{
+	sentenceRow sRow = { r1, r2, digitJoin, digitJoinRev, digitJoinMod28, digitJoinRevMod28, major, minor };
+	int i = 0;
+	do
+	{
+		if (r1)
+		{
+			sRow.sentence += input.Mid(i, r1 % 10);
+			i += r1 % 10;
+			r1 /= 10;
+		}
+		if (r2)
+		{
+			sRow.sentence += dual.Mid(i, r2 % 10);
+			i += r2 % 10;
+			r2 /= 10;
+		}
+	} while (r1 || r2);
+	CalculateScore(sRow.sentence, major, minor);
+	sRow.totalMajor = sRow.major + major;
+	sRow.totalMinor = sRow.minor + minor;
+	d_sentences.insert(sRow);
+}
+
+void Ct2_2Dlg::AddSelections(const CString &input, const CString &dual, const row &r)
+{
+	AddSentence(input, dual, r.n[0], r.n[1], r.digitJoin, r.digitJoinRev, r.digitJoinMod28, r.digitJoinRevMod28, r.major, r.minor);
+	AddSentence(dual, input, r.n[0], r.n[1], r.digitJoin, r.digitJoinRev, r.digitJoinMod28, r.digitJoinRevMod28, r.major, r.minor);
+
+	if (!r.bSameSet)
+		return;
+
+	AddSentence(input, dual, r.n[1], r.n[0], r.digitJoin, r.digitJoinRev, r.digitJoinMod28, r.digitJoinRevMod28, r.major, r.minor);
+	AddSentence(dual, input, r.n[1], r.n[0], r.digitJoin, r.digitJoinRev, r.digitJoinMod28, r.digitJoinRevMod28, r.major, r.minor);
+}
+
+bool Ct2_2Dlg::CheckInputIntegrity(const CString &input)
+{
+	for (int i = 0; i < input.GetLength(); i++)
+	{
+		for (int j = 0; j < _countof(table); j++)
+			if (input[i] == table[j].c)
+				break;
+		if (j == _countof(table))
+			return false;
+	}
+	return true;
+}
+
+void Ct2_2Dlg::OnBnClickedGo()
+{
+	CString input, dual;
+	GetDlgItemText(IDC_INPUT, input);
+	CString fn = input + ".txt";
+	input.Remove(' ');
+	if (!CheckInputIntegrity(input))
+	{
+		AfxMessageBox("invalid character in input");
+		return;
+	}
+	FILE *fp = fopen(fn, "wt");
+	if (!fp)
+	{
+		AfxMessageBox("couldn't open output file");
+		return;
+	}
+
+	GetDlgItem(IDC_GO)->EnableWindow(FALSE);
+
+	int maxLen = 0;
+	CString s;
+	fprintf(fp, "original question:        %s\n", input);	maxLen = max(maxLen, input.GetLength());
+	RemoveDuplicates(input);
+	s = Separated(input);
+	fprintf(fp, "duplicates removed:       %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	Expand(input);
+	s = Separated(input);
+	fprintf(fp, "expanded:                 %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	RemoveDuplicates(input);
+	s = Separated(input);
+	fprintf(fp, "duplicates removed again: %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	CalculateDual(input, dual);
+	fprintf(fp, "dual calculated:          %s\n", Separated(dual));
+
+	int len = input.GetLength(), iPair = len - 1;
+	if (!d_pairsSpec[iPair].maxLen[0])  // if not ready yet
+	{
+		d_iPairWanted = iPair;
+		WaitForSingleObject(d_hEvent, INFINITE);
+	}
+	for (auto it = d_pairsSpec[iPair].pairs.begin(); it != d_pairsSpec[iPair].pairs.end(); it++)
+		AddSelections(input, dual, *it);
+
+	fprintf(fp, "number of sentences:      %d\n", d_sentences.size());
+	fprintf(fp, "---------------------------------------------------------------------------------------------------------------------\n", s);
+	for (auto it = d_sentences.begin(); it != d_sentences.end(); it++)
+	{
+		fprintf(fp, "%*I64d,%-*I64d   %*s,%-*s   %2d,%-2d | %2d,%-2d   %2d,%-2d   %2d,%-2d | %s\n",
+			d_pairsSpec[iPair].maxLen[0], it->n[0],
+			d_pairsSpec[iPair].maxLen[1], it->n[1],
+			d_pairsSpec[iPair].maxLen[2], it->digitJoin.c_str(),
+			d_pairsSpec[iPair].maxLen[2], it->digitJoinRev.c_str(),
+			it->digitJoinMod28, it->digitJoinRevMod28,
+			it->major, it->minor,
+			it->totalMajor - it->major, it->totalMinor - it->minor,
+			it->totalMajor, it->totalMinor,
+			Separated(it->sentence));
+	}
+
+	d_sentences.clear();
+	d_rowNumber = 1;
+	fclose(fp);
+	GetDlgItem(IDC_GO)->EnableWindow(TRUE);
+}
+
+void Ct2_2Dlg::OnOK()
+{
+	OnBnClickedGo();
+}
+
+void Ct2_2Dlg::OnCancel()
+{
+	//if (AfxMessageBox("Are you sure you want to exit?", MB_YESNOCANCEL | MB_ICONQUESTION) == IDYES)
+	{
+		d_bThTerminate = true;
+		WaitForSingleObject(d_hEvent, 0);
+		__super::OnCancel();
+	}
+}
+

@@ -1,0 +1,98 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <vector>
+
+using namespace std;
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void ASSERT(bool cond)
+{
+	if (cond)
+		return;
+	puts("unexpected condition");
+	exit(1);
+}
+
+vector<string> _set[14];
+
+void add(int n[], int i)
+{
+	char str[80] = "";
+	for (int j = 0; j < i; j++)
+		sprintf(str + strlen(str), "%d/", n[j]);
+	sprintf(str + strlen(str), "%d", n[i]);
+	_set[i].push_back(str);
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		usage();
+		return 0;
+	}
+	int _sum = atoi(argv[1]);
+	if (_sum <= 0 || _sum > 14)
+	{
+		printf("invalid number %d\n", _sum);
+		return 1;
+	}
+	int n[14];
+	memset(&n, 0, sizeof(n));
+	int sum = 0;
+	for (int i = 0; ;)
+	{
+		if (n[i] == 6)
+		{
+			if (i == 0)
+				break;
+			sum -= n[i];
+			n[i] = 0;
+			i--;
+			continue;
+		}
+		else
+		{
+			ASSERT(n[i] < 6);
+			n[i]++;
+			sum++;
+		}
+		if (sum < _sum)
+		{
+			if (i < _countof(n) - 1)
+				i++;
+		}
+		else
+		{
+			ASSERT(sum == _sum);
+			if (n[0] > 2)
+				break;
+			if (n[i] <= 2)
+			{
+/*
+				for (int j = 0; j < i; j++)
+					printf("%d/", n[j]);
+				printf("%d\n", n[i]);
+*/
+				add(n, i);
+			}
+			if (i == 0)
+				break;
+			sum -= n[i];
+			n[i] = 0;
+			i--;
+		}
+	}
+	for (int i = 0; i < 14; i++)
+		for (int j = 0; j < _set[i].size(); j++)
+			printf("%s\n", _set[i][j].c_str());
+	return 0;
+}
+

@@ -1,0 +1,210 @@
+// t2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <afx.h>
+
+#define output printf
+//#define output no_printf
+
+using namespace std;
+
+typedef unsigned char byte;
+typedef __int64 int64;
+
+map<int64, byte> _sets[14];
+FILE *_fp[28];
+
+void no_printf(const char * /*fmt*/, ...)
+{
+}
+
+void usage()
+{
+	puts("Usage: t2 <a number>");
+}
+
+void add(byte n[], byte iSet, byte iSumMinusOne)
+{
+	int64 r = 0;
+	for (int i = 0; i <= iSet; i++)
+		r = r * 10 + n[i];
+	_sets[iSet][r] = iSumMinusOne + 1;
+}
+
+void openFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		char fn[80];
+		sprintf(fn, "sum-%02d.dat", i + 1);
+		_fp[i] = fopen(fn, "w");
+		if (!_fp[i])
+		{
+			fprintf(stderr, "fatal: cannot create file %s\n", fn);
+			exit(1);
+		}
+	}
+}
+
+void closeFiles()
+{
+	for (int i = 0; i < 28; i++)
+	{
+		fprintf(_fp[i], "---\n");
+		fclose(_fp[i]);
+	}
+}
+
+void write(int sumMinusOne, const char *key, const char *desc)
+{
+	fprintf(_fp[sumMinusOne], "%s\t%s\n", key, desc);
+}
+
+void addPairs(int64 r1, int64 r2, int sumMinusOne, const char desc[80])
+{
+	string key, first, second;
+	char buf[15];
+	sprintf(buf, "%I64d", r1);
+	first = buf;
+	sprintf(buf, "%I64d", r2);
+	second = buf;
+	key = first + ' ' + second;
+	try
+	{
+		write(sumMinusOne, key.c_str(), desc);
+		reverse(first.begin(), first.end());
+		reverse(second.begin(), second.end());
+		key = first + ' ' + second;
+		write(sumMinusOne, key.c_str(), desc);
+	}
+	catch (std::exception e)
+	{
+		fprintf(stderr, "exception: %s\n", e.what());
+		exit(1);
+	}
+}
+
+bool check(int64 op1, int64 op2, char *const desc)
+{
+	const int mods[] = {8, 11, 17, 20};
+	desc[0] = 0;
+	int64 rDiff = op1 - op2, rSum = op1 + op2;
+	if (rDiff < 0)
+		rDiff = -rDiff;
+	int64 modDiff = rDiff % 28, modSum = rSum % 28;
+	for (int iMods = 0; iMods < _countof(mods); iMods++)
+	{
+		if (modDiff == mods[iMods] || modSum == mods[iMods])
+		{
+			if (modDiff == mods[iMods])
+				sprintf(desc, "|%I64d-%I64d|=%I64d\t%%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff);
+			else
+				sprintf(desc, "%I64d+%I64d=%I64d\t%%28=%I64d", op1, op2, op1+op2, modSum);
+			break;
+		}
+	}
+	if (!desc[0] && modSum == 0)
+		sprintf(desc, "%I64d+%I64d=%I64d\t%%28=%I64d", op1, op2, op1+op2, modSum);
+	if (!desc[0] && modDiff == 0 && rDiff != 0)
+		sprintf(desc, "|%I64d-%I64d|=%I64d\t%%28=%I64d", op1, op2, (op1 > op2) ? op1-op2 : op2-op1, modDiff);
+	return desc[0] != 0;
+}
+
+bool match(int64 r1, int64 r2, char *const desc, int iSet, bool bSameSet)
+{
+	if (bSameSet)  // same number of digits
+	{
+		if (check(r1, r2, desc))
+			return true;
+	}
+	else
+	{
+		const int64 powersOfTen[] =
+		{
+			10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000,
+			100000000000, 1000000000000, 10000000000000
+		};
+		int64 r3 = r2 + (r2 % 10) * powersOfTen[iSet-1];
+		if (check(r1, r2, desc) || check(r1, r3, desc))
+			return true;
+	}
+	return false;
+}
+
+void makePairs()
+{
+	for (int iSumMinusOne = 0; iSumMinusOne < 14; iSumMinusOne++)
+	{
+		byte n[14];
+		memset(&n, 0, sizeof(n));
+		int sum = 0;
+		for (int i = 0; ;)
+		{
+			if (n[i] == 6)
+			{
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+				continue;
+			}
+			else
+			{
+				ASSERT(n[i] < 6);
+				n[i]++;
+				sum++;
+			}
+			if (sum < iSumMinusOne + 1)
+			{
+				if (i < _countof(n) - 1)
+					i++;
+			}
+			else
+			{
+				ASSERT(sum == iSumMinusOne + 1);
+				if (n[0] > 2)
+					break;
+				if (n[i] <= 2)
+				{
+					add(n, i, iSumMinusOne);
+				}
+				if (i == 0)
+					break;
+				sum -= n[i];
+				n[i] = 0;
+				i--;
+			}
+		}
+	}
+	char desc[80];
+	for (int iSet = 0; iSet < 14; iSet++)  // iSet may be replace with iNumDigitsMinusOne
+	{
+		fprintf(stderr, "number of digits=%d\n", iSet + 1);
+		for (auto i1Row = _sets[iSet].begin(); i1Row != _sets[iSet].end(); i1Row++)
+		{
+			for (auto i2Row = next(i1Row); i2Row != _sets[iSet].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, true))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, desc);
+			if (iSet == 0)
+				continue;
+			for (auto i2Row = _sets[iSet-1].begin(); i2Row != _sets[iSet-1].end(); i2Row++)
+				if (match(i1Row->first, i2Row->first, desc, iSet, false))
+					addPairs(i1Row->first, i2Row->first, i1Row->second + i2Row->second - 1, desc);
+		}
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	openFiles();
+	makePairs();
+	closeFiles();
+	return 0;
+}
+
