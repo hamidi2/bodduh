@@ -517,7 +517,7 @@ bool Ct2_2Dlg::HasScore951021(char n[], char nMax, char &major, char &minor)
 		if (!major3 && !minor3)
 			break;
 		major2 += major3;
-		minor2 += major2;
+		minor2 += minor3;
 	}
 	if (i == nMax)
 	{
@@ -548,12 +548,13 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	char nMax = (len-1)/4+1;
 	pos -= 4;
 	char major2 = 0, minor2 = 0;
+	char major3 = 0, minor3 = 0;
 	if (j == 4)
 	{
-		if (HasScore951021(n, nMax, major2, minor2))
+		if (HasScore951021(n, nMax, major3, minor3))
 		{
-			major = max(major, major2);
-			major = max(minor, minor2);
+			major2 = max(major2, major3);
+			minor2 = max(minor2, minor3);
 		}
 	}
 	else
@@ -631,10 +632,10 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 	if (sum / len > 14)
 		return;
 
-	sRow.major951021 = sRow.minor951021 = 0;
-	HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
-	HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
-	if (sRow.major951021 || sRow.minor951021)
+	sRow.major951021 = sRow.minor951021 = sRow.numSidesWithScore951021 = 0;
+	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
+	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
+	if (sRow.numSidesWithScore951021)
 	{
 		CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
 		d_sentences.insert(sRow);

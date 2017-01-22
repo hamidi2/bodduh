@@ -72,7 +72,7 @@ private:
 		int64 r[2];
 		char major, minor, score950122;
 		char sentenceMajor, sentenceMinor;
-		char major951021, minor951021;
+		char major951021, minor951021, numSidesWithScore951021;
 		CString sentence;
 	};
 
