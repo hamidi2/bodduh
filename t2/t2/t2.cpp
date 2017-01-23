@@ -17,7 +17,7 @@
 
 #define output printf
 //#define output no_printf
-#define TEST
+//#define TEST
 
 void no_printf(const char * /*fmt*/, ...)
 {

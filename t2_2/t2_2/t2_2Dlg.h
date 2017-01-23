@@ -80,22 +80,7 @@ private:
 
 	struct sentenceRowCompare
 	{
-		bool operator()(const sentenceRow &left, const sentenceRow &right)
-		{
-			char leftMajor = /*left.major + left.score950122 + left.sentenceMajor + */left.major951021;
-			char rightMajor = /*right.major + right.score950122 + right.sentenceMajor + */right.major951021;
-			char leftMinor = /*left.minor + left.sentenceMinor + */left.minor951021;
-			char rightMinor = /*right.minor + right.sentenceMinor + */right.minor951021;
-			if (leftMajor > rightMajor)
-				return true;
-			if (leftMajor < rightMajor)
-				return false;
-			if (leftMinor > rightMinor)
-				return true;
-			if (leftMinor < rightMinor)
-				return false;
-			return left.sentence < right.sentence;
-		}
+		bool operator()(const sentenceRow &left, const sentenceRow &right);
 	};
 
 	struct
@@ -125,6 +110,7 @@ private:
 	void Calc(const CString &s, bool bRev, int memberOffset, int memberSize, CeOperation op, char &major, char &minor);
 	int CalculateScore950219(LPCSTR sentence);
 	bool IsSelfOrSumOfDigitsMajor(int n);
+	void UpdateScore(char &major, char &minor, char major2, char minor2);
 	bool HasScore951021(char n[], char nMax, char &major, char &minor);
 	bool HasScore951021(LPCSTR sentence, char &major, char &minor, bool bReverse);
 

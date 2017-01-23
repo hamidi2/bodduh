@@ -221,6 +221,29 @@ static const Ct2_2Dlg::letterSpec table[] =
 	'غ', 'ن', "غين", 28, "82", 1000, "0001", 7, 4, 8,
 };
 
+bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sentenceRow &right)
+{
+/*
+	if (left.numSidesWithScore951021 > right.numSidesWithScore951021)
+		return true;
+	if (left.numSidesWithScore951021 < right.numSidesWithScore951021)
+		return false;
+*/
+	char leftMajor = left.major + left.score950122 + left.sentenceMajor + left.major951021;
+	char rightMajor = right.major + right.score950122 + right.sentenceMajor + right.major951021;
+	char leftMinor = left.minor + left.sentenceMinor + left.minor951021;
+	char rightMinor = right.minor + right.sentenceMinor + right.minor951021;
+	if (leftMajor > rightMajor)
+		return true;
+	if (leftMajor < rightMajor)
+		return false;
+	if (leftMinor > rightMinor)
+		return true;
+	if (leftMinor < rightMinor)
+		return false;
+	return left.sentence < right.sentence;
+}
+
 void Ct2_2Dlg::RemoveDuplicates(CString &input)
 {
 	CString output;
@@ -265,7 +288,7 @@ void Ct2_2Dlg::th_LoadDataFiles(void *p)
 {
 	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
 	row r;
-	for (int i = 13; i < 14; i++)
+	for (int i = 0; i < 28; i++)
 	{
 		char buf[80];
 		sprintf(buf, "loading pairs of sum %d", i + 1);
@@ -492,8 +515,17 @@ int Ct2_2Dlg::CalculateScore950219(LPCSTR sentence)
 	return score;
 }
 
+void Ct2_2Dlg::UpdateScore(char &major, char &minor, char major2, char minor2)
+{
+	if (major2 < major)
+		return;
+	if (major2 > major || minor2 > minor)
+		major = major2, minor = minor2;
+}
+
 bool Ct2_2Dlg::HasScore951021(char n[], char nMax, char &major, char &minor)
 {
+	major = minor = 0;
 	// case 1
 	for (char i=0; i < nMax-1; i++)
 		if (!IsMajor(n[i]))
@@ -508,24 +540,19 @@ bool Ct2_2Dlg::HasScore951021(char n[], char nMax, char &major, char &minor)
 		}
 	}
 	// case 2
-	char major2 = 0, minor2 = 0;
 	for (i=0; i < nMax; i++)
 	{
-		char major3 = 0, minor3 = 0;
-		CheckScore(n[i]+n[(i+1)%nMax], major3, minor3);
-		CheckScore(abs(n[i]-n[(i+1)%nMax]), major3, minor3, false);
-		if (!major3 && !minor3)
+		char major2 = 0, minor2 = 0;
+		CheckScore(n[i]+n[(i+1)%nMax], major2, minor2);
+		CheckScore(abs(n[i]-n[(i+1)%nMax]), major2, minor2, false);
+		if (major2)
+			minor2 = 0;  // 951104: gharar bar in shod ke agar mesle 9,11 ham emtiaze asli bedeh ham emtiaze sayer, faghat asli dar nazar gerefteh besheh.
+		if (!major2 && !minor2)
 			break;
-		major2 += major3;
-		minor2 += minor3;
-	}
-	if (i == nMax)
-	{
 		major += major2;
 		minor += minor2;
-		return true;
 	}
-	return false;
+	return (i == nMax);
 }
 
 bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReverse)
@@ -547,62 +574,57 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	}
 	char nMax = (len-1)/4+1;
 	pos -= 4;
+	if (j == 4)
+		return HasScore951021(n, nMax, major, minor);
 	char major2 = 0, minor2 = 0;
 	char major3 = 0, minor3 = 0;
-	if (j == 4)
+	if (HasScore951021(n, nMax, major3, minor3))
+		UpdateScore(major2, minor2, major3, minor3);
+	// 7/21
+	for (; j<4; j++)
+		n[pos/4] += col[pos+j-len];
+	if (HasScore951021(n, nMax, major3, minor3))
+		UpdateScore(major2, minor2, major3, minor3);
+	// 7/23
+	CString lastPart = sentence+pos;
+	if (!bReverse)
+		lastPart.MakeReverse();
+	Expand(lastPart);
+	lastPart = lastPart.Left(4);
+	len = lastPart.GetLength();
+	for (j=0; j<len; j++)
+		col[pos+j] = d_letters[lastPart[j]].abjadCol;
+	n[pos/4] = 0;
+	for (j=0; j<len; j++)
+		n[pos/4] += col[pos+j];
+	// 7/24
+	if (HasScore951021(n, nMax, major3, minor3))
+		UpdateScore(major2, minor2, major3, minor3);
+	// 7/25
+	if (j < 4)
 	{
-		if (HasScore951021(n, nMax, major3, minor3))
-		{
-			major2 = max(major2, major3);
-			minor2 = max(minor2, minor3);
-		}
-	}
-	else
-	{
-		if (HasScore951021(n, nMax, major2, minor2))
-		{
-			major = max(major, major2);
-			major = max(minor, minor2);
-		}
-		// 7/21
 		for (; j<4; j++)
-			n[pos/4] += col[pos+j-len];
-		if (HasScore951021(n, nMax, major2, minor2))
-		{
-			major = max(major, major2);
-			major = max(minor, minor2);
-		}
-		// 7/23
-		CString lastPart = sentence+pos;
-		if (!bReverse)
-			lastPart.MakeReverse();
+			n[pos/4] += col[j-len];
+		if (HasScore951021(n, nMax, major3, minor3))
+			UpdateScore(major2, minor2, major3, minor3);
 		Expand(lastPart);
 		lastPart = lastPart.Left(4);
 		len = lastPart.GetLength();
-		for (j=0; j<len; j++)
+		for (j=1; j<len; j++)
 			col[pos+j] = d_letters[lastPart[j]].abjadCol;
 		n[pos/4] = 0;
 		for (j=0; j<len; j++)
 			n[pos/4] += col[pos+j];
-		// 7/24
-		if (HasScore951021(n, nMax, major2, minor2))
-		{
-			major = max(major, major2);
-			major = max(minor, minor2);
-		}
-		// 7/25
-		if (j < 4)
-		{
-			for (; j<4; j++)
-				n[pos/4] += col[j-len];
-			if (HasScore951021(n, nMax, major2, minor2))
-			{
-				major = max(major, major2);
-				major = max(minor, minor2);
-			}
-		}
+		if (HasScore951021(n, nMax, major3, minor3))
+			UpdateScore(major2, minor2, major3, minor3);
 	}
-	return major || minor;
+	if (major2 || minor2)
+	{
+		major += major2;
+		minor += minor2;
+		return true;
+	}
+	return false;
 }
 
 void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, int64 r2, char major, char minor, char score950122)
@@ -634,7 +656,8 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 
 	sRow.major951021 = sRow.minor951021 = sRow.numSidesWithScore951021 = 0;
 	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
-	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
+	if (sRow.sentence.GetLength() % 4)
+		sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
 	if (sRow.numSidesWithScore951021)
 	{
 		CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
@@ -677,15 +700,21 @@ bool Ct2_2Dlg::CheckInputIntegrity(const CString &input)
 
 void Ct2_2Dlg::OnBnClickedGo()
 {
-	char buf[] = "خارصلزينجسرهعت";
+/*
+	char buf[] = "يسوصلزينجارهبح";
 	char major = 0, minor = 0;
-	HasScore951021(buf, major, minor, false);
-	HasScore951021(buf, major, minor, true);
+	bool bHasScore951021;
+	//bHasScore951021 = HasScore951021(buf, major, minor, false);
+	bHasScore951021 = HasScore951021(buf, major, minor, true);
 	return;
+*/
 	CString input, dual;
 	GetDlgItemText(IDC_INPUT, input);
+	input = "خودشناسی در ایینه ی بدوح";
+	input.Replace('ی', 'ي');
 	CString fn = input + ".txt";
 	input.Remove(' ');
+	input.Replace('آ', 'ا');
 	if (!CheckInputIntegrity(input))
 	{
 		AfxMessageBox("invalid character in input");
@@ -695,7 +724,9 @@ void Ct2_2Dlg::OnBnClickedGo()
 	FILE *fp = fopen(fn, "wt");
 	if (!fp)
 	{
-		AfxMessageBox("couldn't open output file");
+		CString s;
+		s.Format("couldn't open output file \"%s\"", fn);
+		AfxMessageBox(s);
 		return;
 	}
 
@@ -740,16 +771,16 @@ void Ct2_2Dlg::OnBnClickedGo()
 	i = 0;
 	for (auto it = d_sentences.begin(); it != d_sentences.end(); it++)
 	{
-		fprintf(fp, " %*d  %*I64d,%-*I64d  %2d,%-2d  %2d | %2d,%-2d  %2d,%-2d  %2d,%-2d  %2d,%-2d | %s\n",
+		fprintf(fp, " %*d  %*I64d,%-*I64d  %2d,%-2d  %2d | %2d,%-2d  %2d,%-2d  %2d,%-2d %d  %2d,%-2d | %s\n",
 			rowNumberMaxLen, ++i,
-			d_pairsSpec[iPair].maxLen[0], it->r[0],
-			d_pairsSpec[iPair].maxLen[1], it->r[1],
+			d_pairsSpec[iPair].maxLen[0], it->r[0], d_pairsSpec[iPair].maxLen[1], it->r[1],
 			it->major, it->minor, it->score950122,
+
 			it->major + it->score950122, it->minor,
 			it->sentenceMajor, it->sentenceMinor,
-			it->major951021, it->minor951021,
-			it->major + it->score950122 + it->sentenceMajor + it->major951021,
-			it->minor + it->sentenceMinor + it->minor951021,
+			it->major951021, it->minor951021, it->numSidesWithScore951021,
+			it->major + it->score950122 + it->sentenceMajor + it->major951021, it->minor + it->sentenceMinor + it->minor951021,
+
 			Separated(it->sentence));
 	}
 
