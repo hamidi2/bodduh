@@ -223,16 +223,14 @@ static const Ct2_2Dlg::letterSpec table[] =
 
 bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sentenceRow &right)
 {
-/*
 	if (left.numSidesWithScore951021 > right.numSidesWithScore951021)
 		return true;
 	if (left.numSidesWithScore951021 < right.numSidesWithScore951021)
 		return false;
-*/
-	char leftMajor = left.major + left.score950122 + left.sentenceMajor + left.major951021;
-	char rightMajor = right.major + right.score950122 + right.sentenceMajor + right.major951021;
-	char leftMinor = left.minor + left.sentenceMinor + left.minor951021;
-	char rightMinor = right.minor + right.sentenceMinor + right.minor951021;
+	char leftMajor = /*left.major + left.score950122 + left.sentenceMajor + */left.major951021;
+	char rightMajor = /*right.major + right.score950122 + right.sentenceMajor + */right.major951021;
+	char leftMinor = /*left.minor + left.sentenceMinor + */left.minor951021;
+	char rightMinor = /*right.minor + right.sentenceMinor + */right.minor951021;
 	if (leftMajor > rightMajor)
 		return true;
 	if (leftMajor < rightMajor)
@@ -523,24 +521,28 @@ void Ct2_2Dlg::UpdateScore(char &major, char &minor, char major2, char minor2)
 		major = major2, minor = minor2;
 }
 
-bool Ct2_2Dlg::HasScore951021(char n[], char nMax, char &major, char &minor)
+bool Ct2_2Dlg::HasScore951021Independently(char n[], char nMax, char &major, char &minor, bool bAcceptMinor)
 {
 	major = minor = 0;
-	// case 1
 	for (char i=0; i < nMax-1; i++)
 		if (!IsMajor(n[i]))
 			break;
 	if (i == nMax-1)
 	{
 		CheckScore(n[i], major, minor);
-		if (major || minor)
+		if (major || (bAcceptMinor && minor))
 		{
 			major += nMax-1;
 			return true;
 		}
 	}
-	// case 2
-	for (i=0; i < nMax; i++)
+	return false;
+}
+
+bool Ct2_2Dlg::HasScore951021Dependently(char n[], char nMax, char &major, char &minor)
+{
+	major = minor = 0;
+	for (char i=0; i < nMax; i++)
 	{
 		char major2 = 0, minor2 = 0;
 		CheckScore(n[i]+n[(i+1)%nMax], major2, minor2);
@@ -564,7 +566,10 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	char col[80];
 	int len = strlen(sentence), i, j, pos;
 	for (i=0; i<len; i++)
+	{
 		col[i] = d_letters[sentence[i]].abjadCol;
+		j += col[0];
+	}
 	char n[80];
 	for (pos=0; pos<len; pos+=4)
 	{
@@ -575,15 +580,15 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	char nMax = (len-1)/4+1;
 	pos -= 4;
 	if (j == 4)
-		return HasScore951021(n, nMax, major, minor);
+		return HasScore951021Independently(n, nMax, major, minor, false);
 	char major2 = 0, minor2 = 0;
 	char major3 = 0, minor3 = 0;
-	if (HasScore951021(n, nMax, major3, minor3))
+	if (HasScore951021Independently(n, nMax, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/21
 	for (; j<4; j++)
 		n[pos/4] += col[pos+j-len];
-	if (HasScore951021(n, nMax, major3, minor3))
+	if (HasScore951021Dependently(n, nMax, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/23
 	CString lastPart = sentence+pos;
@@ -598,14 +603,14 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	for (j=0; j<len; j++)
 		n[pos/4] += col[pos+j];
 	// 7/24
-	if (HasScore951021(n, nMax, major3, minor3))
+	if (HasScore951021Dependently(n, nMax, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/25
 	if (j < 4)
 	{
 		for (; j<4; j++)
 			n[pos/4] += col[j-len];
-		if (HasScore951021(n, nMax, major3, minor3))
+		if (HasScore951021Dependently(n, nMax, major3, minor3))
 			UpdateScore(major2, minor2, major3, minor3);
 		Expand(lastPart);
 		lastPart = lastPart.Left(4);
@@ -615,7 +620,7 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 		n[pos/4] = 0;
 		for (j=0; j<len; j++)
 			n[pos/4] += col[pos+j];
-		if (HasScore951021(n, nMax, major3, minor3))
+		if (HasScore951021Dependently(n, nMax, major3, minor3))
 			UpdateScore(major2, minor2, major3, minor3);
 	}
 	if (major2 || minor2)
@@ -657,7 +662,7 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 	sRow.major951021 = sRow.minor951021 = sRow.numSidesWithScore951021 = 0;
 	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
 	if (sRow.sentence.GetLength() % 4)
-		sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
+		sRow.numSidesWithScore951021 = sRow.numSidesWithScore951021*2 + HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
 	if (sRow.numSidesWithScore951021)
 	{
 		CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
@@ -704,7 +709,7 @@ void Ct2_2Dlg::OnBnClickedGo()
 	char buf[] = "يسوصلزينجارهبح";
 	char major = 0, minor = 0;
 	bool bHasScore951021;
-	//bHasScore951021 = HasScore951021(buf, major, minor, false);
+	bHasScore951021 = HasScore951021(buf, major, minor, false);
 	bHasScore951021 = HasScore951021(buf, major, minor, true);
 	return;
 */

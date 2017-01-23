@@ -185,7 +185,14 @@ namespace BUtil
 		return false;
 	}
 
-	bool IsMajor(LPCSTR str, int *pMod)
+	bool IsMinor(int64 r)
+	{
+		int m9 = r % 9;
+		int m28 = r % 28;
+		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26;
+	}
+
+	bool IsMajorOrMinor(LPCSTR str, bool bLookingForMajor)
 	{
 		int strLen = strlen(str);
 		if (strLen > 18)  // an int64 may hold until 18 decimal digits.
@@ -202,8 +209,7 @@ namespace BUtil
 				sscanf(buf, "%I64d", &r);
 				if (strPos >= strLen)
 				{
-					if (pMod) *pMod = r % 28;
-					return IsMajor(r);
+					return bLookingForMajor ? IsMajor(r) : IsMinor(r);
 				}
 				else
 				{
@@ -216,16 +222,18 @@ namespace BUtil
 		{
 			int64 r;
 			sscanf(str, "%I64d", &r);
-			if (pMod) *pMod = r % 28;
-			return IsMajor(r);
+			return bLookingForMajor ? IsMajor(r) : IsMinor(r);
 		}
 	}
 
-	bool IsMinor(int64 r)
+	bool IsMajor(LPCSTR str)
 	{
-		int m9 = r % 9;
-		int m28 = r % 28;
-		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26;
+		return IsMajorOrMinor(str, true);
+	}
+
+	bool IsMinor(LPCSTR str)
+	{
+		return IsMajorOrMinor(str, false);
 	}
 
 	int64 Rev(int64 n)

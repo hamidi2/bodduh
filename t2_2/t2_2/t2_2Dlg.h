@@ -72,7 +72,7 @@ private:
 		int64 r[2];
 		char major, minor, score950122;
 		char sentenceMajor, sentenceMinor;
-		char major951021, minor951021, numSidesWithScore951021;
+		char major951021, minor951021, numSidesWithScore951021, score951021Priority;
 		CString sentence;
 	};
 
@@ -111,7 +111,8 @@ private:
 	int CalculateScore950219(LPCSTR sentence);
 	bool IsSelfOrSumOfDigitsMajor(int n);
 	void UpdateScore(char &major, char &minor, char major2, char minor2);
-	bool HasScore951021(char n[], char nMax, char &major, char &minor);
+	bool HasScore951021Independently(char n[], char nMax, char &major, char &minor, bool bAcceptMinor = true);
+	bool HasScore951021Dependently(char n[], char nMax, char &major, char &minor);
 	bool HasScore951021(LPCSTR sentence, char &major, char &minor, bool bReverse);
 
 	static void CALLBACK Timer(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
