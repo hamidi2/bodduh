@@ -221,26 +221,26 @@ static const Ct2_2Dlg::letterSpec table[] =
 	'غ', 'ن', "غين", 28, "82", 1000, "0001", 7, 4, 8,
 };
 
+#define RET_IF_NOT_EQ(a, b) if (a > b) return true; if (a < b) return false
 bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sentenceRow &right)
 {
-	if (left.numSidesWithScore951021 > right.numSidesWithScore951021)
-		return true;
-	if (left.numSidesWithScore951021 < right.numSidesWithScore951021)
-		return false;
-	char leftMajor = /*left.major + left.score950122 + left.sentenceMajor + */left.major951021;
-	char rightMajor = /*right.major + right.score950122 + right.sentenceMajor + */right.major951021;
-	char leftMinor = /*left.minor + left.sentenceMinor + */left.minor951021;
-	char rightMinor = /*right.minor + right.sentenceMinor + */right.minor951021;
-	if (leftMajor > rightMajor)
-		return true;
-	if (leftMajor < rightMajor)
-		return false;
-	if (leftMinor > rightMinor)
-		return true;
-	if (leftMinor < rightMinor)
-		return false;
+	RET_IF_NOT_EQ(left.score951021Priority, right.score951021Priority);
+	RET_IF_NOT_EQ(left.numSidesWithScore951021, right.numSidesWithScore951021);
+	char leftMajor = left.major951021;
+	char rightMajor = right.major951021;
+	char leftMinor = left.minor951021;
+	char rightMinor = right.minor951021;
+	RET_IF_NOT_EQ(leftMajor, rightMajor);
+	RET_IF_NOT_EQ(leftMinor, rightMinor);
+	leftMajor += left.major + left.score950122 + left.sentenceMajor;
+	rightMajor += right.major + right.score950122 + right.sentenceMajor;
+	leftMinor += left.minor + left.sentenceMinor;
+	rightMinor += right.minor + right.sentenceMinor;
+	RET_IF_NOT_EQ(leftMajor, rightMajor);
+	RET_IF_NOT_EQ(leftMinor, rightMinor);
 	return left.sentence < right.sentence;
 }
+#undef RET_IF_NOT_EQ
 
 void Ct2_2Dlg::RemoveDuplicates(CString &input)
 {
@@ -566,10 +566,7 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 	char col[80];
 	int len = strlen(sentence), i, j, pos;
 	for (i=0; i<len; i++)
-	{
 		col[i] = d_letters[sentence[i]].abjadCol;
-		j += col[0];
-	}
 	char n[80];
 	for (pos=0; pos<len; pos+=4)
 	{
@@ -663,11 +660,31 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
 	if (sRow.sentence.GetLength() % 4)
 		sRow.numSidesWithScore951021 = sRow.numSidesWithScore951021*2 + HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
-	if (sRow.numSidesWithScore951021)
+	if (!sRow.numSidesWithScore951021)
+		return;
+	if (!HasScore951021Priority(sRow))
+		return;
+	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
+	d_sentences.insert(sRow);
+}
+
+bool Ct2_2Dlg::HasScore951021Priority(sentenceRow &row)
+{
+	int len = strlen(row.sentence), i, n = 0;
+	char col[80], buf[80];
+	for (i=0; i<len; i++)
 	{
-		CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
-		d_sentences.insert(sRow);
+		col[i] = d_letters[row.sentence[i]].abjadCol;
+		buf[i] = col[i] + '0';
+		n += col[0];
 	}
+	if (IsMajor(buf))
+		row.score951021Priority = 2;
+	else if (IsMinor(n))
+		row.score951021Priority = 1;
+	else
+		return false;
+	return true;
 }
 
 void Ct2_2Dlg::AddSelections(const CString &input, const CString &dual, const row &row)
@@ -776,14 +793,14 @@ void Ct2_2Dlg::OnBnClickedGo()
 	i = 0;
 	for (auto it = d_sentences.begin(); it != d_sentences.end(); it++)
 	{
-		fprintf(fp, " %*d  %*I64d,%-*I64d  %2d,%-2d  %2d | %2d,%-2d  %2d,%-2d  %2d,%-2d %d  %2d,%-2d | %s\n",
+		fprintf(fp, " %*d  %*I64d,%-*I64d  %2d,%-2d  %2d | %2d,%-2d  %2d,%-2d  %2d,%-2d %d %d  %2d,%-2d | %s\n",
 			rowNumberMaxLen, ++i,
 			d_pairsSpec[iPair].maxLen[0], it->r[0], d_pairsSpec[iPair].maxLen[1], it->r[1],
 			it->major, it->minor, it->score950122,
 
 			it->major + it->score950122, it->minor,
 			it->sentenceMajor, it->sentenceMinor,
-			it->major951021, it->minor951021, it->numSidesWithScore951021,
+			it->major951021, it->minor951021, it->numSidesWithScore951021, it->score951021Priority,
 			it->major + it->score950122 + it->sentenceMajor + it->major951021, it->minor + it->sentenceMinor + it->minor951021,
 
 			Separated(it->sentence));

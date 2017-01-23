@@ -114,6 +114,7 @@ private:
 	bool HasScore951021Independently(char n[], char nMax, char &major, char &minor, bool bAcceptMinor = true);
 	bool HasScore951021Dependently(char n[], char nMax, char &major, char &minor);
 	bool HasScore951021(LPCSTR sentence, char &major, char &minor, bool bReverse);
+	bool HasScore951021Priority(sentenceRow &row);
 
 	static void CALLBACK Timer(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
 	static void th_LoadDataFiles(void *);
