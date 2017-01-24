@@ -565,8 +565,6 @@ bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReve
 		_strrev(sentence);
 	char col[80];
 	int len = strlen(sentence), i, j, pos;
-	for (i=0; i<len; i++)
-		col[i] = d_letters[sentence[i]].abjadCol;
 	char n[80];
 	for (pos=0; pos<len; pos+=4)
 	{
@@ -657,31 +655,41 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 		return;
 
 	sRow.major951021 = sRow.minor951021 = sRow.numSidesWithScore951021 = 0;
-	sRow.numSidesWithScore951021 += HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, false);
-	if (sRow.sentence.GetLength() % 4)
-		sRow.numSidesWithScore951021 = sRow.numSidesWithScore951021*2 + HasScore951021(sRow.sentence, sRow.major951021, sRow.minor951021, true);
+	MakeScore951021Items()
+	char col[80], buf[80];
+	for (i = 0; i < len; i++)
+	{
+		col[i] = d_letters[sRow.sentence[i]].abjadCol;
+		buf[i] = col[i] + '0';
+	}
+	buf[i] = 0;
+	sRow.numSidesWithScore951021 += HasScore951021(col, len, sRow.major951021, sRow.minor951021, false);
+	if (len % 4)
+		sRow.numSidesWithScore951021 = sRow.numSidesWithScore951021*2 + HasScore951021(col, len, sRow.major951021, sRow.minor951021, true);
 	if (!sRow.numSidesWithScore951021)
 		return;
-	if (!HasScore951021Priority(sRow))
+	if (!HasScore951021Priority(col, buf, len, sRow.score951021Priority))
+		return;
+	if (!HasScore951105(sRow.sentence))
 		return;
 	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
 	d_sentences.insert(sRow);
 }
 
-bool Ct2_2Dlg::HasScore951021Priority(sentenceRow &row)
+bool Ct2_2Dlg::HasScore951105(LPCSTR input)
 {
-	int len = strlen(row.sentence), i, n = 0;
-	char col[80], buf[80];
-	for (i=0; i<len; i++)
-	{
-		col[i] = d_letters[row.sentence[i]].abjadCol;
-		buf[i] = col[i] + '0';
+
+}
+
+bool Ct2_2Dlg::HasScore951021Priority(const char col[], LPCSTR buf, char len, char &score951021Priority)
+{
+	int n = 0;
+	for (int i=0; i<len; i++)
 		n += col[0];
-	}
 	if (IsMajor(buf))
-		row.score951021Priority = 2;
+		score951021Priority = 2;
 	else if (IsMinor(n))
-		row.score951021Priority = 1;
+		score951021Priority = 1;
 	else
 		return false;
 	return true;
