@@ -224,12 +224,12 @@ static const Ct2_2Dlg::letterSpec table[] =
 #define RET_IF_NOT_EQ(a, b) if (a > b) return true; if (a < b) return false
 bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sentenceRow &right)
 {
-	RET_IF_NOT_EQ(left.score951021Priority, right.score951021Priority);
-	RET_IF_NOT_EQ(left.numSidesWithScore951021, right.numSidesWithScore951021);
-	char leftMajor = left.major951021;
-	char rightMajor = right.major951021;
-	char leftMinor = left.minor951021;
-	char rightMinor = right.minor951021;
+	RET_IF_NOT_EQ(left.score951021Items.priority, right.score951021Items.priority);
+	RET_IF_NOT_EQ(left.score951021Items.numSidesWithScore, right.score951021Items.numSidesWithScore);
+	char leftMajor = left.score951021Items.major;
+	char rightMajor = right.score951021Items.major;
+	char leftMinor = left.score951021Items.minor;
+	char rightMinor = right.score951021Items.minor;
 	RET_IF_NOT_EQ(leftMajor, rightMajor);
 	RET_IF_NOT_EQ(leftMinor, rightMinor);
 	leftMajor += left.major + left.score950122 + left.sentenceMajor;
@@ -521,32 +521,32 @@ void Ct2_2Dlg::UpdateScore(char &major, char &minor, char major2, char minor2)
 		major = major2, minor = minor2;
 }
 
-bool Ct2_2Dlg::HasScore951021Independently(char n[], char nMax, char &major, char &minor, bool bAcceptMinor)
+bool Ct2_2Dlg::HasScore951021Independently(const char n[], char nSize, char &major, char &minor, bool bAcceptMinor)
 {
 	major = minor = 0;
-	for (char i=0; i < nMax-1; i++)
+	for (char i=0; i < nSize-1; i++)
 		if (!IsMajor(n[i]))
 			break;
-	if (i == nMax-1)
+	if (i == nSize-1)
 	{
 		CheckScore(n[i], major, minor);
 		if (major || (bAcceptMinor && minor))
 		{
-			major += nMax-1;
+			major += nSize-1;
 			return true;
 		}
 	}
 	return false;
 }
 
-bool Ct2_2Dlg::HasScore951021Dependently(char n[], char nMax, char &major, char &minor)
+bool Ct2_2Dlg::HasScore951021Dependently(const char n[], char nSize, char &major, char &minor)
 {
 	major = minor = 0;
-	for (char i=0; i < nMax; i++)
+	for (char i=0; i < nSize; i++)
 	{
 		char major2 = 0, minor2 = 0;
-		CheckScore(n[i]+n[(i+1)%nMax], major2, minor2);
-		CheckScore(abs(n[i]-n[(i+1)%nMax]), major2, minor2, false);
+		CheckScore(n[i]+n[(i+1)%nSize], major2, minor2);
+		CheckScore(abs(n[i]-n[(i+1)%nSize]), major2, minor2, false);
 		if (major2)
 			minor2 = 0;  // 951104: gharar bar in shod ke agar mesle 9,11 ham emtiaze asli bedeh ham emtiaze sayer, faghat asli dar nazar gerefteh besheh.
 		if (!major2 && !minor2)
@@ -554,39 +554,28 @@ bool Ct2_2Dlg::HasScore951021Dependently(char n[], char nMax, char &major, char 
 		major += major2;
 		minor += minor2;
 	}
-	return (i == nMax);
+	return (i == nSize);
 }
 
-bool Ct2_2Dlg::HasScore951021(LPCSTR input, char &major, char &minor, bool bReverse)
+bool Ct2_2Dlg::HasScore951021(const score951021Items &items, bool bReverse)
 {
-	char sentence[80];
-	strcpy(sentence, input);
-	if (!bReverse)
-		_strrev(sentence);
-	char col[80];
-	int len = strlen(sentence), i, j, pos;
-	char n[80];
-	for (pos=0; pos<len; pos+=4)
-	{
-		n[pos/4] = 0;
-		for (j=0; j<4 && pos+j<len; j++)
-			n[pos/4] += col[pos+j];
-	}
-	char nMax = (len-1)/4+1;
-	pos -= 4;
-	if (j == 4)
-		return HasScore951021Independently(n, nMax, major, minor, false);
+	char n[7];
+	memcpy(n, bReverse ? items.n : items.nRev, sizeof(n));
+	int i, j, pos;
+	if (!(items.len % 4))
+		return HasScore951021Independently(items, false);
+	pos = items.len / 4 * 4;
 	char major2 = 0, minor2 = 0;
 	char major3 = 0, minor3 = 0;
-	if (HasScore951021Independently(n, nMax, major3, minor3))
+	if (HasScore951021Independently(n, items.nSize, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/21
 	for (; j<4; j++)
-		n[pos/4] += col[pos+j-len];
-	if (HasScore951021Dependently(n, nMax, major3, minor3))
+		n[pos/4] += items.col[pos+j-items.len];
+	if (HasScore951021Dependently(n, items.nSize, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/23
-	CString lastPart = sentence+pos;
+	CString lastPart = items.sentence+pos;
 	if (!bReverse)
 		lastPart.MakeReverse();
 	Expand(lastPart);
@@ -654,39 +643,84 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 	if (sum / len > 14)
 		return;
 
-	sRow.major951021 = sRow.minor951021 = sRow.numSidesWithScore951021 = 0;
-	MakeScore951021Items()
-	char col[80], buf[80];
-	for (i = 0; i < len; i++)
-	{
-		col[i] = d_letters[sRow.sentence[i]].abjadCol;
-		buf[i] = col[i] + '0';
-	}
-	buf[i] = 0;
-	sRow.numSidesWithScore951021 += HasScore951021(col, len, sRow.major951021, sRow.minor951021, false);
+	score951021Items score951021Items;
+	MakeScore951021Items(sRow.sentence, score951021Items);
+	sRow.score951021Items.numSidesWithScore = HasScore951021(sRow.sentence, score951021Items, false);
 	if (len % 4)
-		sRow.numSidesWithScore951021 = sRow.numSidesWithScore951021*2 + HasScore951021(col, len, sRow.major951021, sRow.minor951021, true);
-	if (!sRow.numSidesWithScore951021)
+		sRow.score951021Items.numSidesWithScore += sRow.score951021Items.numSidesWithScore * 2 + HasScore951021(score951021Items, true);
+	if (!sRow.score951021Items.numSidesWithScore)
 		return;
-	if (!HasScore951021Priority(col, buf, len, sRow.score951021Priority))
+	if (!HasScore951021Priority(score951021Items))
 		return;
-	if (!HasScore951105(sRow.sentence))
+	if (!HasScore951105(score951021Items))
 		return;
-	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
+	sRow.score951021Items.major = score951021Items.major;
+	sRow.score951021Items.minor = score951021Items.minor;
 	d_sentences.insert(sRow);
 }
 
-bool Ct2_2Dlg::HasScore951105(LPCSTR input)
+void Ct2_2Dlg::MakeScore951021Items(LPCSTR sentence, score951021Items &items)
 {
-
+	items.len = strlen(sentence);
+	char iN = 0;
+	memset(&items.n, 0, sizeof(items.n));
+	memset(&items.nRev, 0, sizeof(items.n));
+	for (char i = 0; i < items.len; i++)
+	{
+		items.colRev[items.len-1-i] = items.col[i] = d_letters[str[i]].abjadCol;
+		items.bufRev[items.len-1-i] = items.buf[i] = items.col[i] + '0';
+		items.n[i/4] += items.col[i];
+		items.nRev[i/4] += items.col[i];
+	}
+	items.buf[i] = items.bufRev[i] = 0;
+	items.nSize = (items.len-1)/4 + 1;
+	strcpy(items.sentence, sentence);
 }
 
-bool Ct2_2Dlg::HasScore951021Priority(const char col[], LPCSTR buf, char len, char &score951021Priority)
+bool Ct2_2Dlg::HasScore951105(const score951021Items &items)
+{
+	char m[4];
+	char iN1 = (items.nSize + 1) / 2 - 1, iN2 = iN1, iM = 0;
+	if (items.nSize % 2)
+	{
+		m[iM++] = items.n[iN1];
+		iN1--;
+	}
+	iN2++;
+	while (iN1 >= 0)
+	{
+		m[iM++] = abs(items.n[iN1] - items.n[iN2]);
+		iN1--;
+		iN2++;
+	}
+	char mSum = 0;  // max is 112
+	for (char i = 0; i < iM; i++)
+		mSum += m[i];
+	if (mSum % 9 != 2)
+		return false;
+	char buf[80] = "";
+	for (i = 0; i < iM; i++)
+		sprintf(buf + strlen(buf), "%d", m[i]);
+	string s;
+	int remainder;
+	Divide(buf, 28, s, remainder);
+	if (remainder != 0)
+		return false;
+	buf[0] = 0;
+	for (i = iM - 1; i >= 0; i--)
+		sprintf(buf + strlen(buf), "%d", m[i]);
+	Divide(buf, 28, s, remainder);
+	if (remainder != 9)
+		return false;
+	return true;
+}
+
+bool Ct2_2Dlg::HasScore951021Priority(const score951021Items &items, char &score951021Priority)
 {
 	int n = 0;
-	for (int i=0; i<len; i++)
-		n += col[0];
-	if (IsMajor(buf))
+	for (int i=0; i<items.len; i++)
+		n += items.col[0];
+	if (IsMajor(items.buf))
 		score951021Priority = 2;
 	else if (IsMinor(n))
 		score951021Priority = 1;
@@ -808,8 +842,8 @@ void Ct2_2Dlg::OnBnClickedGo()
 
 			it->major + it->score950122, it->minor,
 			it->sentenceMajor, it->sentenceMinor,
-			it->major951021, it->minor951021, it->numSidesWithScore951021, it->score951021Priority,
-			it->major + it->score950122 + it->sentenceMajor + it->major951021, it->minor + it->sentenceMinor + it->minor951021,
+			it->score951021Items.major, it->score951021Items.minor, it->score951021Items.numSidesWithScore, it->score951021Items.priority,
+			it->major + it->score950122 + it->sentenceMajor + it->score951021Items.major, it->minor + it->sentenceMinor + it->score951021Items.minor,
 
 			Separated(it->sentence));
 	}
