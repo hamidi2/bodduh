@@ -70,8 +70,8 @@ private:
 	struct score951021Items
 	{
 		char sentence[29];
-		char buf[29], col[28];
-		char bufRev[29], colRev[28];
+		char buf[29], bufRev[29];
+		char col[28], colRev[28];
 		char len;
 		char n[7], nRev[7];
 		char nSize;
@@ -126,15 +126,18 @@ private:
 	void AddSelections(const CString &input, const CString &dual, const row &r);
 	void CalculateScore(const CString &s, char &major, char &minor);
 	void Calc(const CString &s, bool bRev, int memberOffset, int memberSize, CeOperation op, char &major, char &minor);
-	int CalculateScore950219(LPCSTR sentence);
 	bool IsSelfOrSumOfDigitsMajor(int n);
 	void UpdateScore(char &major, char &minor, char major2, char minor2);
+	// 950219
+	int CalculateScore950219(LPCSTR sentence);
+	// 951021
 	bool HasScore951021Independently(const char n[], char nSize, char &major, char &minor, bool bAcceptMinor = true);
 	bool HasScore951021Dependently(const char n[], char nSize, char &major, char &minor);
-	bool HasScore951021(score951021Items &items, bool bReverse);
+	bool HasScore951021(const score951021Items &items, char &major, char &minor, bool bReverse);
 	bool HasScore951021Priority(const score951021Items &items, char &priority);
-	bool HasScore951105(const score951021Items &items);
 	void MakeScore951021Items(LPCSTR str, score951021Items &items);
+	// 951105
+	bool HasScore951105(const score951021Items &items);
 
 	static void CALLBACK Timer(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
 	static void th_LoadDataFiles(void *);

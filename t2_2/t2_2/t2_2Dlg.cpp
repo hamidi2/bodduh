@@ -277,16 +277,18 @@ void Ct2_2Dlg::OnInit()
 	d_rowNumber = 1;
 	d_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	d_bThTerminate = false;
-	_beginthread(th_LoadDataFiles, 0, this);
+	//_beginthread(th_LoadDataFiles, 0, this);
+	th_LoadDataFiles(this);
 	for (i = 0; i < _countof(table); i++)
 		d_letters[table[i].c] = table[i];
+	PostMessage(WM_COMMAND, IDC_GO);
 }
 
 void Ct2_2Dlg::th_LoadDataFiles(void *p)
 {
 	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
 	row r;
-	for (int i = 0; i < 28; i++)
+	for (int i = 13; i < 14; i++)
 	{
 		char buf[80];
 		sprintf(buf, "loading pairs of sum %d", i + 1);
@@ -557,54 +559,58 @@ bool Ct2_2Dlg::HasScore951021Dependently(const char n[], char nSize, char &major
 	return (i == nSize);
 }
 
-bool Ct2_2Dlg::HasScore951021(const score951021Items &items, bool bReverse)
+bool Ct2_2Dlg::HasScore951021(const score951021Items &items, char &major, char &minor, bool bReverse)
 {
-	char n[7];
+	char n[7], col[28], sentence[29];
 	memcpy(n, bReverse ? items.n : items.nRev, sizeof(n));
-	int i, j, pos;
-	if (!(items.len % 4))
-		return HasScore951021Independently(items, false);
-	pos = items.len / 4 * 4;
+	memcpy(col, bReverse ? items.col : items.colRev, sizeof(col));
+	strcpy(sentence, items.sentence);
+	if (!bReverse)
+		_strrev(sentence);
+	int i, j = items.len%4, pos;
+	if (!j)
+		return HasScore951021Independently(n, items.nSize, major, minor, false);
+	pos = items.len/4;  // or nSize-1
 	char major2 = 0, minor2 = 0;
-	char major3 = 0, minor3 = 0;
+	char major3, minor3;
 	if (HasScore951021Independently(n, items.nSize, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/21
-	for (; j<4; j++)
-		n[pos/4] += items.col[pos+j-items.len];
+	for (i=0; j<4; i++,j++)
+		n[pos] += col[i];
 	if (HasScore951021Dependently(n, items.nSize, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/23
-	CString lastPart = items.sentence+pos;
+	CString lastPart = sentence+pos*4;
 	if (!bReverse)
 		lastPart.MakeReverse();
 	Expand(lastPart);
 	lastPart = lastPart.Left(4);
-	len = lastPart.GetLength();
+	char len = lastPart.GetLength();
+	for (j=1; j<len; j++)
+		col[pos*4+j] = d_letters[lastPart[j]].abjadCol;
+	n[pos] = 0;
 	for (j=0; j<len; j++)
-		col[pos+j] = d_letters[lastPart[j]].abjadCol;
-	n[pos/4] = 0;
-	for (j=0; j<len; j++)
-		n[pos/4] += col[pos+j];
+		n[pos] += col[pos*4+j];
 	// 7/24
-	if (HasScore951021Dependently(n, nMax, major3, minor3))
+	if (HasScore951021Dependently(n, items.nSize, major3, minor3))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/25
 	if (j < 4)
 	{
 		for (; j<4; j++)
-			n[pos/4] += col[j-len];
-		if (HasScore951021Dependently(n, nMax, major3, minor3))
+			n[pos] += col[j-len];
+		if (HasScore951021Dependently(n, items.nSize, major3, minor3))
 			UpdateScore(major2, minor2, major3, minor3);
 		Expand(lastPart);
 		lastPart = lastPart.Left(4);
 		len = lastPart.GetLength();
 		for (j=1; j<len; j++)
-			col[pos+j] = d_letters[lastPart[j]].abjadCol;
-		n[pos/4] = 0;
+			col[pos*4+j] = d_letters[lastPart[j]].abjadCol;
+		n[pos] = 0;
 		for (j=0; j<len; j++)
-			n[pos/4] += col[pos+j];
-		if (HasScore951021Dependently(n, nMax, major3, minor3))
+			n[pos] += col[pos*4+j];
+		if (HasScore951021Dependently(n, items.nSize, major3, minor3))
 			UpdateScore(major2, minor2, major3, minor3);
 	}
 	if (major2 || minor2)
@@ -645,17 +651,15 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 
 	score951021Items score951021Items;
 	MakeScore951021Items(sRow.sentence, score951021Items);
-	sRow.score951021Items.numSidesWithScore = HasScore951021(sRow.sentence, score951021Items, false);
+	sRow.score951021Items.numSidesWithScore = HasScore951021(score951021Items, sRow.score951021Items.major, sRow.score951021Items.minor, false);
 	if (len % 4)
-		sRow.score951021Items.numSidesWithScore += sRow.score951021Items.numSidesWithScore * 2 + HasScore951021(score951021Items, true);
+		sRow.score951021Items.numSidesWithScore += sRow.score951021Items.numSidesWithScore * 2 + HasScore951021(score951021Items, sRow.score951021Items.major, sRow.score951021Items.minor, true);
 	if (!sRow.score951021Items.numSidesWithScore)
 		return;
-	if (!HasScore951021Priority(score951021Items))
+	if (!HasScore951021Priority(score951021Items, sRow.score951021Items.priority))
 		return;
-	if (!HasScore951105(score951021Items))
-		return;
-	sRow.score951021Items.major = score951021Items.major;
-	sRow.score951021Items.minor = score951021Items.minor;
+	//if (!HasScore951105(score951021Items))
+	//	return;
 	d_sentences.insert(sRow);
 }
 
@@ -667,7 +671,7 @@ void Ct2_2Dlg::MakeScore951021Items(LPCSTR sentence, score951021Items &items)
 	memset(&items.nRev, 0, sizeof(items.n));
 	for (char i = 0; i < items.len; i++)
 	{
-		items.colRev[items.len-1-i] = items.col[i] = d_letters[str[i]].abjadCol;
+		items.colRev[items.len-1-i] = items.col[i] = d_letters[sentence[i]].abjadCol;
 		items.bufRev[items.len-1-i] = items.buf[i] = items.col[i] + '0';
 		items.n[i/4] += items.col[i];
 		items.nRev[i/4] += items.col[i];
@@ -710,7 +714,7 @@ bool Ct2_2Dlg::HasScore951105(const score951021Items &items)
 	for (i = iM - 1; i >= 0; i--)
 		sprintf(buf + strlen(buf), "%d", m[i]);
 	Divide(buf, 28, s, remainder);
-	if (remainder != 9)
+	if (remainder % 9 != 0)
 		return false;
 	return true;
 }
@@ -774,7 +778,8 @@ void Ct2_2Dlg::OnBnClickedGo()
 */
 	CString input, dual;
 	GetDlgItemText(IDC_INPUT, input);
-	input = "خودشناسی در ایینه ی بدوح";
+	if (!input.GetLength())
+		input = "خودشناسي در ايينه ي بدوح";
 	input.Replace('ی', 'ي');
 	CString fn = input + ".txt";
 	input.Remove(' ');
