@@ -69,7 +69,7 @@ private:
 
 	struct score951021Items
 	{
-		char sentence[29];
+		char sentence[29], sentenceRev[29];
 		char buf[29], bufRev[29];
 		char col[28], colRev[28];
 		char len;
