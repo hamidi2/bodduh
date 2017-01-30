@@ -496,18 +496,18 @@ void Ct2_2Dlg::OnBnClickedGo()
 
 	size_t maxLen = 0;
 	string s, input = str, dual;
-	fprintf(fp, "original question:        %s\n", input);	maxLen = max(maxLen, input.size());
+	fprintf(fp, "original question:        %s\n", input.c_str());	maxLen = max(maxLen, input.size());
 	RemoveDuplicates(input);
 	s = Separated(input);
-	fprintf(fp, "duplicates removed:       %s\n", s);		maxLen = max(maxLen, s.size());
+	fprintf(fp, "duplicates removed:       %s\n", s.c_str());		maxLen = max(maxLen, s.size());
 	Expand(input);
 	s = Separated(input);
-	fprintf(fp, "expanded:                 %s\n", s);		maxLen = max(maxLen, s.size());
+	fprintf(fp, "expanded:                 %s\n", s.c_str());		maxLen = max(maxLen, s.size());
 	RemoveDuplicates(input);
 	s = Separated(input);
-	fprintf(fp, "duplicates removed again: %s\n", s);		maxLen = max(maxLen, s.size());
+	fprintf(fp, "duplicates removed again: %s\n", s.c_str());		maxLen = max(maxLen, s.size());
 	CalculateDual(input, dual);
-	fprintf(fp, "dual calculated:          %s\n", Separated(dual));
+	fprintf(fp, "dual calculated:          %s\n", Separated(dual).c_str());
 
 	int len = input.size(), iPair = len - 1;
 	if (!d_pairsSpec[iPair].maxLen[0])  // if not ready yet
@@ -543,7 +543,7 @@ void Ct2_2Dlg::OnBnClickedGo()
 			it->score951021Items.major, it->score951021Items.minor, it->score951021Items.numSidesWithScore, it->score951021Items.priority,
 			it->major + it->score950122 + it->sentenceMajor + it->score951021Items.major, it->minor + it->sentenceMinor + it->score951021Items.minor,
 
-			Separated(it->sentence));
+			Separated(it->sentence).c_str());
 	}
 
 	d_sentences.clear();
