@@ -104,8 +104,7 @@ BOOL Ct2_2Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	//PostMessage(WM_COMMAND, wm_init);
-	OnInit();
+	PostMessage(WM_COMMAND, wm_init);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -280,14 +279,13 @@ void Ct2_2Dlg::OnInit()
 	_beginthread(th_LoadDataFiles, 0, this);
 	for (i = 0; i < _countof(table); i++)
 		d_letters[table[i].c] = table[i];
-	//PostMessage(WM_COMMAND, IDC_GO);
 }
 
 void Ct2_2Dlg::th_LoadDataFiles(void *p)
 {
 	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
 	row r;
-	for (int i = 13; i < 14; i++)
+	for (int i = 0; i < 28; i++)
 	{
 		char buf[80];
 		sprintf(buf, "loading pairs of sum %d", i + 1);
@@ -647,6 +645,12 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 
 	score951021Items score951021Items;
 	MakeScore951021Items(sRow.sentence, score951021Items);
+	//if (!strcmp(score951021Items.sentence, "يسوصضشخغجاوقبح"))
+	//{
+	//	int i = 0;
+	//}
+	if (!HasScore951105(score951021Items))
+		return;
 	sRow.score951021Items.major = sRow.score951021Items.minor = 0;
 	sRow.score951021Items.numSidesWithScore = HasScore951021(score951021Items, sRow.score951021Items.major, sRow.score951021Items.minor, false);
 	if (len % 4)
@@ -654,8 +658,6 @@ void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, 
 	if (!sRow.score951021Items.numSidesWithScore)
 		return;
 	if (!HasScore951021Priority(score951021Items, sRow.score951021Items.priority))
-		return;
-	if (!HasScore951105(score951021Items))
 		return;
 	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
 	d_sentences.insert(sRow);
@@ -768,20 +770,10 @@ bool Ct2_2Dlg::CheckInputIntegrity(const CString &input)
 
 void Ct2_2Dlg::OnBnClickedGo()
 {
-/*
-	char sentence[] = "يسوصلزينفارقبت";
-	char major = 0, minor = 0;
-	score951021Items items;
-	MakeScore951021Items(sentence, items);
-	//bool bHasScore951021;
-	//bHasScore951021 = HasScore951021(items, major, minor, false);
-	//bHasScore951021 = HasScore951021(items, major, minor, true);
-	bool bHasScore951105 = HasScore951105(items);
-	return;
-*/
 	CString input, dual;
 	GetDlgItemText(IDC_INPUT, input);
-	input = "خودشناسي در ايينه ي بدوح";
+	if (!input.GetLength())
+		input = "خودشناسي در آيينه ي بدوح";
 	CString fn = input + ".txt";
 	input.Remove(' ');
 	input.Replace('آ', 'ا');
