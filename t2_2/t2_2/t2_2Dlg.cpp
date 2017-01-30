@@ -6,15 +6,12 @@
 #include "t2_2.h"
 #include "t2_2Dlg.h"
 #include "afxdialogex.h"
-#include <util.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 #define wm_init WM_USER
-
-using namespace BUtil;
 
 // CAboutDlg dialog used for App About
 
@@ -159,69 +156,8 @@ HCURSOR Ct2_2Dlg::OnQueryDragIcon()
 }
 
 //---------------------------------------------------------------------------------------------------------------
-/*
-#define LOG(...) Log(__FILE__, __LINE__, __VA_ARGS__)
-
-CString fileName(LPCSTR path)
-{
-	CString s = path;
-	s = s.Right(s.GetLength() - (s.ReverseFind('\\') + 1));
-	return s;
-}
-
-void Log(LPCSTR file, int line, LPCSTR fmt,...)
-{
-	static bool firstTime = true;
-	va_list ap;
-	va_start(ap, fmt);
-	FILE *fp = fopen("t2_2.log", firstTime ? "wt" : "at");
-	if (!fp)
-		return;
-	char buf[200];
-	sprintf(buf, "%s:%d: ", fileName(file), line);
-	vsprintf(buf + strlen(buf), fmt, ap);
-	fprintf(fp, "%s", buf);
-	fclose(fp);
-	va_end(ap);
-	firstTime = false;
-}
-*/
-
-//---------------------------------------------------------------------------------------------------------------
-static const Ct2_2Dlg::letterSpec table[] =
-{
-	'ا', 'س', "الف",  1,  "1",    1,    "1", 1, 1, 2,
-	'ب', 'ع', "با",   2,  "2",    2,    "2", 1, 2, 4,
-	'ج', 'ف', "جيم",  3,  "3",    3,    "3", 1, 3, 6,
-	'د', 'ص', "دال",  4,  "4",    4,    "4", 1, 4, 8,
-	'ه', 'ق', "ها",   5,  "5",    5,    "5", 2, 1, 2,
-	'و', 'ر', "واو",  6,  "6",    6,    "6", 2, 2, 4,
-	'ز', 'ش', "زا",   7,  "7",    7,    "7", 2, 3, 6,
-	'ح', 'ت', "حا",   8,  "8",    8,    "8", 2, 4, 8,
-	'ط', 'ث', "طا",   9,  "9",    9,    "9", 3, 1, 2,
-	'ي', 'خ', "يا",  10, "01",   10,   "01", 3, 2, 4,
-	'ک', 'ذ', "کاف", 11, "11",   20,   "02", 3, 3, 6,
-	'ل', 'ض', "لام",  12, "21",   30,   "03", 3, 4, 8,
-	'م', 'ظ', "ميم", 13, "31",   40,   "04", 4, 1, 2,
-	'ن', 'غ', "نون", 14, "41",   50,   "05", 4, 2, 4,
-	'س', 'ا', "سين", 15, "51",   60,   "06", 4, 3, 6,
-	'ع', 'ب', "عين", 16, "61",   70,   "07", 4, 4, 8,
-	'ف', 'ج', "فا",  17, "71",   80,   "08", 5, 1, 2,
-	'ص', 'د', "صاد", 18, "81",   90,   "09", 5, 2, 4,
-	'ق', 'ه', "قاف", 19, "91",  100,  "001", 5, 3, 6,
-	'ر', 'و', "را",  20, "02",  200,  "002", 5, 4, 8,
-	'ش', 'ز', "شين", 21, "12",  300,  "003", 6, 1, 2,
-	'ت', 'ح', "تا",  22, "22",  400,  "004", 6, 2, 4,
-	'ث', 'ط', "ثا",  23, "32",  500,  "005", 6, 3, 6,
-	'خ', 'ي', "خا",  24, "42",  600,  "006", 6, 4, 8,
-	'ذ', 'ک', "ذال", 25, "52",  700,  "007", 7, 1, 2,
-	'ض', 'ل', "ضاد", 26, "62",  800,  "008", 7, 2, 4,
-	'ظ', 'م', "ظا",  27, "72",  900,  "009", 7, 3, 6,
-	'غ', 'ن', "غين", 28, "82", 1000, "0001", 7, 4, 8,
-};
-
 #define RET_IF_NOT_EQ(a, b) if (a > b) return true; if (a < b) return false
-bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sentenceRow &right)
+bool Ct2_2Dlg::CsSentenceRowCompare::operator()(const CsSentenceRow &left, const CsSentenceRow &right)
 {
 	RET_IF_NOT_EQ(left.score951021Items.priority, right.score951021Items.priority);
 	RET_IF_NOT_EQ(left.score951021Items.numSidesWithScore, right.score951021Items.numSidesWithScore);
@@ -241,35 +177,10 @@ bool Ct2_2Dlg::sentenceRowCompare::operator()(const sentenceRow &left, const sen
 }
 #undef RET_IF_NOT_EQ
 
-void Ct2_2Dlg::RemoveDuplicates(CString &input)
-{
-	CString output;
-	for (int i = 0; i < input.GetLength(); i++)
-	{
-		if (output.Find(input[i]) == -1)
-			output += input[i];
-	}
-	input = output;
-}
-
-void Ct2_2Dlg::Expand(CString &input)
-{
-	CString output;
-	for (int i = 0; i < input.GetLength(); i++)
-		output += d_letters[input[i]].expandedForm;
-	input = output;
-}
-
-void Ct2_2Dlg::CalculateDual(const CString &input, CString &dual)
-{
-	dual.Empty();
-	for (int i = 0; i < input.GetLength(); i++)
-		dual += d_letters[input[i]].dual;
-}
-
 //---------------------------------------------------------------------------------------------------------------
 void Ct2_2Dlg::OnInit()
 {
+	Init();
 	for (int i = 0; i < 28; i++)
 		memset(d_pairsSpec[i].maxLen, 0, sizeof(d_pairsSpec[i].maxLen));
 	d_iPairWanted = -1;
@@ -277,14 +188,12 @@ void Ct2_2Dlg::OnInit()
 	d_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	d_bThTerminate = false;
 	_beginthread(th_LoadDataFiles, 0, this);
-	for (i = 0; i < _countof(table); i++)
-		d_letters[table[i].c] = table[i];
 }
 
 void Ct2_2Dlg::th_LoadDataFiles(void *p)
 {
 	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
-	row r;
+	CsRow r;
 	for (int i = 0; i < 28; i++)
 	{
 		char buf[80];
@@ -329,24 +238,10 @@ void Ct2_2Dlg::th_LoadDataFiles(void *p)
 	pThis->SetDlgItemText(IDC_STATUS, "");
 }
 
-CString Ct2_2Dlg::Separated(const CString &input)
+void Ct2_2Dlg::Calc(LPCSTR s, bool bRev, int memberOffset, int memberSize, CeOperation op, char &major, char &minor)
 {
-	CString s;
-	for (int i = 0; i < input.GetLength(); i++)
-	{
-		s += input[i];
-		s += ' ';
-	}
-	return s;
-}
-
-#define CALC(s, bRev, member, op, major, minor)\
-	Calc(s, bRev, offsetof(letterSpec, member), sizeof(((letterSpec *)0)->member), op, major, minor)
-
-void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSize, CeOperation op, char &major, char &minor)
-{
-	int begin = bRev ? s.GetLength() - 1 : 0;
-	int end = bRev ? -1 : s.GetLength();
+	int begin = bRev ? strlen(s) - 1 : 0;
+	int end = bRev ? -1 : strlen(s);
 	int step = bRev ? -1 : 1;
 	int r = (op == opMul) ? 1 : 0;
 	for (int i = begin; i != end; i += step)
@@ -354,7 +249,7 @@ void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSiz
 		if (op != opSeqRev)  // integral member
 		{
 			int member = 0;
-			memcpy(&member, (char *) &d_letters[s[i]] + memberOffset, memberSize);
+			memcpy(&member, (char *) &letters[s[i]] + memberOffset, memberSize);
 			switch (op)
 			{
 			case opAdd:
@@ -373,7 +268,7 @@ void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSiz
 		else  // non-integral member (string)
 		{
 			CString seq;
-			seq.Format("%d%s", r, (char *) &d_letters[s[i]] + memberOffset);
+			seq.Format("%d%s", r, (char *) &letters[s[i]] + memberOffset);
 			r = atoi(seq);
 		}
 		r %= 28;
@@ -381,7 +276,9 @@ void Ct2_2Dlg::Calc(const CString &s, bool bRev, int memberOffset, int memberSiz
 	CheckScore(r, major, minor);
 }
 
-void Ct2_2Dlg::CalculateScore(const CString &s, char &major, char &minor)
+#define CALC(s, bRev, member, op, major, minor)\
+	Calc(s, bRev, offsetof(CsLetterSpec, member), sizeof(((CsLetterSpec *)0)->member), op, major, minor)
+void Ct2_2Dlg::CalculateScore(LPCSTR s, char &major, char &minor)
 {
 	major = minor = 0;
 
@@ -402,25 +299,18 @@ void Ct2_2Dlg::CalculateScore(const CString &s, char &major, char &minor)
 
 	major += CalculateScore950219(s);
 }
-
-bool Ct2_2Dlg::IsSelfOrSumOfDigitsMajor(int n)
-{
-	bool bMajor = false;
-	while (bMajor = IsMajor(n), !bMajor && n > 28)
-		n = DigitsSum(n);
-	return bMajor;
-}
+#undef CALC
 
 int Ct2_2Dlg::CalculateScore950219(LPCSTR sentence)
 {
 	int order[28], diff[14], n[7], m[3][2], i, iDiff, iN, iM, len = strlen(sentence), r;
 	char buf[80];
 	int score = 0;
-	CString s;
+	string s;
 
 	// step 1
 	for (i = 0; i < len; i++)
-		order[i] = d_letters[sentence[i]].order;
+		order[i] = letters[sentence[i]].order;
 	// step 2
 	iDiff = 0;
 	if (len % 2)
@@ -512,230 +402,41 @@ int Ct2_2Dlg::CalculateScore950219(LPCSTR sentence)
 	return score;
 }
 
-void Ct2_2Dlg::UpdateScore(char &major, char &minor, char major2, char minor2)
+void Ct2_2Dlg::AddSentence(const string &input, const string &dual, int64 r1, int64 r2, char major, char minor, char score950122)
 {
-	if (major2 < major)
-		return;
-	if (major2 > major || minor2 > minor)
-		major = major2, minor = minor2;
-}
-
-bool Ct2_2Dlg::HasScore951021Independently(const char n[], char nSize, char &major, char &minor, bool bAcceptMinor)
-{
-	major = minor = 0;
-	for (char i=0; i < nSize-1; i++)
-		if (!IsMajor(n[i]))
-			break;
-	if (i == nSize-1)
-	{
-		CheckScore(n[i], major, minor);
-		if (major || (bAcceptMinor && minor))
-		{
-			major += nSize-1;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Ct2_2Dlg::HasScore951021Dependently(const char n[], char nSize, char &major, char &minor)
-{
-	major = minor = 0;
-	for (char i=0; i < nSize; i++)
-	{
-		char major2 = 0, minor2 = 0;
-		CheckScore(n[i]+n[(i+1)%nSize], major2, minor2);
-		CheckScore(abs(n[i]-n[(i+1)%nSize]), major2, minor2, false);
-		if (major2)
-			minor2 = 0;  // 951104: gharar bar in shod ke agar mesle 9,11 ham emtiaze asli bedeh ham emtiaze sayer, faghat asli dar nazar gerefteh besheh.
-		if (!major2 && !minor2)
-			break;
-		major += major2;
-		minor += minor2;
-	}
-	return (i == nSize);
-}
-
-bool Ct2_2Dlg::HasScore951021(const score951021Items &items, char &major, char &minor, bool bReverse)
-{
-	char n[7], col[28];
-	memcpy(n, bReverse ? items.n : items.nRev, sizeof(n));
-	memcpy(col, bReverse ? items.col : items.colRev, sizeof(col));
-	int j = items.len % 4, pos;
-	if (!j)
-		return HasScore951021Independently(n, items.nSize, major, minor, false);
-	pos = items.len / 4 * 4;
-	char major2 = 0, minor2 = 0;
-	char major3, minor3;
-	if (HasScore951021Independently(n, items.nSize, major3, minor3))
-		UpdateScore(major2, minor2, major3, minor3);
-	// 7/21
-	for (; j<4; j++)
-		n[pos/4] += col[j-items.len%4];
-	if (HasScore951021Dependently(n, items.nSize, major3, minor3))
-		UpdateScore(major2, minor2, major3, minor3);
-	// 7/23
-	CString lastPart = (bReverse ? items.sentence : items.sentenceRev) + pos;
-	if (!bReverse)
-		lastPart.MakeReverse();
-	Expand(lastPart);
-	lastPart = lastPart.Left(4);
-	char len = lastPart.GetLength();
-	for (j=0; j<len; j++)
-		col[pos+j] = d_letters[lastPart[j]].abjadCol;
-	n[pos/4] = 0;
-	for (j=0; j<len; j++)
-		n[pos/4] += col[pos+j];
-	// 7/24
-	if (HasScore951021Dependently(n, items.nSize, major3, minor3))
-		UpdateScore(major2, minor2, major3, minor3);
-	// 7/25
-	if (j < 4)
-	{
-		for (; j<4; j++)
-			n[pos/4] += col[j-len];
-		if (HasScore951021Dependently(n, items.nSize, major3, minor3))
-			UpdateScore(major2, minor2, major3, minor3);
-		Expand(lastPart);
-		lastPart = lastPart.Left(4);
-		len = lastPart.GetLength();
-		for (j=1; j<len; j++)
-			col[pos+j] = d_letters[lastPart[j]].abjadCol;
-		n[pos/4] = 0;
-		for (j=0; j<len; j++)
-			n[pos/4] += col[pos+j];
-		if (HasScore951021Dependently(n, items.nSize, major3, minor3))
-			UpdateScore(major2, minor2, major3, minor3);
-	}
-	if (major2 || minor2)
-	{
-		major += major2;
-		minor += minor2;
-		return true;
-	}
-	return false;
-}
-
-void Ct2_2Dlg::AddSentence(const CString &input, const CString &dual, int64 r1, int64 r2, char major, char minor, char score950122)
-{
-	sentenceRow sRow = { r1, r2, major, minor, score950122 };
+	CsSentenceRow sRow = { r1, r2, major, minor, score950122 };
 	int i = 0;
 	do
 	{
 		if (r1)
 		{
-			sRow.sentence += input.Mid(i, r1 % 10);
+			sRow.sentence += input.substr(i, r1 % 10);
 			i += r1 % 10;
 			r1 /= 10;
 		}
 		if (r2)
 		{
-			sRow.sentence += dual.Mid(i, r2 % 10);
+			sRow.sentence += dual.substr(i, r2 % 10);
 			i += r2 % 10;
 			r2 /= 10;
 		}
 	} while (r1 || r2);
 
 	int sum = 0;
-	int len = sRow.sentence.GetLength();
+	int len = sRow.sentence.size();
 	for (i = 0; i < len; i++)
-		sum += d_letters[sRow.sentence[i]].order;
+		sum += letters[sRow.sentence[i]].order;
 	if (sum / len > 14)
 		return;
 
-	score951021Items score951021Items;
-	MakeScore951021Items(sRow.sentence, score951021Items);
-	//if (!strcmp(score951021Items.sentence, "يسوصضشخغجاوقبح"))
-	//{
-	//	int i = 0;
-	//}
-	if (!HasScore951105(score951021Items))
+	CcScore951021 score951021(sRow.sentence.c_str());
+	if (!score951021.HasScore(sRow.score951021Items))
 		return;
-	sRow.score951021Items.major = sRow.score951021Items.minor = 0;
-	sRow.score951021Items.numSidesWithScore = HasScore951021(score951021Items, sRow.score951021Items.major, sRow.score951021Items.minor, false);
-	if (len % 4)
-		sRow.score951021Items.numSidesWithScore += sRow.score951021Items.numSidesWithScore * 2 + HasScore951021(score951021Items, sRow.score951021Items.major, sRow.score951021Items.minor, true);
-	if (!sRow.score951021Items.numSidesWithScore)
-		return;
-	if (!HasScore951021Priority(score951021Items, sRow.score951021Items.priority))
-		return;
-	CalculateScore(sRow.sentence, sRow.sentenceMajor, sRow.sentenceMinor);
+	CalculateScore(sRow.sentence.c_str(), sRow.sentenceMajor, sRow.sentenceMinor);
 	d_sentences.insert(sRow);
 }
 
-void Ct2_2Dlg::MakeScore951021Items(LPCSTR sentence, score951021Items &items)
-{
-	items.len = strlen(sentence);
-	char iN = 0;
-	items.nSize = (items.len-1)/4 + 1;
-	memset(&items.n, 0, sizeof(items.n));
-	memset(&items.nRev, 0, sizeof(items.n));
-	for (char i = 0; i < items.len; i++)
-	{
-		items.colRev[items.len-1-i] = items.col[i] = d_letters[sentence[i]].abjadCol;
-		items.bufRev[items.len-1-i] = items.buf[i] = items.col[i] + '0';
-		items.n[i/4] += items.col[i];
-		items.nRev[(items.len-1-i)/4] += items.col[i];
-	}
-	items.buf[i] = items.bufRev[i] = 0;
-	strcpy(items.sentence, sentence);
-	strcpy(items.sentenceRev, sentence);
-	_strrev(items.sentenceRev);
-}
-
-bool Ct2_2Dlg::HasScore951105(const score951021Items &items)
-{
-	char m[4];
-	char iN1 = (items.nSize + 1) / 2 - 1, iN2 = iN1, iM = 0;
-	if (items.nSize % 2)
-	{
-		m[iM++] = items.nRev[iN1];
-		iN1--;
-	}
-	iN2++;
-	while (iN1 >= 0)
-	{
-		m[iM++] = abs(items.nRev[iN1] - items.nRev[iN2]);
-		iN1--;
-		iN2++;
-	}
-	char mSum = 0;  // max is 112
-	for (char i = 0; i < iM; i++)
-		mSum += m[i];
-	if (mSum % 9 != 2)
-		return false;
-	char buf[80] = "";
-	for (i = 0; i < iM; i++)
-		sprintf(buf + strlen(buf), "%d", m[i]);
-	string s;
-	int remainder;
-	Divide(buf, 28, s, remainder);
-	if (remainder != 0)
-		return false;
-	buf[0] = 0;
-	for (i = iM - 1; i >= 0; i--)
-		sprintf(buf + strlen(buf), "%d", m[i]);
-	Divide(buf, 28, s, remainder);
-	if (remainder % 9 != 0)
-		return false;
-	return true;
-}
-
-bool Ct2_2Dlg::HasScore951021Priority(const score951021Items &items, char &score951021Priority)
-{
-	int n = 0;
-	for (int i=0; i<items.len; i++)
-		n += items.col[i];
-	if (IsMajor(items.bufRev))
-		score951021Priority = 2;
-	else if (IsMinor(n))
-		score951021Priority = 1;
-	else
-		return false;
-	return true;
-}
-
-void Ct2_2Dlg::AddSelections(const CString &input, const CString &dual, const row &row)
+void Ct2_2Dlg::AddSelections(const string &input, const string &dual, const CsRow &row)
 {
 	AddSentence(input, dual, row.r[0], row.r[1], row.major, row.minor, row.score950122);
 	AddSentence(dual, input, row.r[0], row.r[1], row.major, row.minor, row.score950122);
@@ -763,21 +464,21 @@ void Ct2_2Dlg::AddSelections(const CString &input, const CString &dual, const ro
 bool Ct2_2Dlg::CheckInputIntegrity(const CString &input)
 {
 	for (int i = 0; i < input.GetLength(); i++)
-		if (d_letters.find(input[i]) == d_letters.end())
+		if (letters.find(input[i]) == letters.end())
 			return false;
 	return true;
 }
 
 void Ct2_2Dlg::OnBnClickedGo()
 {
-	CString input, dual;
-	GetDlgItemText(IDC_INPUT, input);
-	if (!input.GetLength())
-		input = "خودشناسي در آيينه ي بدوح";
-	CString fn = input + ".txt";
-	input.Remove(' ');
-	input.Replace('آ', 'ا');
-	if (!CheckInputIntegrity(input))
+	CString str;
+	GetDlgItemText(IDC_INPUT, str);
+	if (!str.GetLength())
+		str = "خودشناسي در آيينه ي بدوح";
+	CString fn = str + ".txt";
+	str.Remove(' ');
+	str.Replace('آ', 'ا');
+	if (!CheckInputIntegrity(str))
 	{
 		AfxMessageBox("invalid character in input");
 		return;
@@ -786,30 +487,29 @@ void Ct2_2Dlg::OnBnClickedGo()
 	FILE *fp = fopen(fn, "wt");
 	if (!fp)
 	{
-		CString s;
-		s.Format("couldn't open output file \"%s\"", fn);
-		AfxMessageBox(s);
+		str.Format("couldn't open output file \"%s\"", fn);
+		AfxMessageBox(str);
 		return;
 	}
 
 	GetDlgItem(IDC_GO)->EnableWindow(FALSE);
 
-	int maxLen = 0;
-	CString s;
-	fprintf(fp, "original question:        %s\n", input);	maxLen = max(maxLen, input.GetLength());
+	size_t maxLen = 0;
+	string s, input = str, dual;
+	fprintf(fp, "original question:        %s\n", input);	maxLen = max(maxLen, input.size());
 	RemoveDuplicates(input);
 	s = Separated(input);
-	fprintf(fp, "duplicates removed:       %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	fprintf(fp, "duplicates removed:       %s\n", s);		maxLen = max(maxLen, s.size());
 	Expand(input);
 	s = Separated(input);
-	fprintf(fp, "expanded:                 %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	fprintf(fp, "expanded:                 %s\n", s);		maxLen = max(maxLen, s.size());
 	RemoveDuplicates(input);
 	s = Separated(input);
-	fprintf(fp, "duplicates removed again: %s\n", s);		maxLen = max(maxLen, s.GetLength());
+	fprintf(fp, "duplicates removed again: %s\n", s);		maxLen = max(maxLen, s.size());
 	CalculateDual(input, dual);
 	fprintf(fp, "dual calculated:          %s\n", Separated(dual));
 
-	int len = input.GetLength(), iPair = len - 1;
+	int len = input.size(), iPair = len - 1;
 	if (!d_pairsSpec[iPair].maxLen[0])  // if not ready yet
 	{
 		d_iPairWanted = iPair;
@@ -818,18 +518,18 @@ void Ct2_2Dlg::OnBnClickedGo()
 	auto count = d_pairsSpec[iPair].pairs.size();
 	int i = 0;
 	SetDlgItemText(IDC_PERCENT, "0%");
-	for (vector<row>::iterator it = d_pairsSpec[iPair].pairs.begin(); it != d_pairsSpec[iPair].pairs.end(); it++)
+	for (vector<CsRow>::iterator it = d_pairsSpec[iPair].pairs.begin(); it != d_pairsSpec[iPair].pairs.end(); it++)
 	{
 		AddSelections(input, dual, *it);
-		s.Format("%d%%", ++i * 100 / count);
-		SetDlgItemText(IDC_PERCENT, s);
+		str.Format("%d%%", ++i * 100 / count);
+		SetDlgItemText(IDC_PERCENT, str);
 	}
 	SetDlgItemText(IDC_PERCENT, "");
 
 	fprintf(fp, "number of sentences:      %d\n", d_sentences.size());
 	fprintf(fp, "---------------------------------------------------------------------------------------------------------------------\n", s);
-	s.Format("%d", d_sentences.size() + 1);
-	int rowNumberMaxLen = s.GetLength();
+	str.Format("%d", d_sentences.size() + 1);
+	int rowNumberMaxLen = str.GetLength();
 	i = 0;
 	for (auto it = d_sentences.begin(); it != d_sentences.end(); it++)
 	{

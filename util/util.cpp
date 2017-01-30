@@ -3,6 +3,8 @@
 
 namespace BUtil
 {
+	map<char, CsLetterSpec> letters;
+
 	void DigitJoin(int64 r1, int64 r2, char *buf)
 	{
 		int pos = -1;
@@ -300,6 +302,97 @@ namespace BUtil
 	void Rev(string &str)
 	{
 		reverse(str.begin(), str.end());
+	}
+
+	void UpdateScore(char &major, char &minor, char major2, char minor2)
+	{
+		if (major2 < major)
+			return;
+		if (major2 > major || minor2 > minor)
+			major = major2, minor = minor2;
+	}
+
+	const CsLetterSpec table[] =
+	{
+		'«', '”', "«·›",  1,  "1",    1,    "1", 1, 1, 2,
+		'»', '⁄', "»«",   2,  "2",    2,    "2", 1, 2, 4,
+		'Ã', '›', "ÃÌ„",  3,  "3",    3,    "3", 1, 3, 6,
+		'œ', '’', "œ«·",  4,  "4",    4,    "4", 1, 4, 8,
+		'Â', 'ﬁ', "Â«",   5,  "5",    5,    "5", 2, 1, 2,
+		'Ê', '—', "Ê«Ê",  6,  "6",    6,    "6", 2, 2, 4,
+		'“', '‘', "“«",   7,  "7",    7,    "7", 2, 3, 6,
+		'Õ', ' ', "Õ«",   8,  "8",    8,    "8", 2, 4, 8,
+		'ÿ', 'À', "ÿ«",   9,  "9",    9,    "9", 3, 1, 2,
+		'Ì', 'Œ', "Ì«",  10, "01",   10,   "01", 3, 2, 4,
+		'ò', '–', "ò«›", 11, "11",   20,   "02", 3, 3, 6,
+		'·', '÷', "·«„",  12, "21",   30,   "03", 3, 4, 8,
+		'„', 'Ÿ', "„Ì„", 13, "31",   40,   "04", 4, 1, 2,
+		'‰', '€', "‰Ê‰", 14, "41",   50,   "05", 4, 2, 4,
+		'”', '«', "”Ì‰", 15, "51",   60,   "06", 4, 3, 6,
+		'⁄', '»', "⁄Ì‰", 16, "61",   70,   "07", 4, 4, 8,
+		'›', 'Ã', "›«",  17, "71",   80,   "08", 5, 1, 2,
+		'’', 'œ', "’«œ", 18, "81",   90,   "09", 5, 2, 4,
+		'ﬁ', 'Â', "ﬁ«›", 19, "91",  100,  "001", 5, 3, 6,
+		'—', 'Ê', "—«",  20, "02",  200,  "002", 5, 4, 8,
+		'‘', '“', "‘Ì‰", 21, "12",  300,  "003", 6, 1, 2,
+		' ', 'Õ', " «",  22, "22",  400,  "004", 6, 2, 4,
+		'À', 'ÿ', "À«",  23, "32",  500,  "005", 6, 3, 6,
+		'Œ', 'Ì', "Œ«",  24, "42",  600,  "006", 6, 4, 8,
+		'–', 'ò', "–«·", 25, "52",  700,  "007", 7, 1, 2,
+		'÷', '·', "÷«œ", 26, "62",  800,  "008", 7, 2, 4,
+		'Ÿ', '„', "Ÿ«",  27, "72",  900,  "009", 7, 3, 6,
+		'€', '‰', "€Ì‰", 28, "82", 1000, "0001", 7, 4, 8,
+	};
+
+	void Init()
+	{
+		for (char i = 0; i < _countof(table); i++)
+			letters[table[i].c] = table[i];
+	}
+
+	void RemoveDuplicates(string &input)
+	{
+		string output;
+		for (size_t i = 0; i < input.size(); i++)
+		{
+			if (output.find(input[i]) == -1)
+				output += input[i];
+		}
+		input = output;
+	}
+
+	void Expand(string &input)
+	{
+		string output;
+		for (size_t i = 0; i < input.size(); i++)
+			output += letters[input[i]].expandedForm;
+		input = output;
+	}
+
+	void CalculateDual(const string &input, string &dual)
+	{
+		dual.clear();
+		for (size_t i = 0; i < input.size(); i++)
+			dual += letters[input[i]].dual;
+	}
+
+	string Separated(const string &input)
+	{
+		string s;
+		for (size_t i = 0; i < input.size(); i++)
+		{
+			s += input[i];
+			s += ' ';
+		}
+		return s;
+	}
+
+	bool IsSelfOrSumOfDigitsMajor(int n)
+	{
+		bool bMajor = false;
+		while (bMajor = IsMajor(n), !bMajor && n > 28)
+			n = DigitsSum(n);
+		return bMajor;
 	}
 
 }

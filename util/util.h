@@ -1,5 +1,6 @@
 #include <string>
 #include <wtypes.h>
+#include <map>
 
 using namespace std;
 
@@ -8,6 +9,22 @@ typedef __int64 int64;
 
 namespace BUtil
 {
+	struct CsLetterSpec
+	{
+		char c;
+		char dual;
+		char expandedForm[4];
+		char order;
+		char orderRev[3];
+		short abjad;
+		char abjadRev[5];
+		char abjadRow, abjadCol, bodduh;
+	};
+
+	extern map<char, CsLetterSpec> letters;
+
+	void Init();
+
 	int64 Rev(int64 n);
 	void Rev(string &str);
 	int64 AbjadRev(int64 n, bool &isValid);
@@ -64,6 +81,12 @@ namespace BUtil
 		n = i + 1;
 	}
 
+	void UpdateScore(char &major, char &minor, char major2, char minor2);
+	void RemoveDuplicates(string &);
+	void Expand(string &);
+	void CalculateDual(const string &input, string &dual);
+	string Separated(const string &input);
+	bool IsSelfOrSumOfDigitsMajor(int n);
 }
 
 using namespace BUtil;
