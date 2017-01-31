@@ -180,7 +180,6 @@ bool Ct2_2Dlg::CsSentenceRowCompare::operator()(const CsSentenceRow &left, const
 //---------------------------------------------------------------------------------------------------------------
 void Ct2_2Dlg::OnInit()
 {
-	Init();
 	for (int i = 0; i < 28; i++)
 		memset(d_pairsSpec[i].maxLen, 0, sizeof(d_pairsSpec[i].maxLen));
 	d_iPairWanted = -1;
@@ -194,7 +193,7 @@ void Ct2_2Dlg::th_LoadDataFiles(void *p)
 {
 	Ct2_2Dlg *pThis = (Ct2_2Dlg *) p;
 	CsRow r;
-	for (int i = 0; i < 28; i++)
+	for (int i = 15; i < 16; i++)
 	{
 		char buf[80];
 		sprintf(buf, "loading pairs of sum %d", i + 1);
@@ -429,8 +428,8 @@ void Ct2_2Dlg::AddSentence(const string &input, const string &dual, int64 r1, in
 	if (sum / len > 14)
 		return;
 
-	CcScore951021 score951021(sRow.sentence.c_str());
-	if (!score951021.HasScore(sRow.score951021Items))
+	CcScore951021 score951021;
+	if (!score951021.HasScore(sRow.sentence.c_str(), sRow.score951021Items))
 		return;
 	CalculateScore(sRow.sentence.c_str(), sRow.sentenceMajor, sRow.sentenceMinor);
 	d_sentences.insert(sRow);
@@ -471,10 +470,16 @@ bool Ct2_2Dlg::CheckInputIntegrity(const CString &input)
 
 void Ct2_2Dlg::OnBnClickedGo()
 {
+	char sentence[] = "تبقورشامصحنيبفلا";
+	CcScore951021 score951021;
+	CsScore951021PersistentItems items;
+	bool bHasScore951021 = score951021.HasScore(sentence, items);
+	//return;
 	CString str;
 	GetDlgItemText(IDC_INPUT, str);
 	if (!str.GetLength())
-		str = "خودشناسي در آيينه ي بدوح";
+		//str = "خودشناسي در آيينه ي بدوح";
+		str = "اعتدال سازماني در آيينه ي بدوح";
 	CString fn = str + ".txt";
 	str.Remove(' ');
 	str.Replace('آ', 'ا');

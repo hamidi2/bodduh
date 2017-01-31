@@ -2,11 +2,6 @@
 #include "score951021.h"
 #include <util.h>
 
-CcScore951021::CcScore951021(LPCSTR sentence)
-{
-	Make(sentence);
-}
-
 void CcScore951021::Make(LPCSTR sentence)
 {
 	strcpy(d_sentence, sentence);
@@ -61,16 +56,15 @@ bool CcScore951021::HasScore951105() const
 	char buf[80] = "";
 	for (i = 0; i < iM; i++)
 		sprintf(buf + strlen(buf), "%d", m[i]);
-	string s;
-	int remainder;
-	Divide(buf, 28, s, remainder);
-	if (remainder != 0)
+	if (!IsMajor(buf))
 		return false;
 	buf[0] = 0;
 	for (i = iM - 1; i >= 0; i--)
 		sprintf(buf + strlen(buf), "%d", m[i]);
+	string s;
+	int remainder;
 	Divide(buf, 28, s, remainder);
-	if (remainder % 9 != 0)
+	if (remainder % 9 != 0 && remainder != 11 && remainder != 17)
 		return false;
 	return true;
 }
@@ -181,8 +175,9 @@ bool CcScore951021::HasScore(char &major, char &minor, char &priority)
 	return false;
 }
 
-bool CcScore951021::HasScore(CsScore951021PersistentItems &items)
+bool CcScore951021::HasScore(LPCSTR sentence, CsScore951021PersistentItems &items)
 {
+	Make(sentence);
 	items.numSidesWithScore = HasScore(items.major, items.minor, items.priority);
 	if (d_len % 4)
 	{

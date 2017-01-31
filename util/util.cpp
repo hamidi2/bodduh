@@ -5,6 +5,13 @@ namespace BUtil
 {
 	map<char, CsLetterSpec> letters;
 
+	class CBUtilInitializer
+	{
+	public:
+		CBUtilInitializer() { Init(); }
+		~CBUtilInitializer() {}
+	} BUtilInitializer;
+
 	void DigitJoin(int64 r1, int64 r2, char *buf)
 	{
 		int pos = -1;

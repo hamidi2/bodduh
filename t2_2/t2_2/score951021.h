@@ -24,8 +24,6 @@ class CcScore951021
 	bool HasScore(char &major, char &minor, char &priority);
 
 public:
-	CcScore951021(LPCSTR sentence);
-
-	bool HasScore(CsScore951021PersistentItems &);
+	bool HasScore(LPCSTR sentence, CsScore951021PersistentItems &items);
 };
 
