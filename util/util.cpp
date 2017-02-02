@@ -74,10 +74,8 @@ namespace BUtil
 			if (!isAbjadRevValid)
 				continue;
 
-			int sod = DigitsSum(k.c_str());
-			while (!(isMajor = IsMajor(sod)) && sod > 28)
-				sod = DigitsSum(sod);
-			score950122 += isMajor;
+			Divide(k.c_str(), 9, notImportantQuotient, n2);
+			score950122 += IsMajor(n2);
 
 			Divide(k.c_str(), 28, notImportantQuotient, n2);
 			Rev(k);										// k  <- varuneye raghami
@@ -93,8 +91,11 @@ namespace BUtil
 			for (int j = 0; j < lastJ && !isMajor; j++)
 			{
 				n4 = values[j];
-				while (!(isMajor = IsMajor(n4)) && n4 > 28)
-					n4 = DigitsSum(n4);
+				isMajor = IsMajor(n4);
+				if (isMajor)
+					break;
+				n4 %= 9;
+				isMajor = IsMajor(n4);
 			}
 			score950122 += isMajor;
 		}
@@ -155,25 +156,6 @@ namespace BUtil
 		quotient += buf;
 	}
 
-	int DigitsSum(LPCSTR str)
-	{
-		int r = 0;
-		for (; *str; str++)
-			r += *str - '0';
-		return r;
-	}
-
-	int DigitsSum(int64 r)
-	{
-		int n = 0;
-		while (r)
-		{
-			n += r % 10;
-			r /= 10;
-		}
-		return n;
-	}
-
 	int NumDigits(int64 r)
 	{
 		int n = 1;
@@ -198,7 +180,9 @@ namespace BUtil
 	{
 		int m9 = r % 9;
 		int m28 = r % 28;
-		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26;
+		return
+			m9 == 2 || m9 == 8 ||	// 9k+2 or 9k-1
+			m28 == 2 || m28 == 6 || m28 == 11 || m28 == 17 || m28 == 22 || m28 == 26;	// 28k±2 or 28k±11k'
 	}
 
 	bool IsMajorOrMinor(LPCSTR str, bool bLookingForMajor)
@@ -396,10 +380,12 @@ namespace BUtil
 
 	bool IsSelfOrSumOfDigitsMajor(int n)
 	{
-		bool bMajor = false;
-		while (bMajor = IsMajor(n), !bMajor && n > 28)
-			n = DigitsSum(n);
-		return bMajor;
+		if (IsMajor(n))
+			return true;
+		n %= 9;
+		if (IsMajor(n))
+			return true;
+		return false;
 	}
 
 }

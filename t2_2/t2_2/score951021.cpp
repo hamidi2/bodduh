@@ -6,10 +6,11 @@ void CcScore951021::Make(LPCSTR sentence)
 {
 	strcpy(d_sentence, sentence);
 	_strrev(d_sentence);
-	d_len = strlen(d_sentence);
+	d_len = (char) strlen(d_sentence);
 	d_nSize = (d_len-1)/4 + 1;
 	memset(&d_n, 0, sizeof(d_n));
-	for (char i = 0; i < d_len; i++)
+	char i = 0;
+	for (; i < d_len; i++)
 	{
 		d_col[i] = letters[d_sentence[i]].abjadCol;
 		d_buf[i] = d_col[i] + '0';
@@ -28,7 +29,7 @@ void CcScore951021::Reverse()
 		tmp = d_buf[i];			d_buf[i] = d_buf[i2];				d_buf[i2] = tmp;
 	}
 	memset(&d_n, 0, sizeof(d_n));
-	for (i = 0; i < d_len; i++)
+	for (char i=0; i < d_len; i++)
 		d_n[i/4] += d_col[i];
 }
 
@@ -54,12 +55,12 @@ bool CcScore951021::HasScore951105() const
 	if (mSum % 9 != 2)
 		return false;
 	char buf[80] = "";
-	for (i = 0; i < iM; i++)
+	for (char i = 0; i < iM; i++)
 		sprintf(buf + strlen(buf), "%d", m[i]);
 	if (!IsMajor(buf))
 		return false;
 	buf[0] = 0;
-	for (i = iM - 1; i >= 0; i--)
+	for (char i = iM - 1; i >= 0; i--)
 		sprintf(buf + strlen(buf), "%d", m[i]);
 	string s;
 	int remainder;
@@ -75,9 +76,9 @@ bool CcScore951021::HasPriority(char &priority) const
 	for (int i=0; i<d_len; i++)
 		n += d_col[i];
 	if (IsMajor(d_buf))
-		priority = 2;
-	else if (IsMinor(n))
 		priority = 1;
+	else if (IsMinor(n))
+		priority = 2;
 	else
 		return false;
 	return true;
@@ -86,7 +87,8 @@ bool CcScore951021::HasPriority(char &priority) const
 bool CcScore951021::HasScoreIndependently(char &major, char &minor, bool bAcceptMinor) const
 {
 	major = minor = 0;
-	for (char i=0; i < d_nSize-1; i++)
+	char i = 0;
+	for (; i < d_nSize-1; i++)
 		if (!IsMajor(d_n[i]))
 			break;
 	if (i == d_nSize-1)
@@ -104,7 +106,8 @@ bool CcScore951021::HasScoreIndependently(char &major, char &minor, bool bAccept
 bool CcScore951021::HasScoreDependently(char &major, char &minor) const
 {
 	major = minor = 0;
-	for (char i=0; i < d_nSize; i++)
+	char i = 0;
+	for (; i < d_nSize; i++)
 	{
 		char major2 = 0, minor2 = 0;
 		CheckScore(d_n[i]+d_n[(i+1)%d_nSize], major2, minor2);
@@ -143,7 +146,7 @@ bool CcScore951021::HasScore(char &major, char &minor, char &priority)
 	reverse(lastPart.begin(), lastPart.end());
 	Expand(lastPart);
 	lastPart = lastPart.substr(0, 4);
-	char len = lastPart.size();
+	char len = (char) lastPart.size();
 	d_n[pos/4] = 0;
 	for (j=0; j<len; j++)
 		d_n[pos/4] += letters[lastPart[j]].abjadCol;
@@ -159,7 +162,7 @@ bool CcScore951021::HasScore(char &major, char &minor, char &priority)
 			UpdateScore(major2, minor2, major3, minor3);
 		Expand(lastPart);
 		lastPart = lastPart.substr(0, 4);
-		len = lastPart.size();
+		len = (char) lastPart.size();
 		d_n[pos/4] = 0;
 		for (j=0; j<len; j++)
 			d_n[pos/4] += letters[lastPart[j]].abjadCol;

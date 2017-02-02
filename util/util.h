@@ -34,9 +34,6 @@ namespace BUtil
 	int64 Sum(int64 op1, int64 op2);
 	void Divide(LPCSTR dividend, int divisor, string &quotient, int &remainder);
 
-	int DigitsSum(int64 r);
-	int DigitsSum(LPCSTR str);
-
 	int NumDigits(int64 r);
 
 	bool IsMajor(int64 n, bool bZeroIsAcceptable = true);

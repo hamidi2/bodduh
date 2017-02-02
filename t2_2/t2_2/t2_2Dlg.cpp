@@ -159,7 +159,7 @@ HCURSOR Ct2_2Dlg::OnQueryDragIcon()
 #define RET_IF_NOT_EQ(a, b) if (a > b) return true; if (a < b) return false
 bool Ct2_2Dlg::CsSentenceRowCompare::operator()(const CsSentenceRow &left, const CsSentenceRow &right)
 {
-	RET_IF_NOT_EQ(left.score951021Items.priority, right.score951021Items.priority);
+	RET_IF_NOT_EQ(right.score951021Items.priority, left.score951021Items.priority);
 	RET_IF_NOT_EQ(left.score951021Items.numSidesWithScore, right.score951021Items.numSidesWithScore);
 	char leftMajor = left.score951021Items.major;
 	char rightMajor = right.score951021Items.major;
@@ -532,7 +532,7 @@ void Ct2_2Dlg::OnBnClickedGo()
 	SetDlgItemText(IDC_PERCENT, "");
 
 	fprintf(fp, "number of sentences:      %d\n", d_sentences.size());
-	fprintf(fp, "---------------------------------------------------------------------------------------------------------------------\n", s);
+	fprintf(fp, "---------------------------------------------------------------------------------------------------------------------\n");
 	str.Format("%d", d_sentences.size() + 1);
 	int rowNumberMaxLen = str.GetLength();
 	i = 0;
