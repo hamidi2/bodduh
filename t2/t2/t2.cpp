@@ -17,7 +17,7 @@
 
 #define output printf
 //#define output no_printf
-//#define TEST
+#define TEST
 
 void no_printf(const char * /*fmt*/, ...)
 {
@@ -146,25 +146,6 @@ int CT2::calcMajorAndMinor(int64 r1, int64 r2, int iSet, bool bSameSet, char &ma
 	return 0;
 }
 
-#define SHOW_THREADS_DEBUG_INFO
-
-static int numCores;
-
-void writeSets(int sets[], HANDLE threadHandles[])
-{
-#ifndef SHOW_THREADS_DEBUG_INFO
-	return;
-#endif
-	char buf[80] = "";
-	for (int i = 0; i < numCores; i++)
-		sprintf(buf + strlen(buf), "%3d ", sets[i]);
-	printf("%s\n", buf);
-	buf[0] = 0;
-	for (int i = 0; i < numCores; i++)
-		sprintf(buf + strlen(buf), "%d ", threadHandles[i]);
-	printf("%s\n", buf);
-}
-
 void CT2::makePairs()
 {
 	fprintf(stderr, "\ncreating database...\n\n");
@@ -175,7 +156,7 @@ void CT2::makePairs()
 		int sum = 0;
 		for (int i = 0; ;)
 		{
-			if (n[i] == 6)
+			if (n[i] == 9)
 			{
 				if (i == 0)
 					break;
@@ -186,7 +167,7 @@ void CT2::makePairs()
 			}
 			else
 			{
-				ASSERT(n[i] < 6);
+				ASSERT(n[i] < 9);
 				n[i]++;
 				sum++;
 			}
@@ -207,7 +188,7 @@ void CT2::makePairs()
 			}
 		}
 	}
-	/*
+	
 	for (int iSet = 0; iSet < 14; iSet++)
 	{
 		char fn[80];
@@ -217,7 +198,7 @@ void CT2::makePairs()
 			fprintf(fp, "%I64d\t%d\n", iRow->first, iRow->second);
 		fclose(fp);
 	}
-	*/
+	
 	processThreadData data[14][2];
 	for (int iSet = 0; iSet < 14; iSet++)
 	{
@@ -313,7 +294,7 @@ void CT2::process(int64 r1, int64 r2, int digitsSum, int iSet, bool bSameSet)
 	}
 	
 	string joins[4];
-	size_t numJoins = 0, numAcceptableJoins, i, len;
+	size_t numJoins = 0, i, len;
 
 	DigitJoin(r1, r2, buf);
 	joins[numJoins++] = buf;
@@ -328,26 +309,12 @@ void CT2::process(int64 r1, int64 r2, int digitsSum, int iSet, bool bSameSet)
 	}
 	RemoveDuplicates(joins, numJoins, numJoins);
 
-	numAcceptableJoins = numJoins;
-	for (i = 0; i < numJoins; i++)
-	{
-		string &str = joins[i];
-		if (!IsMajor(str.c_str()) || str[0] > '2' || (len = str.length(), len > 1 && str[len-1] > '2'))
-		{
-			str = "a";
-			numAcceptableJoins--;
-		}
-	}
-	if (!numAcceptableJoins)  // can't pair
-		return;
-	RemoveDuplicates(joins, i, numJoins);  // since we know the number of acceptable joins, we don't need the second argument. they're already sorted. just want to move non-acceptable ones to the end, beyond the number of acceptable joins.
-
 	char major, minor;
 	int group = calcMajorAndMinor(r1, r2, iSet, bSameSet, major, minor);
 
 	char score950122 = 0;
 	if (group)
-		for (i = 0; i < numAcceptableJoins; i++)
+		for (i = 0; i < numJoins; i++)
 			score950122 += CalcScore950122(joins[i].c_str());
 
 	switch (group)
@@ -368,7 +335,7 @@ void CT2::process(int64 r1, int64 r2, int digitsSum, int iSet, bool bSameSet)
 void CT2::makeDB()
 {
 #ifdef TEST
-	int64 r1 = 1111, r2 = 145;
+	int64 r1 = 121, r2 = 11;
 	process(r1, r2, DigitsSum(r1) + DigitsSum(r2), NumDigits(r1) - 1, NumDigits(r1) == NumDigits(r2));
 	if (!_getch())
 		_getch();

@@ -74,8 +74,10 @@ namespace BUtil
 			if (!isAbjadRevValid)
 				continue;
 
-			Divide(k.c_str(), 9, notImportantQuotient, n2);
-			score950122 += IsMajor(n2);
+			int sod = DigitsSum(k.c_str());
+			while (!(isMajor = IsMajor(sod)) && sod > 28)
+				sod = DigitsSum(sod);
+			score950122 += isMajor;
 
 			Divide(k.c_str(), 28, notImportantQuotient, n2);
 			Rev(k);										// k  <- varuneye raghami
@@ -91,11 +93,8 @@ namespace BUtil
 			for (int j = 0; j < lastJ && !isMajor; j++)
 			{
 				n4 = values[j];
-				isMajor = IsMajor(n4);
-				if (isMajor)
-					break;
-				n4 %= 9;
-				isMajor = IsMajor(n4);
+				while (!(isMajor = IsMajor(n4)) && n4 > 28)
+					n4 = DigitsSum(n4);
 			}
 			score950122 += isMajor;
 		}
@@ -156,6 +155,25 @@ namespace BUtil
 		quotient += buf;
 	}
 
+	int DigitsSum(LPCSTR str)
+	{
+		int r = 0;
+		for (; *str; str++)
+			r += *str - '0';
+		return r;
+	}
+
+	int DigitsSum(int64 r)
+	{
+		int n = 0;
+		while (r)
+		{
+			n += r % 10;
+			r /= 10;
+		}
+		return n;
+	}
+
 	int NumDigits(int64 r)
 	{
 		int n = 1;
@@ -180,9 +198,8 @@ namespace BUtil
 	{
 		int m9 = r % 9;
 		int m28 = r % 28;
-		return
-			m9 == 2 || m9 == 8 ||	// 9k+2 or 9k-1
-			m28 == 2 || m28 == 6 || m28 == 11 || m28 == 17 || m28 == 22 || m28 == 26;	// 28k±2 or 28k±11k'
+		int m11 = r % 11;
+		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26 || m11 == 0;
 	}
 
 	bool IsMajorOrMinor(LPCSTR str, bool bLookingForMajor)
@@ -240,24 +257,22 @@ namespace BUtil
 		return r;
 	}
 
-	int64 Sum(int64 op1, int64 op2)
+	void Rev(string &str)
 	{
-		return op1 + op2;
+		char buf[80];
+		buf[str.copy(buf, sizeof(buf))] = 0;
+		_strrev(buf);
+		int i=0;
+		while (buf[i] == '0')
+			i++;
+		str = buf + i;
 	}
 
-	int64 Diff(int64 op1, int64 op2)
+	int64 AbjadRev(int64 r, bool &isValid)
 	{
-		char buf[80] = {};
-		int i = 0;
-		while (op1)
-		{
-			buf[i++] = '0' + (int) abs((op1 % 10) - (op2 % 10));
-			op1 /= 10;
-			op2 /= 10;
-		}
-		buf[i] = 0;
-		int64 r;
-		sscanf(_strrev(buf), "%I64d", &r);
+		char buf[80];
+		sprintf(buf, "%I64d", r);
+		sscanf(AbjadRev(buf, isValid).c_str(), "%I64d", &r);
 		return r;
 	}
 
@@ -282,17 +297,25 @@ namespace BUtil
 		return dest;
 	}
 
-	int64 AbjadRev(int64 r, bool &isValid)
+	int64 Sum(int64 op1, int64 op2)
 	{
-		char buf[80];
-		sprintf(buf, "%I64d", r);
-		sscanf(AbjadRev(buf, isValid).c_str(), "%I64d", &r);
-		return r;
+		return op1 + op2;
 	}
 
-	void Rev(string &str)
+	int64 Diff(int64 op1, int64 op2)
 	{
-		reverse(str.begin(), str.end());
+		char buf[80] = {};
+		int i = 0;
+		while (op1)
+		{
+			buf[i++] = '0' + (int) abs((op1 % 10) - (op2 % 10));
+			op1 /= 10;
+			op2 /= 10;
+		}
+		buf[i] = 0;
+		int64 r;
+		sscanf(_strrev(buf), "%I64d", &r);
+		return r;
 	}
 
 	void UpdateScore(char &major, char &minor, char major2, char minor2)
@@ -380,12 +403,10 @@ namespace BUtil
 
 	bool IsSelfOrSumOfDigitsMajor(int n)
 	{
-		if (IsMajor(n))
-			return true;
-		n %= 9;
-		if (IsMajor(n))
-			return true;
-		return false;
+		bool bMajor = false;
+		while (bMajor = IsMajor(n), !bMajor && n > 28)
+			n = DigitsSum(n);
+		return bMajor;
 	}
 
 }
