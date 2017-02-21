@@ -199,7 +199,8 @@ namespace BUtil
 		int m9 = r % 9;
 		int m28 = r % 28;
 		int m11 = r % 11;
-		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26 || m11 == 0;
+		int m17 = r % 17;
+		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26 || m11 == 0 || m17 == 0;
 	}
 
 	bool IsMajorOrMinor(LPCSTR str, bool bLookingForMajor)
