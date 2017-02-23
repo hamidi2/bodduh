@@ -82,30 +82,30 @@ void CT2::calcMajorAndMinor(int64 r1, int64 r2, char &major, char &minor)
 
 	// step1
 	int64 r[] = { r1, r2, Rev(r1), Rev(r2) };
-	size_t max = ((r[0] == r[2] && r[1] == r[3]) || r[0] == r[3]) ? 2 : 4;
-	size_t max2;
 	int mod[4];
-	for (i = 0; i < max; i++)
+	for (i = 0; i < 4; i++)
 		mod[i] = r[i] % 28;
 	int step1[] = { mod[0] + mod[1], abs(mod[0] - mod[1]), mod[2] + mod[3], abs(mod[2] - mod[3]) };
-	max2 = max;//removeDuplicates(step1, max2, max);
-	for (i = 0; i < max2; i++)
+	for (i = 0; i < 4; i++)
 		CheckScore(step1[i], major, minor);
 
 	// step2
-	int64 step2[8] = { Sum(r[0], r[1]), Diff(r[0], r[1]), 0, 0, Sum(r[2], r[3]), Diff(r[2], r[3]) };
-	bool isValid[8];
-	for (i = 0; i < max; i++)
+	// for debugging purpose, i prefer to hold all numbers in an array.
+	int64 step2[12] = { Sum(r[0], r[1]), 0, 0, Diff(r[0], r[1]), 0, 0, Sum(r[2], r[3]), 0, 0, Diff(r[2], r[3]) };
+	bool isValid[4];
+	for (i = 0; i < 4; i++)
 	{
-		bool bIsAbjadRevValid;
-		step2[i + i/2 * 2 + 2] = AbjadRev(step2[i + i/2 * 2], bIsAbjadRevValid);
-		isValid[i + i/2 * 2] = isValid[i + i/2 * 2 + 2] = bIsAbjadRevValid;
+		step2[i*3+1] = Rev(step2[i*3]);
+		step2[i*3+2] = AbjadRev(step2[i*3], isValid[i]);
 	}
-	max2 = max * 2;//removeDuplicates(step2, max2, max * 2);
 	// ~
-	for (i = 0; i < max2; i++)
+	for (i = 0; i < 4; i++)
+	{
+		CheckScore(step2[i*3], major, minor);
+		CheckScore(step2[i*3+1], major, minor);
 		if (isValid[i])
-			CheckScore(step2[i], major, minor);
+			CheckScore(step2[i*3+2], major, minor);
+	}
 }
 
 /*
@@ -294,7 +294,7 @@ void CT2::process(int64 r1, int64 r2, int digitsSum, int iSet, bool bSameSet)
 	}
 	
 	string joins[4];
-	size_t numJoins = 0, i, len;
+	size_t numJoins = 0, i;
 
 	DigitJoin(r1, r2, buf);
 	joins[numJoins++] = buf;
