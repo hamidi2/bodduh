@@ -17,7 +17,10 @@
 
 #define output printf
 //#define output no_printf
+
+#ifdef _DEBUG
 #define TEST
+#endif
 
 void no_printf(const char * /*fmt*/, ...)
 {
@@ -335,7 +338,7 @@ void CT2::process(int64 r1, int64 r2, int digitsSum, int iSet, bool bSameSet)
 void CT2::makeDB()
 {
 #ifdef TEST
-	int64 r1 = 121, r2 = 11;
+	int64 r1 = 4, r2 = 4;
 	process(r1, r2, DigitsSum(r1) + DigitsSum(r2), NumDigits(r1) - 1, NumDigits(r1) == NumDigits(r2));
 	if (!_getch())
 		_getch();

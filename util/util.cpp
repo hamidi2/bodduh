@@ -93,7 +93,7 @@ namespace BUtil
 				for (int iValues = 0; iValues < 2 && !hasScore; iValues++)
 				{
 					int value = values[iValues];
-					while (!(hasScore = (IsMajor(sod) || IsMinor(sod))) && value > 28)
+					while (!(hasScore = (IsMajor(value) || IsMinor(value))) && value > 28)
 						value = DigitsSum(value);
 				}
 			}
