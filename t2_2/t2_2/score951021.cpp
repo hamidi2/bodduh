@@ -52,12 +52,12 @@ bool CcScore951021::HasScore951105() const
 	char mSum = 0;  // max is 112
 	for (char i = 0; i < iM; i++)
 		mSum += m[i];
-	if (mSum % 9 != 2)
+	if (!IsMajor(mSum) || !IsMinor(mSum))
 		return false;
 	char buf[80] = "";
 	for (char i = 0; i < iM; i++)
 		sprintf(buf + strlen(buf), "%d", m[i]);
-	if (!IsMajor(buf))
+	if (!IsMajor(buf) || !IsMinor(buf))
 		return false;
 	buf[0] = 0;
 	for (char i = iM - 1; i >= 0; i--)
