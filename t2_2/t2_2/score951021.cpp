@@ -35,7 +35,7 @@ void CcScore951021::Reverse()
 
 bool CcScore951021::HasScore951105() const
 {
-	char m[4];
+	char m[4], i;
 	char iN1 = (d_nSize+1)/2-1, iN2=iN1, iM=0;
 	if (d_nSize % 2)
 	{
@@ -49,24 +49,47 @@ bool CcScore951021::HasScore951105() const
 		iN1--;
 		iN2++;
 	}
+	
 	char mSum = 0;  // max is 112
-	for (char i = 0; i < iM; i++)
+	for (i = 0; i < iM; i++)
 		mSum += m[i];
 	if (!IsMajor(mSum) || !IsMinor(mSum))
 		return false;
-	char buf[80] = "";
-	for (char i = 0; i < iM; i++)
-		sprintf(buf + strlen(buf), "%d", m[i]);
-	if (!IsMajor(buf) || !IsMinor(buf))
-		return false;
-	buf[0] = 0;
-	for (char i = iM - 1; i >= 0; i--)
-		sprintf(buf + strlen(buf), "%d", m[i]);
+
+	char x1x2[80] = {}, x2x1[80] = {};
+	for (i = 0; i < iM; i++)
+		sprintf(x1x2 + strlen(x1x2), "%d", m[i]);
+	for (i--; i >= 0; i--)
+		sprintf(x2x1 + strlen(x2x1), "%d", m[i]);
+
+	bool x1x2cond1, x2x1cond1;
+	x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
+	x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
+	bool x1x2cond2, x2x1cond2;
 	string s;
-	int remainder;
-	Divide(buf, 28, s, remainder);
-	if (remainder % 9 != 0 && remainder != 11 && remainder != 17)
+	int x1x2rem, x2x1rem;
+	Divide(x1x2, 28, s, x1x2rem);
+	x1x2cond2 = x1x2rem % 9 == 0 || x1x2rem == 11 || x1x2rem == 17;
+	Divide(x2x1, 28, s, x2x1rem);
+	x2x1cond2 = x2x1rem % 9 == 0 || x2x1rem == 11 || x2x1rem == 17;
+	bool x1x2cond3, x2x1cond3;
+	int rem;
+	Divide(x1x2, 9, s, rem);
+	x1x2cond3 = rem == 2 || x1x2rem % 9 == 2;
+	Divide(x2x1, 9, s, rem);
+	x2x1cond3 = rem == 2 || x2x1rem % 9 == 2;
+
+	if (x1x2cond1 && x2x1cond2)
+	{
+	}
+	else if (x2x1cond1 && x1x2cond2)
+	{
+	}
+	else
+	{
 		return false;
+	}
+
 	return true;
 }
 
