@@ -62,38 +62,20 @@ bool CcScore951021::HasScore951105() const
 	for (i--; i >= 0; i--)
 		sprintf(x2x1 + strlen(x2x1), "%d", m[i]);
 
-	// cond1: asli ya sayer budan
-	bool x1x2cond1, x2x1cond1;
-	x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
-	x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
-	
-	// cond2: 28k+9k or 28k+11 or 28k+17 budan
-	bool x1x2cond2, x2x1cond2;
 	string s;
-	int x1x2rem, x2x1rem;
-	Divide(x1x2, 28, s, x1x2rem);
-	x1x2cond2 = x1x2rem % 9 == 0 || x1x2rem == 11 || x1x2rem == 17;
-	Divide(x2x1, 28, s, x2x1rem);
-	x2x1cond2 = x2x1rem % 9 == 0 || x2x1rem == 11 || x2x1rem == 17;
-	
-	// cond3: 9k+2 or 28k+9k+2 budan
-	bool x1x2cond3, x2x1cond3;
-	int rem;
-	Divide(x1x2, 9, s, rem);
-	x1x2cond3 = rem == 2 || x1x2rem % 9 == 2;
-	Divide(x2x1, 9, s, rem);
-	x2x1cond3 = rem == 2 || x2x1rem % 9 == 2;
+	int x1x2rem28, x2x1rem28, x1x2rem9, x2x1rem9;
+	Divide(x1x2, 28, s, x1x2rem28);
+	Divide(x2x1, 28, s, x2x1rem28);
+	Divide(x1x2, 9, s, x1x2rem9);
+	Divide(x2x1, 9, s, x2x1rem9);
+	bool x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
+	bool x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
+	bool cond2 = ((x1x2rem28 + x2x1rem28) % 9) == 2;
+	bool x1x2cond2 = cond2 || ((x2x1rem9 + x1x2rem28) % 9) == 2;
+	bool x2x1cond2 = cond2 || ((x1x2rem9 + x2x1rem28) % 9) == 2;
 
-	if (x1x2cond1 && x2x1cond2)
-	{
-	}
-	else if (x2x1cond1 && x1x2cond2)
-	{
-	}
-	else
-	{
+	if (!((x1x2cond1 && x2x1cond2) || (x2x1cond1 && x1x2cond2)))
 		return false;
-	}
 
 	return true;
 }
