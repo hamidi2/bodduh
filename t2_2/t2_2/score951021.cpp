@@ -35,49 +35,61 @@ void CcScore951021::Reverse()
 
 bool CcScore951021::HasScore951105() const
 {
-	char m[4], i;
+	char m0 = 0, m[3][2], i;
 	char iN1 = (d_nSize+1)/2-1, iN2=iN1, iM=0;
 	if (d_nSize % 2)
 	{
-		m[iM++] = d_n[iN1];
+		m0 = d_n[iN1];
 		iN1--;
 	}
-	iN2++;
 	while (iN1 >= 0)
 	{
-		m[iM++] = abs(d_n[iN1] - d_n[iN2]);
-		iN1--;
 		iN2++;
+		m[iM][0] = d_n[iN1] + d_n[iN2];
+		while (m[iM][0] > 9)
+			m[iM][0] = DigitsSum(m[iM][0]);
+		m[iM][1] = abs(d_n[iN1] - d_n[iN2]);
+		iM++;
+		iN1--;
 	}
-	
-	char mSum = 0;  // max is 112
-	for (i = 0; i < iM; i++)
-		mSum += m[i];
-	if (!IsMajor(mSum) || !IsMinor(mSum))
-		return false;
 
-	char x1x2[80] = {}, x2x1[80] = {};
-	for (i = 0; i < iM; i++)
-		sprintf(x1x2 + strlen(x1x2), "%d", m[i]);
-	for (i--; i >= 0; i--)
-		sprintf(x2x1 + strlen(x2x1), "%d", m[i]);
+	for (char op = 0; op < 1 << iM; op++)
+	{
+		char mSum = m0;  // max is less than 112
+		for (i = 0; i < iM; i++)
+			mSum += m[i][(op >> i) & 1];
+		if (!IsMajor(mSum) || !IsMinor(mSum))
+			return continue;
 
-	string s;
-	int x1x2rem28, x2x1rem28, x1x2rem9, x2x1rem9;
-	Divide(x1x2, 28, s, x1x2rem28);
-	Divide(x2x1, 28, s, x2x1rem28);
-	Divide(x1x2, 9, s, x1x2rem9);
-	Divide(x2x1, 9, s, x2x1rem9);
-	bool x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
-	bool x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
-	bool cond2 = ((x1x2rem28 + x2x1rem28) % 9) == 2;
-	bool x1x2cond2 = cond2 || ((x2x1rem9 + x1x2rem28) % 9) == 2;
-	bool x2x1cond2 = cond2 || ((x1x2rem9 + x2x1rem28) % 9) == 2;
+		char x1x2[80] = {}, x2x1[80] = {};
+		if (m0)
+			sprintf(x1x2 + strlen(x1x2), "%d", m0);
+		for (i = 0; i < iM; i++)
+			sprintf(x1x2 + strlen(x1x2), "%d", m[i][(op >> i) & 1]);
+		for (i--; i >= 0; i--)
+			sprintf(x2x1 + strlen(x2x1), "%d", m[i][(op >> i) & 1]);
+		if (m0)
+			sprintf(x2x1 + strlen(x2x1), "%d", m0);
 
-	if (!((x1x2cond1 && x2x1cond2) || (x2x1cond1 && x1x2cond2)))
-		return false;
+		string s;
+		int x1x2rem28, x2x1rem28, x1x2rem9, x2x1rem9;
+		Divide(x1x2, 28, s, x1x2rem28);
+		Divide(x2x1, 28, s, x2x1rem28);
+		Divide(x1x2, 9, s, x1x2rem9);
+		Divide(x2x1, 9, s, x2x1rem9);
+		bool x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
+		bool x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
+		bool cond2 = ((x1x2rem28 + x2x1rem28) % 9) == 2;
+		bool x1x2cond2 = cond2 || ((x2x1rem9 + x1x2rem28) % 9) == 2;
+		bool x2x1cond2 = cond2 || ((x1x2rem9 + x2x1rem28) % 9) == 2;
 
-	return true;
+		if (!((x1x2cond1 && x2x1cond2) || (x2x1cond1 && x1x2cond2)))
+			return continue;
+
+		return true;
+	}
+
+	return false;
 }
 
 bool CcScore951021::HasPriority(char &priority) const
