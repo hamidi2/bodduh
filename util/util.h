@@ -39,10 +39,11 @@ namespace BUtil
 
 	int NumDigits(int64 r);
 
-	bool IsMajor(int64 n, bool bZeroIsAcceptable = true);
+	bool IsMajor(int64 r, bool bZeroIsAcceptable = true);
 	bool IsMajor(LPCSTR str);
 	bool IsMinor(int64 r);
 	bool IsMinor(LPCSTR str);
+	bool IsMajorOrMinor(int64 r);
 
 	bool CheckScore(int64 r, char &major, char &minor, bool bZeroIsAcceptable = true);
 	int CalcScore950122(LPCSTR r);

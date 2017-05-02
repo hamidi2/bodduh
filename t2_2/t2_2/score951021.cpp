@@ -55,36 +55,36 @@ bool CcScore951021::HasScore951105() const
 
 	for (char op = 0; op < 1 << iM; op++)
 	{
-		char mSum = m0;  // max is less than 112
+		char mSum = m0;  // mSum holds x1+x2. max is less than 112.
 		for (i = 0; i < iM; i++)
 			mSum += m[i][(op >> i) & 1];
-		if (!IsMajor(mSum) || !IsMinor(mSum))
-			return continue;
 
-		char x1x2[80] = {}, x2x1[80] = {};
+		int64 x1x2, x2x1;
+		char buf[80] = "";
 		if (m0)
-			sprintf(x1x2 + strlen(x1x2), "%d", m0);
+			sprintf(buf, "%d", m0);
 		for (i = 0; i < iM; i++)
-			sprintf(x1x2 + strlen(x1x2), "%d", m[i][(op >> i) & 1]);
+			sprintf(buf + strlen(buf), "%d", m[i][(op >> i) & 1]);
+		sscanf(buf, "%I64d", &x1x2);
+		buf[0] = 0;
 		for (i--; i >= 0; i--)
-			sprintf(x2x1 + strlen(x2x1), "%d", m[i][(op >> i) & 1]);
+			sprintf(buf + strlen(buf), "%d", m[i][(op >> i) & 1]);
 		if (m0)
-			sprintf(x2x1 + strlen(x2x1), "%d", m0);
+			sprintf(buf + strlen(buf), "%d", m0);
+		sscanf(buf, "%I64d", &x2x1);
 
-		string s;
-		int x1x2rem28, x2x1rem28, x1x2rem9, x2x1rem9;
-		Divide(x1x2, 28, s, x1x2rem28);
-		Divide(x2x1, 28, s, x2x1rem28);
-		Divide(x1x2, 9, s, x1x2rem9);
-		Divide(x2x1, 9, s, x2x1rem9);
-		bool x1x2cond1 = IsMajor(x1x2) || IsMinor(x1x2);
-		bool x2x1cond1 = IsMajor(x2x1) || IsMinor(x2x1);
-		bool cond2 = ((x1x2rem28 + x2x1rem28) % 9) == 2;
-		bool x1x2cond2 = cond2 || ((x2x1rem9 + x1x2rem28) % 9) == 2;
-		bool x2x1cond2 = cond2 || ((x1x2rem9 + x2x1rem28) % 9) == 2;
+		int r = x1x2 % 28 + x2x1 % 28;
+		bool cond2 = IsMajorOrMinor(r);
+		bool x1x2cond2 = cond2 || IsMajorOrMinor(x1x2 + x2x1 % 28);
+		bool x2x1cond2 = cond2 || IsMajorOrMinor(x2x1 + x1x2 % 28);
 
-		if (!((x1x2cond1 && x2x1cond2) || (x2x1cond1 && x1x2cond2)))
-			return continue;
+		if (!((x1x2 % 9 == 2) || (IsMajorOrMinor(x1x2) && x1x2cond2) ||
+			  (x2x1 % 9 == 2) || (IsMajorOrMinor(x2x1) && x2x1cond2)))
+			continue;
+
+		// sharte jam'e baghimandehha
+		if (!(IsMajorOrMinor(r+mSum) || IsMajorOrMinor(r+mSum%28) || IsMajorOrMinor(r+mSum%9)))
+			continue;
 
 		return true;
 	}
@@ -92,18 +92,20 @@ bool CcScore951021::HasScore951105() const
 	return false;
 }
 
-bool CcScore951021::HasPriority(char &priority) const
+bool CcScore951021::HasPriority(char &/*priority*/) const
 {
-	int n = 0;
-	for (int i=0; i<d_len; i++)
-		n += d_col[i];
-	if (IsMajor(d_buf))
-		priority = 1;
-	else if (IsMinor(n))
-		priority = 2;
-	else
-		return false;
-	return true;
+	if (IsMajorOrMinor(d_buf))
+		return true;
+	bool isAbjadRevValid;
+	string abjadRev = AbjadRev(d_buf, isAbjadRevValid);
+	if (IsMajorOrMinor(abjadRev))
+		return true;
+	int sum = 0;
+	for (int i=0; i<d_nSize; i++)
+		sum += d_n[i];
+	if (IsMajorOrMinor(sum))
+		return true;
+	return false;
 }
 
 bool CcScore951021::HasScoreIndependently(char &major, char &minor, bool bAcceptMinor) const

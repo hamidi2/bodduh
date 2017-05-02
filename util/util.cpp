@@ -204,6 +204,16 @@ namespace BUtil
 		return m9 == 2 || m9 == 8 || m28 == 2 || m28 == 26 || m11 == 0 || m17 == 0;
 	}
 
+	bool IsMajorOrMinor(int64 r)
+	{
+		return IsMajor(r) || IsMinor(r);
+	}
+
+	bool IsMajorOrMinor(LPCSTR str)
+	{
+		return IsMajor(str) || IsMinor(str);
+	}
+
 	bool IsMajorOrMinor(LPCSTR str, bool bLookingForMajor)
 	{
 		int strLen = strlen(str);
