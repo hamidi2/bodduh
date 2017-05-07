@@ -272,7 +272,7 @@ namespace BUtil
 	void Rev(string &str)
 	{
 		char buf[80];
-		buf[str.copy(buf, sizeof(buf))] = 0;
+		strcpy(buf, str.c_str());
 		_strrev(buf);
 		int i=0;
 		while (buf[i] == '0')

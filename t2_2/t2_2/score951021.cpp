@@ -21,12 +21,11 @@ void CcScore951021::Make(LPCSTR sentence)
 
 void CcScore951021::Reverse()
 {
-	char tmp;
 	for (char i=0, i2=d_len-1-i; i < d_len/2; i++, i2--)
 	{
-		tmp = d_sentence[i];	d_sentence[i] = d_sentence[i2];		d_sentence[i2] = tmp;
-		tmp = d_col[i];			d_col[i] = d_col[i2];				d_col[i2] = tmp;
-		tmp = d_buf[i];			d_buf[i] = d_buf[i2];				d_buf[i2] = tmp;
+		swap(d_sentence[i], d_sentence[i2]);
+		swap(d_col[i], d_col[i2]);
+		swap(d_buf[i], d_buf[i2]);
 	}
 	memset(&d_n, 0, sizeof(d_n));
 	for (char i=0; i < d_len; i++)
@@ -94,17 +93,24 @@ bool CcScore951021::HasScore951105() const
 
 bool CcScore951021::HasPriority(char &/*priority*/) const
 {
-	if (IsMajorOrMinor(d_buf))
-		return true;
-	bool isAbjadRevValid;
-	string abjadRev = AbjadRev(d_buf, isAbjadRevValid);
-	if (IsMajorOrMinor(abjadRev))
-		return true;
 	int sum = 0;
 	for (int i=0; i<d_nSize; i++)
 		sum += d_n[i];
 	if (IsMajorOrMinor(sum))
 		return true;
+	
+	char buf[80] = "";
+	for (i=0; i<d_nSize; i++)
+		sprintf(buf+strlen(buf), "%d", i);
+	if (IsMajorOrMinor(buf))
+		return true;
+
+	buf[0] = 0;
+	for (i=d_nSize-1; i>=0; i--)
+		sprintf(buf+strlen(buf), "%d", i);
+	if (IsMajorOrMinor(buf))
+		return true;
+
 	return false;
 }
 

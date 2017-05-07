@@ -44,6 +44,7 @@ namespace BUtil
 	bool IsMinor(int64 r);
 	bool IsMinor(LPCSTR str);
 	bool IsMajorOrMinor(int64 r);
+	bool IsMajorOrMinor(LPCSTR str);
 
 	bool CheckScore(int64 r, char &major, char &minor, bool bZeroIsAcceptable = true);
 	int CalcScore950122(LPCSTR r);
