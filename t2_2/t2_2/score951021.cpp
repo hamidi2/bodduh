@@ -133,7 +133,7 @@ bool CcScore951021::HasScoreIndependently(char &major, char &minor, bool bAccept
 	return false;
 }
 
-bool CcScore951021::HasScoreDependently(char &major, char &minor) const
+bool CcScore951021::HasScoreDependently(char &major, char &minor, bool is4k) const
 {
 	major = minor = 0;
 	char i = 0;
@@ -149,6 +149,11 @@ bool CcScore951021::HasScoreDependently(char &major, char &minor) const
 		major += major2;
 		minor += minor2;
 	}
+	if (is4k && (i == d_nSize-1) && IsMajorOrMinor(d_n[i]))  // 'IsMajorOrMinor(d_n[i])' here may be replaced with 'IsMajor(d_n[i])' or 'd_n[i] == 8 || d_n[i] == 11'. since no major or minor number between 4 and 16 exists other than these two numbers.
+	{
+		major++;
+		i++;
+	}
 	return (i == d_nSize);
 }
 
@@ -159,12 +164,10 @@ bool CcScore951021::HasScore(char &major, char &minor, char &priority)
 	if (!HasScore951105())
 		return false;
 	int j = d_len % 4, pos;
-	if (!j)
-		return HasScoreIndependently(major, minor, false);
 	pos = d_len / 4 * 4;
 	char major2 = 0, minor2 = 0;
 	char major3, minor3;
-	if (HasScoreIndependently(major3, minor3))
+	if (HasScoreIndependently(major3, minor3, j))
 		UpdateScore(major2, minor2, major3, minor3);
 	// 7/21
 	for (; j<4; j++)
