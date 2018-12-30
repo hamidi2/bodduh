@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -16,10 +17,6 @@ namespace WindowsFormsApp1
         public Form1()
         {
             InitializeComponent();
-			//var sc1 = Score(11, 10, 21, 2);
-			//var sc2 = Score(11, 10, 9, 20);
-			var sc3 = Score(11, 10, 13, 16);
-			//var sc4 = Score(11, 10, 16, 13);
 		}
 
 		class Pair
@@ -36,19 +33,20 @@ namespace WindowsFormsApp1
                 return;
             }
             var scores = new Dictionary<Pair, int>();
+			Pair pair = null;
             for (byte i = 1; i <= 28; i++)
                 for (byte j = 1; j <= 28; j++)
                 {
                     var score = Score(Constants.Letters[tbInput.Text[0]].Abjad1, Constants.Letters[tbInput.Text[1]].Abjad1, i, j);
-					var pair = new Pair();
+					pair = new Pair();
 					pair.Letters[0] = i;
                     pair.Letters[1] = j;
                     scores[pair] = score;
                 }
 			var list = scores.ToList();
-			list.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
-			var sw = new StreamWriter("1.log");
-			sw.Write(list);
+			list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+			pair = list[0].Key;
+			Debug.WriteLine("{0} {1}", pair.Letters[0], pair.Letters[1]);
 		}
 
         private int Score(byte a, byte b, byte x, byte y)
@@ -265,10 +263,10 @@ namespace WindowsFormsApp1
                 Diff(rows[2], rowsRev[2]),
                 Diff(rows[3], rowsRev[3]),
                 0,
-                Diff(cols[0], colsRev[0]),
-                Diff(cols[1], colsRev[1]),
-                Diff(cols[2], colsRev[2]),
                 Diff(cols[3], colsRev[3]),
+                Diff(cols[2], colsRev[2]),
+                Diff(cols[1], colsRev[1]),
+                Diff(cols[0], colsRev[0]),
 				0,
             };
 			vars[4] = vars[0] + vars[1] + vars[2] + vars[3];
@@ -289,23 +287,23 @@ namespace WindowsFormsApp1
             {
 				// 50: rowsSum[0], 30: rowsSum[3]
 				// 58: colsSum[3], 46: colsSum[2], 34: colsSum[1], 38: colsSum[0]
-                int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0])),  // 58463438
-				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], colsSum[1], colsSum[2], colsSum[3])),  // 38344658
-				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[3], colsSum[3], rowsSum[0], colsSum[0])),  // 30585038
-				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[0], colsSum[3], rowsSum[3], colsSum[0])),  // 50583038
-				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], rowsSum[3], colsSum[0], rowsSum[0])),  // 58303850
-				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], rowsSum[3], colsSum[3], rowsSum[0])),  // 38305850
-				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[3], colsSum[0], rowsSum[0], colsSum[3])),  // 30385058
-				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[0], colsSum[0], rowsSum[3], colsSum[3])),  // 50383058
-				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], rowsSum[0], colsSum[0], rowsSum[3])),  // 58503830
-				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], rowsSum[0], colsSum[3], rowsSum[3])),  // 38505830
+                int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0])),  // 0. 58463438
+				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], colsSum[1], colsSum[2], colsSum[3])),  // 1. 38344658
+				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[3], colsSum[3], rowsSum[0], colsSum[0])),  // 2. 30585038
+				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[0], colsSum[3], rowsSum[3], colsSum[0])),  // 3. 50583038
+				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], rowsSum[3], colsSum[0], rowsSum[0])),  // 4. 58303850
+				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], rowsSum[3], colsSum[3], rowsSum[0])),  // 5. 38305850
+				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[3], colsSum[0], rowsSum[0], colsSum[3])),  // 6. 30385058
+				int.Parse(string.Format("{0}{1}{2}{3}", rowsSum[0], colsSum[0], rowsSum[3], colsSum[3])),  // 7. 50383058
+				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[3], rowsSum[0], colsSum[0], rowsSum[3])),  // 8. 58503830
+				int.Parse(string.Format("{0}{1}{2}{3}", colsSum[0], rowsSum[0], colsSum[3], rowsSum[3])),  // 9. 38505830
 			};
 			scores[23] = Score(Sum(vars[0], vars[1]));
-			scores[24] = Sum(vars[2], vars[3]) % 8 == 0 ? 1 : 0;
-			scores[25] = Score(Diff(vars[2], vars[3]));
-			scores[26] = Score(Sum(vars[4], vars[5]));
-			scores[27] = Sum(vars[6], vars[7]) % 8 == 0 ? 1 : 0;
-			scores[28] = Score(Sum(vars[8], vars[9]));
+			scores[24] = Sum(vars[3], vars[5]) % 8 == 0 ? 1 : 0;
+			scores[25] = Score(Diff(vars[3], vars[5]));
+			scores[26] = Score(Sum(vars[4], vars[7]));
+			scores[27] = Sum(vars[6], vars[8]) % 8 == 0 ? 1 : 0;
+			scores[28] = Score(Sum(vars[9], vars[2]));
 
 			// 30
 			vars = new[]
