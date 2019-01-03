@@ -19,76 +19,83 @@ namespace WindowsFormsApp1
             InitializeComponent();
 		}
 
-		class Pair
+		class Table
         {
-            public byte[] Abjad1 = new byte[2];
+			public byte x, y;
+			public int[] colsSum;// = new int[4];
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-			//tbInput.Text = "کیفحالالرضامعالمامون";
-			tbInput.Text = "کیفحالرضمعون";
+			tbInput.Text = "کیفحالالرضامعالمامون";
+			//tbInput.Text = "کیفحالرضمعون";
 
 			if (tbInput.Text.Length < 2)
             {
                 MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
                 return;
             }
-            var scores = new Dictionary<Pair, int>();
-			Pair pair = null;
+            var scores = new Dictionary<Table, int>();
+			Table table = null;
 			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 			var iInput = 2;
 			for (byte i = 1; i <= 28; i++)
                 for (byte j = 1; j <= 28; j++)
                 {
-                    var score = Score(a, b, i, j);
-					pair = new Pair();
-					pair.Abjad1[0] = i;
-                    pair.Abjad1[1] = j;
-                    scores[pair] = score;
+					table = new Table();
+					var score = Score(a, b, i, j, out table.colsSum);
+					table.x = i;
+                    table.y = j;
+                    scores[table] = score;
                 }
 			var list = scores.ToList();
-			list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-			pair = list[0].Key;
+			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
+			table = list[0].Key;
+			_colsSum[0] += table.colsSum[0];
+			_colsSum[1] += table.colsSum[1];
+			_colsSum[2] += table.colsSum[2];
+			_colsSum[3] += table.colsSum[3];
 			foreach (var letter in Constants.Letters)
-				if (letter.Value.Abjad1 == pair.Abjad1[0])
+				if (letter.Value.Abjad1 == table.x)
 					tbOutput.Text += letter.Key;
 			foreach (var letter in Constants.Letters)
-				if (letter.Value.Abjad1 == pair.Abjad1[1])
+				if (letter.Value.Abjad1 == table.y)
 					tbOutput.Text += letter.Key;
 			while (true)
 			{
 				a = PutInRange(a + b);
 				b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
-				var x = PutInRange(pair.Abjad1[0] + pair.Abjad1[1]);
-				scores = new Dictionary<Pair, int>();
+				var x = PutInRange(table.x + table.y);
+				scores = new Dictionary<Table, int>();
 				for (byte j = 1; j <= 28; j++)
 				{
-					var score = Score(a, b, x, j);
-					pair = new Pair();
-					pair.Abjad1[0] = x;
-					pair.Abjad1[1] = j;
-					scores[pair] = score;
+					table = new Table();
+					var score = Score(a, b, x, j, out table.colsSum);
+					table.x = x;
+					table.y = j;
+					scores[table] = score;
 				}
 				list = scores.ToList();
 				list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-				pair = list[0].Key;
-				//foreach (var letter in Constants.Letters)
-				//	if (letter.Value.Abjad1 == pair.Abjad1[0])
-				//		tbOutput.Text += letter.Key;
+				table = list[0].Key;
+				_colsSum[0] += table.colsSum[0];
+				_colsSum[1] += table.colsSum[1];
+				_colsSum[2] += table.colsSum[2];
+				_colsSum[3] += table.colsSum[3];
 				foreach (var letter in Constants.Letters)
-					if (letter.Value.Abjad1 == pair.Abjad1[1])
+					if (letter.Value.Abjad1 == table.y)
 						tbOutput.Text += letter.Key;
 				iInput++;
 				if (iInput == tbInput.Text.Length)
 					break;
 			}
+			Debug.WriteLine("{0} {1} {2} {3}", _colsSum[3], _colsSum[2], _colsSum[1], _colsSum[0]);
 		}
 
 		int[] _colsSum = new int[4];
 
-		private int Score(byte a, byte b, byte x, byte y)
+		private int Score(byte a, byte b, byte x, byte y, out int[] colsSum)
         {
             var score = 0;
             var ar = new int[16];
@@ -115,7 +122,7 @@ namespace WindowsFormsApp1
 				ar[12] + ar[13] + ar[14] + ar[15],
             };
             // first column is defined to be the rightmost one.
-            int[] colsSum =
+            colsSum = new int[]
             {
                 ar[0] + ar[4] + ar[8] + ar[12],
                 ar[1] + ar[5] + ar[9] + ar[13],
