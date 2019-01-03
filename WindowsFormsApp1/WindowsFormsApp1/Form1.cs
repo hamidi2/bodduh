@@ -21,35 +21,74 @@ namespace WindowsFormsApp1
 
 		class Pair
         {
-            public byte[] Letters = new byte[2];
+            public byte[] Abjad1 = new byte[2];
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-			tbInput.Text = "کی";
-            if (tbInput.Text.Length < 2)
+			//tbInput.Text = "کیفحالالرضامعالمامون";
+			tbInput.Text = "کیفحالرضمعون";
+
+			if (tbInput.Text.Length < 2)
             {
-                MessageBox.Show("تعداد حروف ورودی حداقل باید دو حرف باشد");
+                MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
                 return;
             }
             var scores = new Dictionary<Pair, int>();
 			Pair pair = null;
-            for (byte i = 1; i <= 28; i++)
+			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
+			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
+			var iInput = 2;
+			for (byte i = 1; i <= 28; i++)
                 for (byte j = 1; j <= 28; j++)
                 {
-                    var score = Score(Constants.Letters[tbInput.Text[0]].Abjad1, Constants.Letters[tbInput.Text[1]].Abjad1, i, j);
+                    var score = Score(a, b, i, j);
 					pair = new Pair();
-					pair.Letters[0] = i;
-                    pair.Letters[1] = j;
+					pair.Abjad1[0] = i;
+                    pair.Abjad1[1] = j;
                     scores[pair] = score;
                 }
 			var list = scores.ToList();
 			list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
 			pair = list[0].Key;
-			Debug.WriteLine("{0} {1}", pair.Letters[0], pair.Letters[1]);
+			foreach (var letter in Constants.Letters)
+				if (letter.Value.Abjad1 == pair.Abjad1[0])
+					tbOutput.Text += letter.Key;
+			foreach (var letter in Constants.Letters)
+				if (letter.Value.Abjad1 == pair.Abjad1[1])
+					tbOutput.Text += letter.Key;
+			while (true)
+			{
+				a = PutInRange(a + b);
+				b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
+				var x = PutInRange(pair.Abjad1[0] + pair.Abjad1[1]);
+				scores = new Dictionary<Pair, int>();
+				for (byte j = 1; j <= 28; j++)
+				{
+					var score = Score(a, b, x, j);
+					pair = new Pair();
+					pair.Abjad1[0] = x;
+					pair.Abjad1[1] = j;
+					scores[pair] = score;
+				}
+				list = scores.ToList();
+				list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+				pair = list[0].Key;
+				//foreach (var letter in Constants.Letters)
+				//	if (letter.Value.Abjad1 == pair.Abjad1[0])
+				//		tbOutput.Text += letter.Key;
+				foreach (var letter in Constants.Letters)
+					if (letter.Value.Abjad1 == pair.Abjad1[1])
+						tbOutput.Text += letter.Key;
+				iInput++;
+				if (iInput == tbInput.Text.Length)
+					break;
+			}
 		}
 
-        private int Score(byte a, byte b, byte x, byte y)
+		int[] _colsSum = new int[4];
+
+		private int Score(byte a, byte b, byte x, byte y)
         {
             var score = 0;
             var ar = new int[16];
@@ -349,13 +388,12 @@ namespace WindowsFormsApp1
             }
         }
 
-        int PutInRange(int n)
+        byte PutInRange(int n)
         {
-            while (n < 1)
-                n += 28;
-            //while (n > 28)
-            //	n -= 28;
-            return n;
+			n = (n - 1) % 28 + 1;
+			if (n <= 0)
+				n += 28;
+			return (byte)n;
         }
 
         int Sum(int n1, int n2)
@@ -389,6 +427,12 @@ namespace WindowsFormsApp1
                 return 1;
             return 0;
         }
-    }
+
+		private void Form1_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Escape)
+				Close();
+		}
+	}
 }
 
