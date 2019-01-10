@@ -70,5 +70,13 @@ namespace WindowsFormsApp1
 			MainMap[62] = Letters['ه'].Abjad1;
 			MainMap[63] = Letters['خ'].Abjad1;
 		}
+
+		public static char Abjad1ToLetter(byte abjad1)
+		{
+			foreach (var letter in Letters)
+				if (letter.Value.Abjad1 == abjad1)
+					return letter.Key;
+			throw new Exception(string.Format("No letter has abjad1 code of {0}", abjad1));
+		}
 	}
 }

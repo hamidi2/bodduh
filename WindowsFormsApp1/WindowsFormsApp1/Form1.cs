@@ -17,6 +17,7 @@ namespace WindowsFormsApp1
         public Form1()
         {
             InitializeComponent();
+			//int[] colsSum = new int[4];
 			//Score(21, 17, 1, 1, out _colsSum);
 			//Score(21, 17, 1, 21, out _colsSum);
 		}
@@ -57,16 +58,13 @@ namespace WindowsFormsApp1
 			var list = scores.ToList();
 			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
 			table = list[0].Key;
-			_colsSum[0] += table.colsSum[0];
-			_colsSum[1] += table.colsSum[1];
-			_colsSum[2] += table.colsSum[2];
-			_colsSum[3] += table.colsSum[3];
-			foreach (var letter in Constants.Letters)
-				if (letter.Value.Abjad1 == table.x)
-					tbOutput.Text += letter.Key;
-			foreach (var letter in Constants.Letters)
-				if (letter.Value.Abjad1 == table.y)
-					tbOutput.Text += letter.Key;
+			int[] colsSum = new int[4];
+			colsSum[0] += table.colsSum[0];
+			colsSum[1] += table.colsSum[1];
+			colsSum[2] += table.colsSum[2];
+			colsSum[3] += table.colsSum[3];
+			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
+			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 			while (true)
 			{
 				a = PutInRange(a + b);
@@ -84,21 +82,17 @@ namespace WindowsFormsApp1
 				list = scores.ToList();
 				list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
 				table = list[0].Key;
-				_colsSum[0] += table.colsSum[0];
-				_colsSum[1] += table.colsSum[1];
-				_colsSum[2] += table.colsSum[2];
-				_colsSum[3] += table.colsSum[3];
-				foreach (var letter in Constants.Letters)
-					if (letter.Value.Abjad1 == table.y)
-						tbOutput.Text += letter.Key;
+				colsSum[0] += table.colsSum[0];
+				colsSum[1] += table.colsSum[1];
+				colsSum[2] += table.colsSum[2];
+				colsSum[3] += table.colsSum[3];
+				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
 					break;
 			}
-			Debug.WriteLine("{0} {1} {2} {3}", _colsSum[3], _colsSum[2], _colsSum[1], _colsSum[0]);
+			Debug.WriteLine("{0} {1} {2} {3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0]);
 		}
-
-		int[] _colsSum = new int[4];
 
 		private int Score(byte a, byte b, byte x, byte y, out int[] colsSum)
         {
