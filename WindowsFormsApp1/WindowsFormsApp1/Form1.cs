@@ -28,11 +28,32 @@ namespace WindowsFormsApp1
 			public int[] colsSum;// = new int[4];
         }
 
-        private void button1_Click(object sender, EventArgs e)
+		void FindBestTable(byte a, byte b, byte xFrom, byte xTo, out Table table, ref int[] colsSum)
+		{
+			var scores = new Dictionary<Table, int>();
+			for (byte x = xFrom; x <= xTo; x++)
+				for (byte y = 1; y <= 28; y++)
+				{
+					table = new Table();
+					var score = Score(a, b, x, y, out table.colsSum);
+					table.x = x;
+					table.y = y;
+					scores[table] = score;
+				}
+			var list = scores.ToList();
+			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
+			table = list[0].Key;
+			colsSum[0] += table.colsSum[0];
+			colsSum[1] += table.colsSum[1];
+			colsSum[2] += table.colsSum[2];
+			colsSum[3] += table.colsSum[3];
+		}
+
+		private void button1_Click(object sender, EventArgs e)
         {
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
 			// 3042 3106 2918 3030 کیفحالرضمعون
-			// 2334 2454 2290 2358 کیهوزتادسرغمن 
+			// 2334 2454 2290 2358 کیهوزتادسرغمن
 			// 1238 1270 1102 1294 کیهوزتوایدکهدهیدولتمان
 			// 1764 1808 1608 1776 کیهوزتادلمن
 			if (tbInput.Text.Length < 2)
@@ -41,30 +62,12 @@ namespace WindowsFormsApp1
                 return;
             }
 			tbOutput.Text = "";
-            var scores = new Dictionary<Table, int>();
-			Table table = null;
+			int[] colsSum = new int[4];
 			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
+			Table table;
+			FindBestTable(a, b, 1, 28, out table, ref colsSum);
 			var iInput = 2;
-			for (byte i = 1; i <= 28; i++)
-                for (byte j = 1; j <= 28; j++)
-                {
-					table = new Table();
-					var score = Score(a, b, i, j, out table.colsSum);
-					table.x = i;
-                    table.y = j;
-                    scores[table] = score;
-                }
-			var list = scores.ToList();
-			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
-			table = list[0].Key;
-			int[] colsSum = new int[4];
-			colsSum[0] += table.colsSum[0];
-			colsSum[1] += table.colsSum[1];
-			colsSum[2] += table.colsSum[2];
-			colsSum[3] += table.colsSum[3];
-			table.x = 13;
-			table.y = 16;
 			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
 			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 			while (true)
@@ -72,22 +75,7 @@ namespace WindowsFormsApp1
 				a = PutInRange(a + b);
 				b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
 				var x = PutInRange(table.x + table.y);
-				scores = new Dictionary<Table, int>();
-				for (byte j = 1; j <= 28; j++)
-				{
-					table = new Table();
-					var score = Score(a, b, x, j, out table.colsSum);
-					table.x = x;
-					table.y = j;
-					scores[table] = score;
-				}
-				list = scores.ToList();
-				list.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-				table = list[0].Key;
-				colsSum[0] += table.colsSum[0];
-				colsSum[1] += table.colsSum[1];
-				colsSum[2] += table.colsSum[2];
-				colsSum[3] += table.colsSum[3];
+				FindBestTable(a, b, x, x, out table, ref colsSum);
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
