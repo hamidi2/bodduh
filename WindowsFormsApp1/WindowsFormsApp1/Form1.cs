@@ -58,7 +58,9 @@ namespace WindowsFormsApp1
 			// 2334 2454 2290 2358 کیهوزتادسرغمن
 			// 1238 1270 1102 1294 کیهوزتوایدکهدهیدولتمان
 			// 1764 1808 1608 1776 کیهوزتادلمن
-			tbInput.Text = "کیفحالرضمعون";
+            // کیفرهماییبرسدازشهجان
+            // کیفرهمابسدزشجن
+			//tbInput.Text = "کیفحالرضمعون";
 			if (tbInput.Text.Length < 2)
             {
                 MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
@@ -142,9 +144,9 @@ namespace WindowsFormsApp1
 			int[] scores = new int[34];
 
             // 1
-			scores[0] = ScoreDiff(ar[3] + ar[2], ar[1] + ar[0]);
+			scores[0] += ScoreDiff(ar[3] + ar[2], ar[1] + ar[0]);
 			if (scores[0] == 0 && !bCalculateForTwoInitialLetters)
-				scores[0] = Score(Diff(ar[3], ar[2]) + ar[1] + ar[0]);
+				scores[0] += Score(Diff(ar[3], ar[2]) + ar[1] + ar[0]);
 
 			// 2
 			scores[1] = Score(rowsSum[0], rowsSum[3]);
