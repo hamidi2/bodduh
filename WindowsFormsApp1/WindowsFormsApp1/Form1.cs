@@ -20,8 +20,10 @@ namespace WindowsFormsApp1
 			int[] colsSum = new int[4];
 			//Score(21, 17, 1, 1, out colsSum);
 			//Score(21, 17, 1, 21, out colsSum);
-			Score(10, 8, 2, 19, out colsSum, false);
-			Score(10, 8, 2, 7, out colsSum, false);
+			//Score(10, 8, 2, 19, out colsSum, false);
+			//Score(10, 8, 2, 7, out colsSum, false);
+			Score(18, 1, 21, 15, out colsSum, false);
+			Score(18, 1, 21, 3, out colsSum, false);
 		}
 
 		class Table
@@ -30,7 +32,7 @@ namespace WindowsFormsApp1
 			public int[] colsSum;// = new int[4];
         }
 
-		void FindBestTable(byte a, byte b, byte x, out Table table, ref int[] colsSum, byte yMod4)
+		void FindBestTable(byte a, byte b, byte x, out Table table, ref int[] colsSum, byte yMod4, bool replaceGhaf = false)
 		{
 			var scores = new Dictionary<Table, int>();
 			byte xFrom, xTo, yFrom, yStep;
@@ -60,6 +62,12 @@ namespace WindowsFormsApp1
 			var list = scores.ToList();
 			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
 			table = list[0].Key;
+			if (replaceGhaf)
+			{
+				foreach (var item in list)
+					if (item.Key.y == 19)
+						table = item.Key;
+			}
 			colsSum[0] += table.colsSum[0];
 			colsSum[1] += table.colsSum[1];
 			colsSum[2] += table.colsSum[2];
@@ -101,7 +109,7 @@ namespace WindowsFormsApp1
 				var x = (byte)(table.x + table.y);
 				if (x > 28)
 					x -= 28;
-				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput]);
+				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput], iInput == 3);
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
