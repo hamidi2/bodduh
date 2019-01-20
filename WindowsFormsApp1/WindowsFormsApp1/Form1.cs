@@ -20,8 +20,8 @@ namespace WindowsFormsApp1
 			int[] colsSum = new int[4];
 			//Score(21, 17, 1, 1, out colsSum);
 			//Score(21, 17, 1, 21, out colsSum);
-			//Score(10, 8, 2, 19, out colsSum, false);
-			SumOfDigits(9999, false);
+			Score(10, 8, 2, 19, out colsSum, false);
+			Score(10, 8, 2, 7, out colsSum, false);
 		}
 
 		class Table
@@ -30,14 +30,29 @@ namespace WindowsFormsApp1
 			public int[] colsSum;// = new int[4];
         }
 
-		void FindBestTable(byte a, byte b, byte xFrom, byte xTo, out Table table, ref int[] colsSum, bool bCalculateForTwoInitialLetters)
+		void FindBestTable(byte a, byte b, byte x, out Table table, ref int[] colsSum, byte yMod4)
 		{
 			var scores = new Dictionary<Table, int>();
-			for (byte x = xFrom; x <= xTo; x++)
-				for (byte y = 1; y <= 28; y++)
+			byte xFrom, xTo, yFrom, yStep;
+			if (yMod4 == 4)  // no limit for x
+			{
+				xFrom = 1;
+				xTo = 28;
+				yFrom = 1;
+				yStep = 1;
+			}
+			else
+			{
+				xFrom = x;
+				xTo = x;
+				yFrom = (byte)(yMod4 + 1);
+				yStep = 4;
+			}
+			for (x = xFrom; x <= xTo; x++)
+				for (byte y = yFrom; y <= 28; y += yStep)
 				{
 					table = new Table();
-					var score = Score(a, b, x, y, out table.colsSum, bCalculateForTwoInitialLetters);
+					var score = Score(a, b, x, y, out table.colsSum, yMod4 == 4);
 					table.x = x;
 					table.y = y;
 					scores[table] = score;
@@ -60,7 +75,8 @@ namespace WindowsFormsApp1
 			// 1764 1808 1608 1776 کیهوزتادلمن
             // کیفرهماییبرسدازشهجان
             // کیفرهمابسدزشجن
-			//tbInput.Text = "کیفحالرضمعون";
+			if (tbInput.Text.Length == 0)
+				tbInput.Text = "کیفحالرضمعون";
 			if (tbInput.Text.Length < 2)
             {
                 MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
@@ -71,10 +87,11 @@ namespace WindowsFormsApp1
 			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 			Table table;
-			FindBestTable(a, b, 1, 28, out table, ref colsSum, true);
+			FindBestTable(a, b, 0, out table, ref colsSum, 4);
 			var iInput = 2;
 			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
 			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
+			byte[] onsori = { 0, 3, 0, 2, 2, 1, 3, 1, 1, 2, 1, 3 };
 			while (true)
 			{
 				a += b;
@@ -84,7 +101,7 @@ namespace WindowsFormsApp1
 				var x = (byte)(table.x + table.y);
 				if (x > 28)
 					x -= 28;
-				FindBestTable(a, b, x, x, out table, ref colsSum, false);
+				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput]);
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
@@ -262,11 +279,7 @@ namespace WindowsFormsApp1
 			vars[1] = colsSum[0] * colsSum[1];
 			scores[15] += Score(vars[0] * vars[1]);
 			if (scores[15] == 0 && !bCalculateForTwoInitialLetters)
-			{
-				scores[15] = Score(vars[0] + vars[1]);
-				if (scores[15] == 0)
-					ScoreDiff(vars[0], vars[1]);
-			}
+				scores[15] = Score(vars[0], vars[1], true);
 
 			// 17
 			int[] columnsMul =
@@ -276,16 +289,13 @@ namespace WindowsFormsApp1
                 ar[2] * ar[6] * ar[10] * ar[14],
                 ar[3] * ar[7] * ar[11] * ar[15],
             };
-			scores[16] = Score(columnsMul[0] + columnsMul[1]);
-			scores[16] += ScoreDiff(columnsMul[0], columnsMul[1]);
+			scores[16] = Score(columnsMul[0], columnsMul[1]);
 			scores[16] += Score(columnsMul[2]);
 			scores[16] += Score(columnsMul[3]);
 
 			// 18
-			scores[17] += Score(rowsSum[0] + rowsSum[1]);
-			scores[17] += ScoreDiff(rowsSum[0], rowsSum[1]);
-            scores[17] += Score(rowsSum[0] + rowsSum[2]);
-            scores[17] += ScoreDiff(rowsSum[0], rowsSum[2]);
+			scores[17] += Score(rowsSum[0], rowsSum[1]);
+            scores[17] += Score(rowsSum[0], rowsSum[2]);
             scores[17] += Score(rowsSum[1] + rowsSum[3]);
             scores[17] += Score(rowsSum[0] * rowsSum[1] * rowsSum[2] * rowsSum[3]);
 
@@ -310,9 +320,9 @@ namespace WindowsFormsApp1
 				0,
 			};
 			scores[19] = Score(vars[0] + vars[1]);
-			if (scores[19] == 0)
+			if (scores[19] == 0 && !bCalculateForTwoInitialLetters)
 				scores[19] = ScoreDiff(vars[0], vars[1]);
-			if (scores[19] == 0)
+			if (scores[19] == 0 && !bCalculateForTwoInitialLetters)
 			{
 				vars[2] = vars[0] * vars[1];
 				vars[3] = vars[1] * colsSum[1] * colsSum[2];
@@ -333,9 +343,6 @@ namespace WindowsFormsApp1
             scores[20] += vars[3] % a == 0 ? 1 : 0;
             scores[20] += Score(vars[2]);
             scores[20] += Score(vars[3]);
-			if (scores[20] == 0 && !bCalculateForTwoInitialLetters)
-			{
-			}
 
 			// 22
 			int[] cols =
@@ -369,8 +376,7 @@ namespace WindowsFormsApp1
 			vars[9] = vars[5] + vars[6] + vars[7] + vars[8];
 			scores[21] = vars[4] % 9 == 0 ? 1 : 0;
             scores[21] += vars[9] % 9 == 0 ? 1 : 0;
-            scores[21] += Score(vars[4] + vars[9]);
-            scores[21] += ScoreDiff(vars[4], vars[9]);
+            scores[21] += Score(vars[4], vars[9]);
 
             // 23
             scores[22] = ScoreDiff(vars[0], vars[8]);
@@ -447,9 +453,6 @@ namespace WindowsFormsApp1
 			{
 				list.Add(vars[6] + vars[8]);
 				list.Add(Diff(vars[6], vars[8]));
-			}
-			if (scores[27] == 0 && !bCalculateForTwoInitialLetters)
-			{
 			}
 
 			// 29
