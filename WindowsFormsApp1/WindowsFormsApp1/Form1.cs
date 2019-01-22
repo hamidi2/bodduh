@@ -171,24 +171,46 @@ namespace WindowsFormsApp1
             // 1
 			scores[0] += ScoreDiff(ar[3] + ar[2], ar[1] + ar[0]);
 			if (scores[0] == 0 && !bCalculateForTwoInitialLetters)
+			{
 				scores[0] += Score(Diff(ar[3], ar[2]) + ar[1] + ar[0]);
+				if (scores[0] == 0)
+					scores[0] += Score(ar[0] + ar[3] + Diff(ar[1], ar[2]));
+			}
 
 			// 2
 			scores[1] = Score(rowsSum[0], rowsSum[3]);
+			if (scores[1] == 0 && !bCalculateForTwoInitialLetters)
+			{
+				scores[1] += Score(Diff(rowsSum[0], rowsSum[3]) * 2);
+				if (scores[1] == 0)
+					scores[1] += Score((rowsSum[0] + rowsSum[3]) * 2);
+			}
 
 			// 3
-			scores[2] = Score(colsSum[3], colsSum[0]);
+			scores[2] = Score(colsSum[0], colsSum[3]);
+			if (scores[2] == 0 && !bCalculateForTwoInitialLetters)
+			{
+				scores[2] += Score(Diff(colsSum[0], colsSum[3]) * 2);
+				if (scores[2] == 0)
+					scores[2] += Score((colsSum[0] + colsSum[3]) * 2);
+			}
 
 			// 4
-			scores[3] = Score(colsSum[3], rowsSum[0]);
+			scores[3] = Score(rowsSum[0], colsSum[3]);
+			if (scores[3] == 0 && !bCalculateForTwoInitialLetters)
+			{
+				scores[3] += Score(Diff(rowsSum[0], colsSum[3]) * 2);
+				if (scores[3] == 0)
+					scores[3] += Score((rowsSum[0] + colsSum[3]) * 2);
+			}
 
 			// 5
-			scores[4] = Score(rowsSum[3], colsSum[0]);
+			scores[4] = Score(colsSum[0], rowsSum[3]);
 			if (scores[4] == 0 && !bCalculateForTwoInitialLetters)
 			{
-				scores[4] = Score((rowsSum[3] + colsSum[0]) * 2);
+				scores[4] = Score((colsSum[0] + rowsSum[3]) * 2);
 				if (scores[4] == 0)
-					scores[4] = Score(Diff(rowsSum[3], colsSum[0]) * 2);
+					scores[4] = Score(Diff(colsSum[0], rowsSum[3]) * 2);
 			}
 
 			// 6
@@ -213,7 +235,11 @@ namespace WindowsFormsApp1
 			// 9
 			scores[8] = Score(rows[0] + rows[2]);
 			if (scores[8] == 0 && !bCalculateForTwoInitialLetters)
+			{
 				scores[8] = Score(rowsRev[0] + rowsRev[2]);
+				if (scores[8] == 0)
+					scores[8] += Score(Reverse(rows[0]) + Reverse(rows[2]));
+			}
 
 			// 10
 			scores[9] = (int.Parse(string.Format("{0}{0}{0}{0}", ar[0])) % 28 == ar[0]) ? 1 : 0;
@@ -245,6 +271,10 @@ namespace WindowsFormsApp1
 			{
 				vars[0] %= 9;
 				scores[11] += (vars[0] == 2 || vars[0] == 8) ? 1 : 0;
+				if (scores[11] == 0)
+				{
+					scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[3], sumOfDigits[2])));
+				}
 			}
 
 			// 13
@@ -306,6 +336,8 @@ namespace WindowsFormsApp1
             scores[17] += Score(rowsSum[0], rowsSum[2]);
             scores[17] += Score(rowsSum[1] + rowsSum[3]);
             scores[17] += Score(rowsSum[0] * rowsSum[1] * rowsSum[2] * rowsSum[3]);
+			if (scores[17] == 0 && !bCalculateForTwoInitialLetters)
+				scores[17] += ScoreDiff(rowsSum[1], rowsSum[3]);
 
             // 19
 			vars = new long[]
@@ -433,13 +465,23 @@ namespace WindowsFormsApp1
 				vars[11] = vars[10] % 28;
 				vars[12] = Diff(vars[0], vars[1]) % 28;
 				scores[23] = Score(vars[11], vars[12], true);
+				if (scores[23] == 0)
+					scores[23] += ScoreDiff(vars[0], vars[1]);
 			}
 
 			// 25
 			vars[10] = vars[3] + vars[5];
 			scores[24] = Score(vars[10]) != 0 || vars[10] % 8 == 0 ? 1 : 0;
 			if (scores[24] == 0)
+			{
 				list.Add(vars[10]);
+				if (!bCalculateForTwoInitialLetters)
+				{
+					scores[24] += Score(vars[2] + vars[9] + vars[10]);
+					if (scores[24] == 0)
+						scores[24] += ScoreDiff(vars[2] + vars[9], vars[10]);
+				}
+			}
 
 			// 26
 			scores[25] = ScoreDiff(vars[3], vars[5]);
@@ -461,6 +503,8 @@ namespace WindowsFormsApp1
 			{
 				list.Add(vars[6] + vars[8]);
 				list.Add(Diff(vars[6], vars[8]));
+				if (!bCalculateForTwoInitialLetters)
+					scores[27] += ScoreDiff(vars[6], vars[8]);
 			}
 
 			// 29
@@ -514,7 +558,7 @@ namespace WindowsFormsApp1
 			}
 
 			foreach (var sc in scores)
-				score += sc;
+				score += sc == 0 ? 0 : 1;
 
 			return score;
         }
