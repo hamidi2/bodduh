@@ -194,38 +194,50 @@ X9 = C4R1C1R4
 X10 = C1R1C4R4
 X11 = X1 + X2
 X11 = ?
+3:
 X11 = K28 + X12
 (X1-X2) = K28 + X13
-3:
 X12 ± X13 = ?
 X1 ñ X2 = ?
 (X1 ± X2) * 2 = ?
+(X1 ± X2) = K11 or K17 ?
+SumOfDigits(X1 ± X2) = K11 or K17 ?
 
 ‘—ÿ »Ì”  Ê Å‰Ã„:
 X4+X6 = ? Ì« X4+X6 = K8
 3:
 (X3+X10) ± (X4+X6) = ?
 X4±X10 = ?
+X4+X6 = K11 or K17 ?
+SumOfDigits(X4+x6) = K11 or K17 ?
 
 ‘—ÿ »Ì”  Ê ‘‘„:
 X4-X6 = ?
+X4-X6 = K11 or K17 ?
+SumOfDigits(X4-X6) = K11 or K17 ?
 
 ‘—ÿ »Ì”  Ê Â› „:
 X5+X8 = ?
 3:
 X4±X5 = ?
 X5-X8 = ?
+X5±X8 = K11 or K17 ?
+SumOfDigits(X5±X8) = K11 or K17 ?
 
 ‘—ÿ »Ì”  Ê Â‘ „:
 X7+X9 = ? Ì« X7+X9 = K8
 3:
 X7ñX9 = ?
 X5±X7 = ?
+X7±X9 = K11 or K17
+SumOfDigits(X7±X9) = K11 or K17
 
 ‘—ÿ »Ì”  Ê ‰Â„:
 X3+X10 = ?
 3:
 X3-X10 = ?
+X3±X10 = K11 or K17
+SumOfDigits(X3±X10) = K11 or K17
 
 ‘—ÿ ”Ìù«„:
 Å” «“ Ã«Ìê“Ì‰ ò—œ‰ „— »Â ⁄‰’—Ì Â— ⁄÷Ê œ— ÃœÊ· ›—÷ ò‰Ì„ Õ«’· Ã„⁄ «⁄œ«œ Â— ” Ê‰ «“ —«”  »Â çÅ ‘œ
