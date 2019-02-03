@@ -21,14 +21,14 @@ namespace WindowsFormsApp1
 			// khorujie barnameh
 			int output_score1, output_score2;
 			int[] output_scores;
-			Score(21, 13, 24, 18, out colsSum, false, out output_scores, out output_score1, out output_score2);
+			Score(23, 26, 2, 14, out colsSum, false, out output_scores, out output_score1, out output_score2);
 			// morede entezar
 			int desired_score1, desired_score2;
 			int[] desired_scores;
-			Score(21, 13, 24, 2, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
-			Debug.WriteLine("\t24\t12");
+			Score(23, 26, 2, 22, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
+			Debug.WriteLine("\t14\t22");
 			for (var i = 0; i < output_scores.Length; i++)
-				if (desired_scores[i] == 0)
+				if (output_scores[i] > desired_scores[i])
 					Debug.WriteLine("{0}\t{1}\t{2}", i + 1, output_scores[i], desired_scores[i]);
 			Debug.WriteLine("\t{0}\t{1}", output_score2, desired_score2);
 		}
@@ -130,6 +130,8 @@ namespace WindowsFormsApp1
 				if (x > 28)
 					x -= 28;
 				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput]);
+				if (iInput == 6)
+					table.y = 12;
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
@@ -270,6 +272,10 @@ namespace WindowsFormsApp1
 				scores[8] = Score(rowsRev[0], rowsRev[2], true);
 				if (scores[8] == 0)
 					scores[8] += Score(Reverse(rows[0]), Reverse(rows[2]), true);
+				if (scores[8] == 0)
+					scores[8] += Score(Reverse(rows[0] + rows[2]), true);
+				if (scores[8] == 0)
+					scores[8] += Score(Reverse(Diff(rows[0], rows[2])), true);
 			}
 
 			// 10
@@ -327,24 +333,32 @@ namespace WindowsFormsApp1
 			scores[12] = Score(colMul);
 			scores[12] += Score(rowMul, colMul);
 			if (scores[12] == 0 && !bCalculateForTwoInitialLetters)
+			{
 				scores[12] += Score(rowMul);
+				if (scores[12] == 0)
+				{
+					colMul = SumOfDigits(c[0]) * SumOfDigits(c[3]);
+					rowMul = SumOfDigits(r[0]) * SumOfDigits(r[3]);
+					scores[12] = Score(colMul) != 0 || Score(rowMul) != 0 || Score(rowMul, colMul) != 0 ? 1 : 0;
+				}
+			}
 
 			// 14
 			scores[13] = Score((c[0] + c[3]) * (r[0] + r[3]));
 			if (Diff(r[0], r[3]) != 0)
-				scores[13] += Score((c[0] + c[3]) * Diff(r[0], r[3]), false);
+				scores[13] += Score((c[0] + c[3]) * Diff(r[0], r[3]));
 			if (Diff(c[0], c[3]) != 0)
-			scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]), false);
+				scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]));
 			if (Diff(c[0], c[3]) != 0 && Diff(r[0], r[3]) != 0)
-			scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]), false);
+				scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]));
 
 			scores[13] += Score((r[0] + c[3]) * (c[0] + r[3]));
 			if (Diff(c[0], r[3]) != 0)
-				scores[13] += Score((r[0] + c[3]) * Diff(c[0], r[3]), false);
+				scores[13] += Score((r[0] + c[3]) * Diff(c[0], r[3]));
 			if (Diff(r[0], c[3]) != 0)
-				scores[13] += Score(Diff(r[0], c[3]) * (c[0] + r[3]), false);
+				scores[13] += Score(Diff(r[0], c[3]) * (c[0] + r[3]));
 			if (Diff(r[0], c[3]) != 0 && Diff(c[0], r[3]) != 0)
-				scores[13] += Score(Diff(r[0], c[3]) * Diff(c[0], r[3]), false);
+				scores[13] += Score(Diff(r[0], c[3]) * Diff(c[0], r[3]));
 
             // 15
 			vars = new long[]
@@ -364,7 +378,11 @@ namespace WindowsFormsApp1
 				scores[14] += Score(vars[2], vars[3]);
 				scores[14] += Score(vars[0], vars[3]);
 				if (scores[14] == 0 && !bCalculateForTwoInitialLetters)
+				{
 					scores[14] += Score(vars[1], vars[2], true);
+					//if (scores[14] == 0)
+					//	scores[14] += Score(vars[1], vars[2], true);
+				}
 			}
 
 			// 16
@@ -398,27 +416,40 @@ namespace WindowsFormsApp1
 			// 18
 			scores[17] += Score(r[0], r[1]);
             scores[17] += Score(r[0], r[2]);
-            scores[17] += Score(r[1] + r[3]);
+			//scores[17] += Score(r[0], r[3]);
+			scores[17] += Score(r[1] + r[3]);
             scores[17] += Score(r[0] * r[1] * r[2] * r[3]);
 			if (scores[17] == 0 && !bCalculateForTwoInitialLetters)
 			{
 				scores[17] += ScoreDiff(r[1], r[2]);
 				if (scores[17] == 0)
 					scores[17] += ScoreDiff(r[1], r[3]);
+				if (scores[17] == 0)
+					scores[17] += ScoreDiff(r[0], r[3]);
 			}
 
-            // 19
+			// 19
 			vars = new long[]
 			{
-				Diff(ar[0], ar[3]) + Diff(ar[4], ar[7]) + Diff(ar[8], ar[11]) + Diff(ar[12], ar[15]),
-				Diff(ar[1], ar[2]) + Diff(ar[5], ar[6]) + Diff(ar[9], ar[10]) + Diff(ar[13], ar[14]),
+				Diff(ar[0], ar[3]), Diff(ar[4], ar[7]), Diff(ar[8], ar[11]), Diff(ar[12], ar[15]), 0,
+				Diff(ar[1], ar[2]), Diff(ar[5], ar[6]), Diff(ar[9], ar[10]), Diff(ar[13], ar[14]), 0,
 			};
-			if (vars[0] != 0)
-				scores[18] += Score(vars[0]);
-			if (vars[1] != 0)
-				scores[18] += Score(vars[1]);
-			if (vars[0] != vars[1])
-				scores[18] += Score(vars[0], vars[1]);
+			vars[4] = vars[0] + vars[1] + vars[2] + vars[3];
+			vars[9] = vars[5] + vars[6] + vars[7] + vars[8];
+			if (vars[4] != 0)
+				scores[18] += Score(vars[4]);
+			if (vars[9] != 0)
+				scores[18] += Score(vars[9]);
+			if (vars[4] != vars[9])
+				scores[18] += Score(vars[4], vars[9]);
+			if (scores[18] == 0 && !bCalculateForTwoInitialLetters)
+			{
+				scores[18] +=
+					Score(vars[0], vars[5], true) != 0 &&
+					Score(vars[1], vars[6], true) != 0 &&
+					Score(vars[2], vars[7], true) != 0 &&
+					Score(vars[3], vars[8], true) != 0 ? 1 : 0;
+			}
 
 			// 20
 			vars = new long[]
@@ -867,7 +898,11 @@ namespace WindowsFormsApp1
 
 			// 31
 			if (!bCalculateForTwoInitialLetters)
-				scores[30] = Score(r[0]) + Score(r[3]) + Score(c[0]) + Score(c[3]);
+				scores[30] =
+					Score(r[0]) != 0 || Score(r[0] * 2) != 0 ||
+					Score(c[0]) != 0 || Score(c[0] * 2) != 0 ||
+					Score(r[3]) != 0 || Score(r[3] * 2) != 0 ||
+					Score(c[3]) != 0 || Score(c[3] * 2) != 0 ? 1 : 0;
 
 			// 32
 			if (!bCalculateForTwoInitialLetters)
