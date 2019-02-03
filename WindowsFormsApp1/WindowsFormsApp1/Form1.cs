@@ -18,16 +18,19 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
 			int[] colsSum = new int[4];
-			int[] scores1, scores2;
 			// khorujie barnameh
-			int score1 = Score(19, 12, 8, 6, out colsSum, false, out scores1);
+			int output_score1, output_score2;
+			int[] output_scores;
+			Score(21, 13, 24, 18, out colsSum, false, out output_scores, out output_score1, out output_score2);
 			// morede entezar
-			int score2 = Score(19, 12, 8, 10, out colsSum, false, out scores2);
-			Debug.WriteLine("\t3\t19");
-			for (var i = 0; i < scores1.Length; i++)
-				if (scores2[i] == 0)
-					Debug.WriteLine("{0}\t{1}\t{2}", i + 1, scores1[i], scores2[i]);
-			Debug.WriteLine("\t{0}\t{1}", score1, score2);
+			int desired_score1, desired_score2;
+			int[] desired_scores;
+			Score(21, 13, 24, 2, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
+			Debug.WriteLine("\t24\t12");
+			for (var i = 0; i < output_scores.Length; i++)
+				if (desired_scores[i] == 0)
+					Debug.WriteLine("{0}\t{1}\t{2}", i + 1, output_scores[i], desired_scores[i]);
+			Debug.WriteLine("\t{0}\t{1}", output_score2, desired_score2);
 		}
 
 		class Table
@@ -36,9 +39,26 @@ namespace WindowsFormsApp1
 			public int[] colsSum;// = new int[4];
         }
 
+		class Scores
+		{
+			public int score1, score2;
+			public static int Compare(Scores sc1, Scores sc2)
+			{
+				if (sc1.score1 < sc2.score1)
+					return -1;
+				if (sc1.score1 > sc2.score1)
+					return 1;
+				if (sc1.score2 < sc2.score2)
+					return -1;
+				if (sc1.score2 > sc2.score2)
+					return 1;
+				return 0;
+			}
+		}
+
 		void FindBestTable(byte a, byte b, byte x, out Table table, ref int[] colsSum, byte yMod4)
 		{
-			var scores = new Dictionary<Table, int>();
+			var scores = new Dictionary<Table, Scores>();
 			byte xFrom, xTo, yFrom, yStep;
 			if (yMod4 == 4)  // no limit for x
 			{
@@ -58,14 +78,15 @@ namespace WindowsFormsApp1
 				for (byte y = yFrom; y <= 28; y += yStep)
 				{
 					table = new Table();
-					int[] sc;
-					var score = Score(a, b, x, y, out table.colsSum, yMod4 == 4, out sc);
+					int[] output_scores;
+					int output_score1, output_score2;
+					Score(a, b, x, y, out table.colsSum, yMod4 == 4, out output_scores, out output_score1, out output_score2);
 					table.x = x;
 					table.y = y;
-					scores[table] = score;
+					scores[table] = new Scores { score1 = output_score1, score2 = output_score2 };
 				}
 			var list = scores.ToList();
-			list.Sort((item1, item2) => item2.Value.CompareTo(item1.Value));
+			list.Sort((item1, item2) => Scores.Compare(item2.Value, item1.Value));
 			table = list[0].Key;
 			colsSum[0] += table.colsSum[0];
 			colsSum[1] += table.colsSum[1];
@@ -117,9 +138,8 @@ namespace WindowsFormsApp1
 			Debug.WriteLine("{0} {1} {2} {3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0]);
 		}
 
-		private int Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores)
+		private void Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores, out int score1, out int score2)
         {
-            int score = 0;
             var ar = new int[16];
             ar[0] = ar[5] = ar[10] = ar[15] = a;
             ar[1] = b;
@@ -253,12 +273,21 @@ namespace WindowsFormsApp1
 			}
 
 			// 10
-			vars[0] = int.Parse(string.Format("{0}{0}{0}{0}", ar[0])) % 28;
-			vars[1] = int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[6], ar[9], ar[12])) % 28;
-			scores[9] = vars[0] == ar[0] ? 1 : 0;
-			scores[9] += vars[1] == ar[1] ? 1 : 0;
-			if (scores[9] == 0 && !bCalculateForTwoInitialLetters)
-				scores[9] += Score(vars[0], vars[1], true);
+			do
+			{
+				vars[0] = int.Parse(string.Format("{0}{0}{0}{0}", ar[0])) % 28;
+				vars[1] = int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[6], ar[9], ar[12])) % 28;
+				scores[9] = vars[0] == ar[0] ? 1 : 0;
+				scores[9] += vars[1] == ar[1] ? 1 : 0;
+				if (bCalculateForTwoInitialLetters)
+					break;
+				if (scores[9] == 0)
+					scores[9] += Score(vars[0], vars[1], true);
+				if (scores[9] == 0)
+					scores[9] += Score(vars[0]) != 0 || vars[0] % 11 == 0 || vars[0] % 17 == 0 ? 1 : 0;
+				if (scores[9] == 0)
+					scores[9] += Score(vars[1]) != 0 || vars[1] % 11 == 0 || vars[1] % 17 == 0 ? 1 : 0;
+			} while (false);
 
 			// 11
 			vars[0] = int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[9], ar[6], ar[3]));
@@ -348,6 +377,10 @@ namespace WindowsFormsApp1
 				scores[15] = Score(vars[0], vars[1], true);
 				if (scores[15] == 0)
 					scores[15] = Score(vars[2], Reverse(vars[2]), true);
+				if (scores[15] == 0)
+					scores[15] = Score(vars[2] * 2);
+				if (scores[15] == 0)
+					scores[15] = Score(Reverse(vars[2]) * 2);
 			}
 
 			// 17
@@ -884,13 +917,12 @@ namespace WindowsFormsApp1
 					scores[33] = Score(Diff(c[0], c[1]), Diff(c[2], c[3]), true);
 			}
 
+			score1 = score2 = 0;
 			foreach (var sc in scores)
 			{
-				//score += sc;
-				score += sc == 0 ? 0 : 1;
+				score1 += sc == 0 ? 0 : 1;
+				score2 += sc;
 			}
-
-			return score;
         }
 
 		long Reverse(long n)
