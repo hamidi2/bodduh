@@ -14,42 +14,30 @@ namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-		void DebugFunc1()
-		{
+        public Form1()
+        {
+            InitializeComponent();
 			int[] colsSum = new int[4];
 			// khorujie barnameh
 			int output_score1, output_score2;
 			int[] output_scores;
-			Score(3, 20, 18, 24, out colsSum, false, out output_scores, out output_score1, out output_score2);
+			Score(23, 26, 2, 14, out colsSum, false, out output_scores, out output_score1, out output_score2);
 			// morede entezar
 			int desired_score1, desired_score2;
 			int[] desired_scores;
-			Score(3, 20, 18, 12, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
-			Debug.WriteLine("\t24\t12");
+<<<<<<< Updated upstream
+			Score(23, 26, 2, 22, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
+			Debug.WriteLine("\t14\t22");
+=======
+			Score(21, 13, 24, 2, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
+			Debug.WriteLine("\t18\t2");
+>>>>>>> Stashed changes
 			for (var i = 0; i < output_scores.Length; i++)
 				if (output_scores[i] > desired_scores[i])
 					Debug.WriteLine("{0}\t{1}\t{2}", i + 1, output_scores[i], desired_scores[i]);
 			Debug.WriteLine("\t{0}\t{1}", output_score2, desired_score2);
-		}
+			Debug.WriteLine("------------------------------------------");
 
-		void DebugFunc2()
-		{
-			int[] colsSum = new int[4];
-			int output_score1, output_score2;
-			int[] output_scores;
-			Score(21, 17, 1, 1, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(10, 8, 2, 19, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(18, 1, 21, 15, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(19, 12, 8, 10, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(3, 20, 18, 12, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(23, 26, 2, 22, out colsSum, false, out output_scores, out output_score1, out output_score2);
-			Score(21, 13, 24, 6, out colsSum, false, out output_scores, out output_score1, out output_score2);
-		}
-
-		public Form1()
-        {
-            InitializeComponent();
-			//DebugFunc2();
 		}
 
 		class Table
@@ -107,10 +95,6 @@ namespace WindowsFormsApp1
 			var list = scores.ToList();
 			list.Sort((item1, item2) => Scores.Compare(item2.Value, item1.Value));
 			table = list[0].Key;
-			//var firstY = list[0].Key.y;
-			//var secondY = list[1].Key.y;
-			//var firstScore = list[0].Value;
-			//var secondScore = list[1].Value;
 			colsSum[0] += table.colsSum[0];
 			colsSum[1] += table.colsSum[1];
 			colsSum[2] += table.colsSum[2];
@@ -153,6 +137,8 @@ namespace WindowsFormsApp1
 				if (x > 28)
 					x -= 28;
 				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput]);
+				if (iInput == 6)
+					table.y = 12;
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
@@ -208,7 +194,7 @@ namespace WindowsFormsApp1
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[8], ar[9], ar[10], ar[11])),
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[13], ar[14], ar[15])),
 			};
-			scores = new int[35];
+			scores = new int[34];
 
 			// 1
 			long[] vars = new long[2];
@@ -293,6 +279,10 @@ namespace WindowsFormsApp1
 				scores[8] = Score(rowsRev[0], rowsRev[2], true);
 				if (scores[8] == 0)
 					scores[8] += Score(Reverse(rows[0]), Reverse(rows[2]), true);
+				if (scores[8] == 0)
+					scores[8] += Score(Reverse(rows[0] + rows[2]), true);
+				if (scores[8] == 0)
+					scores[8] += Score(Reverse(Diff(rows[0], rows[2])), true);
 			}
 
 			// 10
@@ -356,7 +346,11 @@ namespace WindowsFormsApp1
 				{
 					colMul = SumOfDigits(c[0]) * SumOfDigits(c[3]);
 					rowMul = SumOfDigits(r[0]) * SumOfDigits(r[3]);
+<<<<<<< Updated upstream
+					scores[12] = Score(colMul) != 0 || Score(rowMul) != 0 || Score(rowMul, colMul) != 0 ? 1 : 0;
+=======
 					scores[12] = Score(colMul) != 0 || Score(rowMul) != 0 || Score(rowMul, colMul, true) != 0 ? 1 : 0;
+>>>>>>> Stashed changes
 				}
 			}
 
@@ -365,9 +359,15 @@ namespace WindowsFormsApp1
 			if (Diff(r[0], r[3]) != 0)
 				scores[13] += Score((c[0] + c[3]) * Diff(r[0], r[3]));
 			if (Diff(c[0], c[3]) != 0)
+<<<<<<< Updated upstream
+				scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]));
+			if (Diff(c[0], c[3]) != 0 && Diff(r[0], r[3]) != 0)
+				scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]));
+=======
 			scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]));
 			if (Diff(c[0], c[3]) != 0 && Diff(r[0], r[3]) != 0)
 			scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]));
+>>>>>>> Stashed changes
 
 			scores[13] += Score((r[0] + c[3]) * (c[0] + r[3]));
 			if (Diff(c[0], r[3]) != 0)
@@ -392,9 +392,20 @@ namespace WindowsFormsApp1
 			else
 			{
 				scores[14] = ScoreDiff(vars[0], vars[1]);
+<<<<<<< Updated upstream
+				scores[14] += Score(vars[2], vars[3]);
+				scores[14] += Score(vars[0], vars[3]);
+				if (scores[14] == 0 && !bCalculateForTwoInitialLetters)
+				{
+					scores[14] += Score(vars[1], vars[2], true);
+					//if (scores[14] == 0)
+					//	scores[14] += Score(vars[1], vars[2], true);
+				}
+=======
 				scores[14] += Score(vars[1], vars[2], true);
 				scores[14] += Score(vars[2], vars[3], true);
 				scores[14] += Score(vars[0], vars[3], true);
+>>>>>>> Stashed changes
 			}
 
 			// 16
@@ -428,6 +439,10 @@ namespace WindowsFormsApp1
 			// 18
 			scores[17] += Score(r[0], r[1]);
             scores[17] += Score(r[0], r[2]);
+<<<<<<< Updated upstream
+			//scores[17] += Score(r[0], r[3]);
+=======
+>>>>>>> Stashed changes
 			scores[17] += Score(r[1] + r[3]);
             scores[17] += Score(r[0] * r[1] * r[2] * r[3]);
 			if (scores[17] == 0 && !bCalculateForTwoInitialLetters)
@@ -436,7 +451,11 @@ namespace WindowsFormsApp1
 				if (scores[17] == 0)
 					scores[17] += ScoreDiff(r[1], r[3]);
 				if (scores[17] == 0)
+<<<<<<< Updated upstream
+					scores[17] += ScoreDiff(r[0], r[3]);
+=======
 					scores[17] += Score(r[2], r[3], true);
+>>>>>>> Stashed changes
 			}
 
 			// 19
@@ -449,10 +468,22 @@ namespace WindowsFormsApp1
 			vars[9] = vars[5] + vars[6] + vars[7] + vars[8];
 			if (vars[4] != 0)
 				scores[18] += Score(vars[4]);
+<<<<<<< Updated upstream
+			if (vars[9] != 0)
+				scores[18] += Score(vars[9]);
+=======
+>>>>>>> Stashed changes
 			if (vars[4] != vars[9])
 				scores[18] += Score(vars[4], vars[9]);
 			if (scores[18] == 0 && !bCalculateForTwoInitialLetters)
 			{
+<<<<<<< Updated upstream
+				scores[18] +=
+					Score(vars[0], vars[5], true) != 0 &&
+					Score(vars[1], vars[6], true) != 0 &&
+					Score(vars[2], vars[7], true) != 0 &&
+					Score(vars[3], vars[8], true) != 0 ? 1 : 0;
+=======
 				if (vars[9] != 0)
 					scores[18] += Score(vars[9]);
 				if (scores[18] == 0)
@@ -461,6 +492,7 @@ namespace WindowsFormsApp1
 						Score(vars[1], vars[6], true) != 0 &&
 						Score(vars[2], vars[7], true) != 0 &&
 						Score(vars[3], vars[8], true) != 0 ? 1 : 0;
+>>>>>>> Stashed changes
 			}
 
 			// 20
@@ -910,6 +942,13 @@ namespace WindowsFormsApp1
 
 			// 31
 			if (!bCalculateForTwoInitialLetters)
+<<<<<<< Updated upstream
+				scores[30] =
+					Score(r[0]) != 0 || Score(r[0] * 2) != 0 ||
+					Score(c[0]) != 0 || Score(c[0] * 2) != 0 ||
+					Score(r[3]) != 0 || Score(r[3] * 2) != 0 ||
+					Score(c[3]) != 0 || Score(c[3] * 2) != 0 ? 1 : 0;
+=======
 			{
 				scores[30] = Score(r[0]) + Score(r[3]) + Score(c[0]) + Score(c[3]);
 				if (scores[30] == 0)
@@ -918,6 +957,7 @@ namespace WindowsFormsApp1
 					scores[30] = Score(SumOfDigits(vars[0]));
 				}
 			}
+>>>>>>> Stashed changes
 
 			// 32
 			if (!bCalculateForTwoInitialLetters)
@@ -965,29 +1005,6 @@ namespace WindowsFormsApp1
 					scores[33] = Score(c[0] + c[1], c[2] + c[3], true);
 				if (scores[33] == 0)
 					scores[33] = Score(Diff(c[0], c[1]), Diff(c[2], c[3]), true);
-			}
-
-			// 35
-			if (!bCalculateForTwoInitialLetters)
-			{
-				scores[34] += Score(c[0], c[3], true);
-				if (scores[34] == 0)
-					scores[34] += (c[0] + c[3]) % 28 % 11 == 0 ? 1 : 0;
-				if (scores[34] == 0)
-					scores[34] += (c[0] - c[3]) % 28 % 11 == 0 ? 1 : 0;
-				if (scores[34] == 0)
-					scores[34] += Score(c[1], c[2], true);
-				if (scores[34] == 0)
-					scores[34] += (c[1] + c[2]) % 28 % 11 == 0 ? 1 : 0;
-				if (scores[34] == 0)
-					scores[34] += (c[1] - c[2]) % 28 % 11 == 0 ? 1 : 0;
-				if (scores[34] == 0)
-				{
-					vars[0] = Diff(c[0], c[3]) + Diff(c[1], c[2]);
-					scores[34] += Score(vars[0]);
-					if (scores[34] == 0)
-						scores[34] += vars[0] % 28 % 11 == 0 ? 1 : 0;
-				}
 			}
 
 			score1 = score2 = 0;
