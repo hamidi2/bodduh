@@ -20,12 +20,12 @@ namespace WindowsFormsApp1
 			// khorujie barnameh
 			int output_score1, output_score2;
 			int[] output_scores;
-			Score(3, 20, 18, 24, out colsSum, false, out output_scores, out output_score1, out output_score2);
+			Score(21, 13, 24, 6, out colsSum, false, out output_scores, out output_score1, out output_score2);
 			// morede entezar
 			int desired_score1, desired_score2;
 			int[] desired_scores;
-			Score(3, 20, 18, 12, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
-			Debug.WriteLine("\t24\t12");
+			Score(21, 13, 24, 2, out colsSum, false, out desired_scores, out desired_score1, out desired_score2);
+			Debug.WriteLine("\t6\t2");
 			for (var i = 0; i < output_scores.Length; i++)
 				if (output_scores[i] > desired_scores[i])
 					Debug.WriteLine("{0}\t{1}\t{2}", i + 1, output_scores[i], desired_scores[i]);
@@ -49,7 +49,7 @@ namespace WindowsFormsApp1
 		public Form1()
         {
             InitializeComponent();
-			//DebugFunc2();
+			DebugFunc1();
 		}
 
 		class Table
@@ -107,10 +107,6 @@ namespace WindowsFormsApp1
 			var list = scores.ToList();
 			list.Sort((item1, item2) => Scores.Compare(item2.Value, item1.Value));
 			table = list[0].Key;
-			//var firstY = list[0].Key.y;
-			//var secondY = list[1].Key.y;
-			//var firstScore = list[0].Value;
-			//var secondScore = list[1].Value;
 			colsSum[0] += table.colsSum[0];
 			colsSum[1] += table.colsSum[1];
 			colsSum[2] += table.colsSum[2];
@@ -208,6 +204,20 @@ namespace WindowsFormsApp1
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[8], ar[9], ar[10], ar[11])),
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[13], ar[14], ar[15])),
 			};
+			int[] cols =
+            {
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[0], ar[4], ar[8], ar[12])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[1], ar[5], ar[9], ar[13])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[2], ar[6], ar[10], ar[14])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[7], ar[11], ar[15])),
+            };
+			int[] colsRev =
+            {
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[8], ar[4], ar[0])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[13], ar[9], ar[5], ar[1])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[14], ar[10], ar[6], ar[2])),
+                int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[11], ar[7], ar[3])),
+            };
 			scores = new int[35];
 
 			// 1
@@ -330,7 +340,7 @@ namespace WindowsFormsApp1
                 SumOfDigits(c[3]),
             };
 			scores[11] = Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[1], sumOfDigits[0])));
-			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[1], sumOfDigits[3], sumOfDigits[0])));
+			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[1], sumOfDigits[2], sumOfDigits[0])));
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3])));
 			vars[0] = sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3];
 			scores[11] += Score(vars[0] * 2);
@@ -352,6 +362,12 @@ namespace WindowsFormsApp1
 					scores[11] += Score(vars[0]);
 					vars[1] = Reverse(sumOfDigits[0]) + Reverse(sumOfDigits[1]) + Reverse(sumOfDigits[2]) + Reverse(sumOfDigits[3]);
 					scores[11] += Score(vars[1]);
+					scores[11] += Score(cols[3]);
+					scores[11] += Score(colsRev[3]);
+					if (cols[3] % 9 != 2 || cols[3] % 9 != 8)
+						scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))));
+					if (colsRev[3] % 9 != 2 || colsRev[3] % 9 != 8)
+						scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))));
 				}
 			}
 
@@ -512,20 +528,6 @@ namespace WindowsFormsApp1
 			}
 
 			// 22
-			int[] cols =
-            {
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[0], ar[4], ar[8], ar[12])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[1], ar[5], ar[9], ar[13])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[2], ar[6], ar[10], ar[14])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[7], ar[11], ar[15])),
-            };
-            int[] colsRev =
-            {
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[8], ar[4], ar[0])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[13], ar[9], ar[5], ar[1])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[14], ar[10], ar[6], ar[2])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[11], ar[7], ar[3])),
-            };
             vars = new long[]
             {
                 Diff(rows[0], rowsRev[0]),
