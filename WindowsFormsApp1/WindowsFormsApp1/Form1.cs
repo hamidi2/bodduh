@@ -344,12 +344,12 @@ namespace WindowsFormsApp1
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3])));
 			vars[0] = sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3];
 			scores[11] += Score(vars[0] * 2);
-			//scores[11] += Score(cols[3]);
-			//scores[11] += Score(colsRev[3]);
-			//if (cols[3] % 9 != 2 || cols[3] % 9 != 8)
-			//    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))));
-			//if (colsRev[3] % 9 != 2 || colsRev[3] % 9 != 8)
-			//    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))));
+			scores[11] += Score(cols[3]);
+			scores[11] += Score(colsRev[3]);
+			if (cols[3] % 9 != 2 || cols[3] % 9 != 8)
+			    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))));
+			if (colsRev[3] % 9 != 2 || colsRev[3] % 9 != 8)
+			    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))));
 			if (scores[11] == 0 && !bCalculateForTwoInitialLetters)
 			{
 				vars[0] %= 9;
