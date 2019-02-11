@@ -332,6 +332,12 @@ namespace WindowsFormsApp1
 			}
 
 			// 12
+			vars[0] = (c[0] + c[1] + c[2] + c[3]) % 9;
+			if (vars[0] == 2 || vars[0] == 8)
+				scores[11]++;
+			vars[0] = c[3] % 9;
+			if (vars[0] == 2 || vars[0] == 8)
+				scores[11]++;
 			int[] sumOfDigits =
             {
                 SumOfDigits(c[0]),
@@ -339,24 +345,19 @@ namespace WindowsFormsApp1
                 SumOfDigits(c[2]),
                 SumOfDigits(c[3]),
             };
-			scores[11] = Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[1], sumOfDigits[0])));
+			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[1], sumOfDigits[0])));
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[1], sumOfDigits[2], sumOfDigits[0])));
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3])));
 			vars[0] = sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3];
 			scores[11] += Score(vars[0] * 2);
 			scores[11] += Score(cols[3]);
 			scores[11] += Score(colsRev[3]);
-			if (cols[3] % 9 != 2 || cols[3] % 9 != 8)
-			    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))));
-			if (colsRev[3] % 9 != 2 || colsRev[3] % 9 != 8)
-			    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))));
-			if (scores[11] == 0 && !bCalculateForTwoInitialLetters)
+		    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))));
+		    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))));
+			//if (scores[11] == 0 && !bCalculateForTwoInitialLetters)
 			{
-				vars[0] %= 9;
-				scores[11] += (vars[0] == 2 || vars[0] == 8) ? 1 : 0;
-				if (scores[11] == 0)
-					scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[0], sumOfDigits[1])));
-				if (scores[11] == 0)
+				scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[0], sumOfDigits[1])));
+				//if (scores[11] == 0)
 				{
 					sumOfDigits[0] = int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[2]), SumOfDigits(ar[1]), SumOfDigits(ar[0])));
 					sumOfDigits[1] = int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[7]), SumOfDigits(ar[6]), SumOfDigits(ar[5]), SumOfDigits(ar[4])));
@@ -364,7 +365,7 @@ namespace WindowsFormsApp1
 					sumOfDigits[3] = int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[14]), SumOfDigits(ar[13]), SumOfDigits(ar[12])));
 					vars[0] = sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3];
 					scores[11] += Score(vars[0]);
-					if (scores[11] == 0)
+					//if (scores[11] == 0)
 					{
 						vars[1] = Reverse(sumOfDigits[0]) + Reverse(sumOfDigits[1]) + Reverse(sumOfDigits[2]) + Reverse(sumOfDigits[3]);
 						scores[11] += Score(vars[1]);
@@ -1066,9 +1067,9 @@ namespace WindowsFormsApp1
         {
 			if (n == 0)
 				return 0;
-			var n9 = n % 9;
-			if (n9 == 2 || n9 == 8)
-				return 1;
+			//var n9 = n % 9;
+			//if (n9 == 2 || n9 == 8)
+			//    return 1;
 			n %= 28;
             if (n == 0 || n == 2 || n == 8 || n == 11 || n == 17 || n == 20 || n == 26)
                 return 1;
