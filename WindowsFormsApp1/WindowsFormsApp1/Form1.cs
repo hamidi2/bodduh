@@ -17,7 +17,7 @@ namespace WindowsFormsApp1
 		void DebugFunc1()
 		{
 			int[] colsSum = new int[4];
-			byte[] n = { 21, 13, 24, 6, 2 };
+			byte[] n = { 28, 14, 3, 28, 12 };
 			// khorujie barnameh
 			int output_score1, output_score2;
 			int[] output_scores;
@@ -174,7 +174,8 @@ namespace WindowsFormsApp1
             ar[12] = a - y + a;
             ar[13] = a - y + b;
             ar[14] = a - y + x;
-			for (var i = 0; i < ar.Length; i++)
+			var i = 0;
+			for (; i < ar.Length; i++)
 				ar[i] = (ar[i] + 27) % 28 + 1;
             int[] r =
             {
@@ -236,6 +237,8 @@ namespace WindowsFormsApp1
 					scores[0] += Score(vars[0]);
 					if (scores[0] == 0)
 						scores[0] += vars[0] % 11 == 0 ? 1 : 0;
+					if (scores[0] == 0)
+						scores[0] += vars[0] % 17 == 0 ? 1 : 0;
 				}
 			}
 
@@ -350,7 +353,6 @@ namespace WindowsFormsApp1
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[1], sumOfDigits[2], sumOfDigits[0])), false);
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3])), false);
 			vars[0] = sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3];
-			//scores[11] += Score(vars[0], false);
 			scores[11] += Score(vars[0] * 2, false);
 			scores[11] += Score(cols[3], false);
 			scores[11] += Score(colsRev[3], false);
@@ -374,6 +376,21 @@ namespace WindowsFormsApp1
 			scores[11] += Score(sumOfDigits[2], sumOfDigits[3]);
 			scores[11] += Score(sumOfDigits[3], sumOfDigits[0]);
 			scores[11] += Score(sumOfDigits[0] + sumOfDigits[1] + sumOfDigits[2] + sumOfDigits[3]);
+			vars = new long[9];
+			vars[0] = Diff(ar[0], ar[3]);
+			vars[1] = Diff(ar[1], ar[2]);
+			vars[2] = int.Parse(string.Format("{0}{1}", vars[0], vars[1]));
+			vars[3] = int.Parse(string.Format("{0}{1}", vars[1], vars[0]));
+			vars[4] = vars[0] + vars[1];
+			vars[5] = Diff(vars[0], vars[1]);
+			vars[6] = Diff(vars[2], vars[3]);
+			vars[7] = int.Parse(string.Format("{0}{1}", vars[4], vars[5]));
+			vars[8] = int.Parse(string.Format("{0}{1}", vars[5], vars[4]));
+			scores[11] += Score(vars[4]);
+			scores[11] += ScoreDiff(vars[0], vars[1]);
+			scores[11] += ScoreDiff(vars[2], vars[3]);
+			scores[11] += Score(vars[7]);
+			scores[11] += Score(vars[8]);
 
 			// 13
 			var colMul = c[0] * c[3];
@@ -927,6 +944,61 @@ namespace WindowsFormsApp1
 			scores[29] += Diff(ar[0], vars[0]) % 7 == 0 && Diff(ar[1], vars[1]) % 7 == 0 && Diff(ar[2], vars[2]) % 7 == 0 && Diff(ar[3], vars[3]) % 7 == 0 ? 1 : 0;
 			scores[29] += (r[0] + vars[0] + vars[1] + vars[2] + vars[3]) % 7 == 0 ? 1 : 0;
 			scores[29] += (vars[0] + vars[1] + vars[2] + vars[3]) % 7 == 0 ? 1 : 0;
+			sumOfDigits = new int[]
+			{
+				SumOfDigits(c[3]), SumOfDigits(c[2]), SumOfDigits(c[1]), SumOfDigits(c[0]),
+				SumOfDigits(vars[3]), SumOfDigits(vars[2]), SumOfDigits(vars[1]), SumOfDigits(vars[0]),
+			};
+			for (i = 0; i < 4; i++)
+			{
+				vars[0] = Diff(sumOfDigits[i], sumOfDigits[4 + i]);
+				if (vars[0] == 1 || vars[0] == 2 || vars[0] == 8)
+					continue;
+				vars[0] = SumOfDigits(sumOfDigits[i] + sumOfDigits[4 + i]);
+				if (vars[0] == 1 || vars[0] == 2 || vars[0] == 8)
+					continue;
+				break;
+			}
+			//if (i == 4)
+			{
+				vars[0] = int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3]));
+				vars[1] = int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[4], sumOfDigits[5], sumOfDigits[6], sumOfDigits[7]));
+				vars[2] = SumOfDigits(vars[0], false);
+				vars[3] = SumOfDigits(vars[1], false);
+				if (Score(vars[2], vars[3], true) != 0)
+				{
+					if ((vars[0] + vars[1]) % 7 == 0 || Diff(vars[0], vars[1]) % 7 == 0)
+					{
+						vars[1] = int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[7], sumOfDigits[6], sumOfDigits[5], sumOfDigits[4]));
+						if (ScoreDiff(vars[0], vars[1]) != 0)
+						{
+							vars[0] = int.Parse(string.Format("{0}{1}{2}{3}",
+								SumOfDigits(sumOfDigits[3] + sumOfDigits[4]),
+								SumOfDigits(sumOfDigits[2] + sumOfDigits[5]),
+								SumOfDigits(sumOfDigits[1] + sumOfDigits[6]),
+								SumOfDigits(sumOfDigits[0] + sumOfDigits[7])));
+							if (Score(vars[0]) != 0)
+							{
+								vars[0] = int.Parse(string.Format("{0}{1}{2}{3}",
+									sumOfDigits[0] + sumOfDigits[7],
+									sumOfDigits[1] + sumOfDigits[6],
+									sumOfDigits[2] + sumOfDigits[5],
+									sumOfDigits[3] + sumOfDigits[4]));
+								scores[29] += Score(vars[0]);
+								if (scores[29] == 0)
+								{
+									vars[0] = int.Parse(string.Format("{0}{1}{2}{3}",
+										SumOfDigits(sumOfDigits[0] + sumOfDigits[7]),
+										SumOfDigits(sumOfDigits[1] + sumOfDigits[6]),
+										SumOfDigits(sumOfDigits[2] + sumOfDigits[5]),
+										SumOfDigits(sumOfDigits[3] + sumOfDigits[4])));
+									scores[29] += Score(vars[0]);
+								}
+							}
+						}
+					}
+				}
+			}
 
 			// 31
 			if (!bCalculateForTwoInitialLetters)
@@ -958,7 +1030,7 @@ namespace WindowsFormsApp1
 			if (!bCalculateForTwoInitialLetters)
 			{
 				vars = list1.ToArray();
-				for (var i = 0; i < vars.Length - 1; i++)
+				for (i = 0; i < vars.Length - 1; i++)
 					for (var j = i + 1; j < vars.Length; j++)
 					{
 						scores[32] += Score(vars[i], vars[j], true);
@@ -966,7 +1038,7 @@ namespace WindowsFormsApp1
 							break;
 					}
 				vars = list2.ToArray();
-				for (var i = 0; i < vars.Length - 1; i++)
+				for (i = 0; i < vars.Length - 1; i++)
 					for (var j = i + 1; j < vars.Length; j++)
 					{
 						scores[32] += Score(vars[i], vars[j], true);
