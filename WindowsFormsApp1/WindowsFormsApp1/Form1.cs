@@ -97,31 +97,31 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		void FindBestTable(byte a, byte b, byte x, out Table table, ref int[] colsSum, byte yMod4)
+		void FindBestTable(byte a, byte b, byte y, out Table table, ref int[] colsSum, byte xMod4)
 		{
 			var scores = new Dictionary<Table, Scores>();
-			byte xFrom, xTo, yFrom, yStep;
-			if (yMod4 == 4)  // no limit for x
+			byte yFrom, yTo, xFrom, xStep;
+			if (xMod4 == 4)  // no limit for x
 			{
-				xFrom = 1;
-				xTo = 28;
 				yFrom = 1;
-				yStep = 1;
+				yTo = 28;
+				xFrom = 1;
+				xStep = 1;
 			}
 			else
 			{
-				xFrom = x;
-				xTo = x;
-				yFrom = (byte)(yMod4 + 1);
-				yStep = 4;
+				yFrom = y;
+				yTo = y;
+				xFrom = (byte)(xMod4 + 1);
+				xStep = 4;
 			}
-			for (x = xFrom; x <= xTo; x++)
-				for (byte y = yFrom; y <= 28; y += yStep)
+			for (y = yFrom; y <= yTo; y++)
+				for (byte x = xFrom; x <= 28; x += xStep)
 				{
 					table = new Table();
 					int[] output_scores;
 					int output_score1, output_score2;
-					Score(a, b, x, y, out table.colsSum, yMod4 == 4, out output_scores, out output_score1, out output_score2);
+					Score(a, b, x, y, out table.colsSum, xMod4 == 4, out output_scores, out output_score1, out output_score2);
 					table.x = x;
 					table.y = y;
 					scores[table] = new Scores { score1 = output_score1, score2 = output_score2 };
@@ -160,18 +160,19 @@ namespace WindowsFormsApp1
 			var iInput = 2;
 			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
 			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
-			byte[] onsori = { 0, 3, 0, 2, 2, 1, 3, 1, 1, 2, 1, 3 };
+			//byte[] onsori = { 0, 3, 0, 2, 2, 1, 3, 1, 1, 2, 1, 3 };
+			byte[] onsori = { 3, 1, 2, 1, 1, 3, 1, 2, 2, 0, 3, 0 };
 			while (true)
 			{
-				a += b;
-				if (a > 28)
-					a -= 28;
-				b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
-				var x = (byte)(table.x + table.y);
-				if (x > 28)
-					x -= 28;
-				FindBestTable(a, b, x, out table, ref colsSum, onsori[iInput]);
-				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
+				b += a;
+				if (b > 28)
+					b -= 28;
+				a = Constants.Letters[tbInput.Text[iInput]].Abjad1;
+				var y = (byte)(table.x + table.y);
+				if (y > 28)
+					y -= 28;
+				FindBestTable(a, b, y, out table, ref colsSum, onsori[iInput]);
+				tbOutput.Text += Constants.Abjad1ToLetter(table.x);
 				iInput++;
 				if (iInput == tbInput.Text.Length)
 					break;
