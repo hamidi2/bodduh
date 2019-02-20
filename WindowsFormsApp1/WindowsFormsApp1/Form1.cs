@@ -47,10 +47,31 @@ namespace WindowsFormsApp1
 			Score(21, 13, 24, 6, out colsSum, false, out output_scores, out output_score1, out output_score2);
 		}
 
+		void DebugFunc3()
+		{
+			Table table;
+			var scores = new Dictionary<Table, Scores>();
+			byte a = 6, b = 14;
+			for (byte x = 2; x <= 28; x += 4)
+				for (byte y = 4; y <= 28; y += 4)
+				{
+					table = new Table();
+					int[] output_scores;
+					int output_score1, output_score2;
+					Score(a, b, x, y, out table.colsSum, false, out output_scores, out output_score1, out output_score2);
+					table.x = x;
+					table.y = y;
+					scores[table] = new Scores { score1 = output_score1, score2 = output_score2 };
+				}
+			var list = scores.ToList();
+			list.Sort((item1, item2) => Scores.Compare(item2.Value, item1.Value));
+			table = list[0].Key;
+		}
+
 		public Form1()
         {
             InitializeComponent();
-			DebugFunc1();
+			DebugFunc3();
 		}
 
 		class Table
