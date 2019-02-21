@@ -129,11 +129,15 @@ namespace WindowsFormsApp1
 			// 2334 2454 2290 2358 کیهوزتادسرغمن
 			// 1238 1270 1102 1294 کیهوزتوایدکهدهیدولتمان
 			// 1764 1808 1608 1776 کیهوزتادلمن
-            // کیفرهماییبرسدازشهجان
-            // کیفرهمابسدزشجن
-			if (tbInput.Text.Length == 0)
+			// کیفرهماییبرسدازشهجان
+			// کیفرهمابسدزشجن
+			var len = tbInput.Text.Length;
+			if (len == 0)
+			{
 				tbInput.Text = "کیفحالرضمعون";
-			if (tbInput.Text.Length < 2)
+				len = tbInput.Text.Length;
+			}
+			if (len < 2)
             {
                 MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
                 return;
@@ -143,9 +147,43 @@ namespace WindowsFormsApp1
 			var iInput = 0;
 			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
-			byte[] onsori = { 0, 3, 0, 2, 2, 1, 3, 1, 1, 2, 1, 3 };
+			byte[][] elementalStrings =
+			{
+				new byte[] {
+					0, 3, 0, 2, 2, 1, 2, 0,
+					1, 0, 1, 3, 3, 2, 3, 1,
+					2, 1, 2, 0, 0, 3, 0, 2,
+					3, 2, 3, 1, 1, 0, 1, 3,
+				},
+				new byte[] {
+					2, 3, 2, 0, 0, 1, 0, 2,
+					1, 2, 1, 3, 3, 0, 3, 1,
+					0, 1, 0, 2, 2, 3, 2, 0,
+					3, 0, 3, 1, 1, 2, 1, 3,
+				},
+			};
+			var myElementalStrings = new List<byte[]>();
+			if (len <= 64)
+			{
+				var str = new byte[len];
+				var n = len / 2;
+				Array.Copy(elementalStrings[0], 0, str, 0, n);
+				Array.Copy(elementalStrings[1], elementalStrings[1].Length - (len - n), str, n, len - n);
+				myElementalStrings.Add(str);
+				if (len % 2 != 0)  // len is odd
+				{
+					str = new byte[len];
+					n++;
+					Array.Copy(elementalStrings[0], 0, str, 0, n);
+					Array.Copy(elementalStrings[1], elementalStrings[1].Length - (len - n), str, n, len - n);
+				}
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
 			Table table;
-			FindBestTable(a, b, onsori[0], onsori[1], true, out table, ref colsSum);
+			FindBestTable(a, b, myElementalStrings[0][0], myElementalStrings[0][1], true, out table, ref colsSum);
 			iInput += 2;
 			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
 			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
@@ -158,10 +196,10 @@ namespace WindowsFormsApp1
 				var x = (byte)(table.x + table.y);
 				if (x > 28)
 					x -= 28;
-				FindBestTable(a, b, x, onsori[iInput], false, out table, ref colsSum);
+				FindBestTable(a, b, x, myElementalStrings[0][iInput], false, out table, ref colsSum);
 				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
 				iInput++;
-				if (iInput == tbInput.Text.Length)
+				if (iInput == len)
 					break;
 			}
 			Debug.WriteLine("{0} {1} {2} {3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0]);
