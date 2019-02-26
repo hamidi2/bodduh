@@ -78,5 +78,14 @@ namespace WindowsFormsApp1
 					return letter.Key;
 			throw new Exception(string.Format("No letter has abjad1 code of {0}", abjad1));
 		}
+
+		public static bool ValidateString(string str)
+		{
+			foreach (var chr in str) {
+				if (!Letters.ContainsKey(chr))
+					return false;
+			}
+			return true;
+		}
 	}
 }

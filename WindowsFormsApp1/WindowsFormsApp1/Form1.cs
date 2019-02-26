@@ -137,11 +137,12 @@ namespace WindowsFormsApp1
                 MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
                 return;
             }
-			tbOutput.Text = "";
+			if (!Constants.ValidateString(tbInput.Text)) {
+				MessageBox.Show("ورودی شامل حروف غیر ابجد میباشد");
+				return;
+			}
+			tbOutput1.Text = "";
 			int[] colsSum = new int[4];
-			var iInput = 0;
-			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
-			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 			byte[][] elementalStrings = {
 				// first
 				new byte[] {
@@ -162,66 +163,75 @@ namespace WindowsFormsApp1
 				// reverse of second
 				null,
 			};
-			elementalStrings[1] = (byte[])elementalStrings[0].Clone();
-			elementalStrings[1].Reverse();
-			elementalStrings[3] = (byte[])elementalStrings[2].Clone();
-			elementalStrings[3].Reverse();
+			elementalStrings[1] = elementalStrings[0].Reverse().ToArray();
+			elementalStrings[3] = elementalStrings[2].Reverse().ToArray();
 			var myElementalStrings = new List<byte[]>();
-			int[] mids = len % 2 != 0 ? new int[] { len / 2, len / 2 + 1 } : new int[] { len / 2 };
+			var patternSize = elementalStrings[0].Length;
+			var mids = len % 2 == 0 ? new int[] { len / 2 } : new int[] { len / 2, len / 2 + 1 };
+			var expandPatterns = new byte[][] {
+				new byte[] { 0, 0, 2, 2 },
+				new byte[] { 0, 1, 2, 3 },
+			};
 			foreach (var mid in mids) {
-				var str = new byte[len];
-				var n = mid;
-				var i = 0;
-				do {
-					var n2 = Math.Min(n, 32);
-					Array.Copy(elementalStrings[0], 0, str, i, n2);
-					n -= n2;
-					i += n2;
-				} while (n != 0);
-				n = len - mid;
-				i = len;
-				do {
-					var n2 = Math.Min(n, 32);
-					Array.Copy(elementalStrings[1], 32 - n2, str, i - n2, n2);
-					n -= n2;
-					i -= n2;
-				} while (n != 0);
-				myElementalStrings.Add(str);
-				if (len > 64) {
-					var str2 = new byte[len];
-					Array.Copy(str, 0, str2, 0, mid);
-					n = len - mid;
-					i = mid;
-					do
-					{
-						var n2 = Math.Min(n, 32);
-						Array.Copy(elementalStrings[1], 0, str2, i, n2);
+				foreach (var expandPattern in expandPatterns) {
+					var str = new byte[len];
+					var n = mid;
+					var iStr = 0;
+					var iExpandPattern = 0;
+					do {
+						var n2 = Math.Min(n, patternSize);
+						Array.Copy(elementalStrings[expandPattern[iExpandPattern]], 0, str, iStr, n2);
+						iExpandPattern = (iExpandPattern + 1) % 2;
 						n -= n2;
-						i += n2;
+						iStr += n2;
 					} while (n != 0);
-					myElementalStrings.Add(str2);
+					n = len - mid;
+					iStr = len;
+					iExpandPattern = 0;
+					do {
+						var n2 = Math.Min(n, patternSize);
+						Array.Copy(elementalStrings[expandPattern[2 + iExpandPattern]], patternSize - n2, str, iStr - n2, n2);
+						iExpandPattern = (iExpandPattern + 1) % 2;
+						n -= n2;
+						iStr -= n2;
+					} while (n != 0);
+					myElementalStrings.Add(str);
+					if (len <= 2 * patternSize)
+						break;
 				}
 			}
 			Table table;
-			FindBestTable(a, b, myElementalStrings[0][0], myElementalStrings[0][1], true, out table, ref colsSum);
-			iInput += 2;
-			tbOutput.Text += Constants.Abjad1ToLetter(table.x);
-			tbOutput.Text += Constants.Abjad1ToLetter(table.y);
-			while (true) {
-				a += b;
-				if (a > 28)
-					a -= 28;
-				b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
-				var x = (byte)(table.x + table.y);
-				if (x > 28)
-					x -= 28;
-				FindBestTable(a, b, x, myElementalStrings[0][iInput], false, out table, ref colsSum);
-				tbOutput.Text += Constants.Abjad1ToLetter(table.y);
-				iInput++;
-				if (iInput == len)
-					break;
+			tbOutput1.Text = tbOutput2.Text = tbOutput3.Text = tbOutput4.Text = "";
+			Debug.Assert(
+				myElementalStrings.Count == 1 ||
+				myElementalStrings.Count == 2 ||
+				myElementalStrings.Count == 4);
+			var tbOutputs = new TextBox[] {
+				tbOutput1, tbOutput2, tbOutput3, tbOutput4
+			};
+			for (var i = 0; i < myElementalStrings.Count; i++) {
+				var iInput = 0;
+				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
+				var b = Constants.Letters[tbInput.Text[1]].Abjad1;
+				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out table, ref colsSum);
+				iInput += 2;
+				tbOutputs[i].Text += Constants.Abjad1ToLetter(table.x);
+				tbOutputs[i].Text += Constants.Abjad1ToLetter(table.y);
+				while (true) {
+					a += b;
+					if (a > 28)
+						a -= 28;
+					b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
+					var x = (byte)(table.x + table.y);
+					if (x > 28)
+						x -= 28;
+					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out table, ref colsSum);
+					tbOutputs[i].Text += Constants.Abjad1ToLetter(table.y);
+					iInput++;
+					if (iInput == len)
+						break;
+				}
 			}
-			Debug.WriteLine("{0} {1} {2} {3}", colsSum[3], colsSum[2], colsSum[1], colsSum[0]);
 		}
 
 		private void Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores, out int score1, out int score2)
