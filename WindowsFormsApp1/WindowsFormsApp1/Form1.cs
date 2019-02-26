@@ -143,52 +143,62 @@ namespace WindowsFormsApp1
 			var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 			var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 			byte[][] elementalStrings = {
+				// first
 				new byte[] {
 					0, 3, 0, 2, 2, 1, 2, 0,
 					1, 0, 1, 3, 3, 2, 3, 1,
 					2, 1, 2, 0, 0, 3, 0, 2,
 					3, 2, 3, 1, 1, 0, 1, 3,
 				},
+				// reverse of first
+				null,
+				// second
 				new byte[] {
 					2, 3, 2, 0, 0, 1, 0, 2,
 					1, 2, 1, 3, 3, 0, 3, 1,
 					0, 1, 0, 2, 2, 3, 2, 0,
 					3, 0, 3, 1, 1, 2, 1, 3,
 				},
+				// reverse of second
+				null,
 			};
+			elementalStrings[1] = (byte[])elementalStrings[0].Clone();
+			elementalStrings[1].Reverse();
+			elementalStrings[3] = (byte[])elementalStrings[2].Clone();
+			elementalStrings[3].Reverse();
 			var myElementalStrings = new List<byte[]>();
-			int[] mid = len % 2 != 0 ? new int[] { len / 2, len / 2 + 1 } : new int[] { len / 2 };
-			foreach (var n in mid) {
+			int[] mids = len % 2 != 0 ? new int[] { len / 2, len / 2 + 1 } : new int[] { len / 2 };
+			foreach (var mid in mids) {
 				var str = new byte[len];
-				var n2 = n;
+				var n = mid;
 				var i = 0;
 				do {
-					var m = Math.Min(n2, 32);
-					Array.Copy(elementalStrings[0], 0, str, i, m);
-					n2 -= m;
-					i += m;
-				} while (n2 != 0);
-				n2 = len - n;
+					var n2 = Math.Min(n, 32);
+					Array.Copy(elementalStrings[0], 0, str, i, n2);
+					n -= n2;
+					i += n2;
+				} while (n != 0);
+				n = len - mid;
 				i = len;
 				do {
-					var m = Math.Min(n2, 32);
-					Array.Copy(elementalStrings[1], 32 - m, str, i - m, m);
-					n2 -= m;
-					i -= m;
-				} while (n2 != 0);
+					var n2 = Math.Min(n, 32);
+					Array.Copy(elementalStrings[1], 32 - n2, str, i - n2, n2);
+					n -= n2;
+					i -= n2;
+				} while (n != 0);
 				myElementalStrings.Add(str);
 				if (len > 64) {
 					var str2 = new byte[len];
-					Array.Copy(str, 0, str2, 0, n);
-					n2 = len - n;
-					i = n;
+					Array.Copy(str, 0, str2, 0, mid);
+					n = len - mid;
+					i = mid;
 					do
 					{
-						var m = Math.Min(n2, 32);
-						Array.Copy(elementalStrings[1], 0, str2, i, m);
-						n2 -= m;
-						i += m;
-					} while (n2 != 0);
+						var n2 = Math.Min(n, 32);
+						Array.Copy(elementalStrings[1], 0, str2, i, n2);
+						n -= n2;
+						i += n2;
+					} while (n != 0);
 					myElementalStrings.Add(str2);
 				}
 			}
