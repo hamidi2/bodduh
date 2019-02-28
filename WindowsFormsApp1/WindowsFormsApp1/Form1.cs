@@ -95,14 +95,14 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		void FindBestTable(byte a, byte b, byte xOrXMod4, byte yMod4, bool bChangeX, out Table table, ref int[] colsSum)
+		void FindBestTable(byte a, byte b, byte xOrXMod4, byte yMod4, bool bChangeX, out Table[] tables)
 		{
 			var scores = new Dictionary<Table, Scores>();
 			byte xFrom = bChangeX ? (byte)(xOrXMod4 + 1) : xOrXMod4, xTo = bChangeX ? (byte)28 : xFrom;
 			byte yFrom = (byte)(yMod4 + 1), yTo = 28;
 			for (byte x = xFrom; x <= xTo; x += 4)
 				for (byte y = yFrom; y <= yTo; y += 4) {
-					table = new Table();
+					var table = new Table();
 					int[] output_scores;
 					int output_score1, output_score2;
 					Score(a, b, x, y, out table.colsSum, bChangeX, out output_scores, out output_score1, out output_score2);
@@ -112,11 +112,9 @@ namespace WindowsFormsApp1
 				}
 			var list = scores.ToList();
 			list.Sort((item1, item2) => Scores.Compare(item2.Value, item1.Value));
-			table = list[0].Key;
-			colsSum[0] += table.colsSum[0];
-			colsSum[1] += table.colsSum[1];
-			colsSum[2] += table.colsSum[2];
-			colsSum[3] += table.colsSum[3];
+			tables = new Table[list.Count];
+			for (var i = 0; i < list.Count; i++)
+				tables[i] = list[i].Key;
 		}
 
 		private void button1_Click(object sender, EventArgs e)
@@ -142,7 +140,6 @@ namespace WindowsFormsApp1
 				return;
 			}
 			tbOutput1.Text = "";
-			int[] colsSum = new int[4];
 			byte[][] elementalStrings = {
 				// first
 				new byte[] {
@@ -200,7 +197,7 @@ namespace WindowsFormsApp1
 						break;
 				}
 			}
-			Table table;
+			Table[] tables;
 			tbOutput1.Text = tbOutput2.Text = tbOutput3.Text = tbOutput4.Text = "";
 			Debug.Assert(
 				myElementalStrings.Count == 1 ||
@@ -213,20 +210,24 @@ namespace WindowsFormsApp1
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 				var b = Constants.Letters[tbInput.Text[1]].Abjad1;
-				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out table, ref colsSum);
+				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out tables);
+				for (var j = 0; j < 7; j++)
+					Debug.WriteLine("{0} {1} --> {2} {3}", a, b, tables[j].x, tables[j].y);
 				iInput += 2;
-				tbOutputs[i].Text += Constants.Abjad1ToLetter(table.x);
-				tbOutputs[i].Text += Constants.Abjad1ToLetter(table.y);
+				tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].x);
+				tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].y);
 				while (true) {
 					a += b;
 					if (a > 28)
 						a -= 28;
 					b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
-					var x = (byte)(table.x + table.y);
+					var x = (byte)(tables[0].x + tables[0].y);
 					if (x > 28)
 						x -= 28;
-					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out table, ref colsSum);
-					tbOutputs[i].Text += Constants.Abjad1ToLetter(table.y);
+					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out tables);
+					for (var j = 0; j < 7; j++)
+						Debug.WriteLine("{0} --> {1}", b, tables[j].y);
+					tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].y);
 					iInput++;
 					if (iInput == len)
 						break;
