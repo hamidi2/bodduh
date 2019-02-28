@@ -117,6 +117,20 @@ namespace WindowsFormsApp1
 				tables[i] = list[i].Key;
 		}
 
+		struct LetterSpec
+		{
+			public byte[] l;
+			public byte i;
+		}
+
+		byte[] FindBestLetters(LetterSpec[] lettersSpec)
+		{
+			var letters = new byte[lettersSpec.Length];
+			for (var i = 0; i < letters.Length; i++)
+				letters[i] = lettersSpec[i].l[0];
+			return letters;
+		}
+
 		private void button1_Click(object sender, EventArgs e)
         {
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
@@ -197,7 +211,6 @@ namespace WindowsFormsApp1
 						break;
 				}
 			}
-			Table[] tables;
 			tbOutput1.Text = tbOutput2.Text = tbOutput3.Text = tbOutput4.Text = "";
 			Debug.Assert(
 				myElementalStrings.Count == 1 ||
@@ -207,16 +220,19 @@ namespace WindowsFormsApp1
 				tbOutput1, tbOutput2, tbOutput3, tbOutput4
 			};
 			for (var i = 0; i < myElementalStrings.Count; i++) {
+				var lettersSpec = new LetterSpec[len];
+				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 				var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out tables);
-				for (var j = 0; j < 7; j++)
-					Debug.WriteLine("{0} {1} --> {2} {3}", a, b, tables[j].x, tables[j].y);
-				iInput += 2;
-				tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].x);
-				tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].y);
-				while (true) {
+				lettersSpec[0].l = new byte[tables.Length];
+				lettersSpec[1].l = new byte[tables.Length];
+				for (var j = 0; j < tables.Length; j++) {
+					lettersSpec[0].l[j] = tables[j].x;
+					lettersSpec[1].l[j] = tables[j].y;
+				}
+				for (iInput += 2; iInput < len; iInput++) {
 					a += b;
 					if (a > 28)
 						a -= 28;
@@ -225,13 +241,14 @@ namespace WindowsFormsApp1
 					if (x > 28)
 						x -= 28;
 					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out tables);
-					for (var j = 0; j < 7; j++)
-						Debug.WriteLine("{0} --> {1}", b, tables[j].y);
-					tbOutputs[i].Text += Constants.Abjad1ToLetter(tables[0].y);
-					iInput++;
-					if (iInput == len)
-						break;
+					lettersSpec[iInput].l = new byte[tables.Length];
+					for (var j = 0; j < tables.Length; j++)
+						lettersSpec[iInput].l[j] = tables[j].y;
 				}
+				var letters = FindBestLetters(lettersSpec);
+				tbOutputs[i].Text = "";
+				for (var j = 0; j < len; j++)
+					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
 			}
 		}
 
