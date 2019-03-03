@@ -119,15 +119,33 @@ namespace WindowsFormsApp1
 
 		struct LetterSpec
 		{
-			public byte[] l;
-			public byte i;
+			public byte n;  // input letter
+			public byte[] l;  // output letters sorted by scores
+			public byte i;  // current letter in l
 		}
 
 		byte[] FindBestLetters(LetterSpec[] lettersSpec)
 		{
 			var letters = new byte[lettersSpec.Length];
-			for (var i = 0; i < letters.Length; i++)
-				letters[i] = lettersSpec[i].l[0];
+			for (var c = 0; c < letters.Length; c++) {
+				for (var found = false; lettersSpec[c].i < lettersSpec[c].l.Length; lettersSpec[c].i++) {
+					long[] vars = {
+						lettersSpec[c].l[lettersSpec[c].i] + lettersSpec[c].n,
+						Diff(lettersSpec[c].l[lettersSpec[c].i], lettersSpec[c].n),
+					};
+					foreach (var n in vars) {
+						if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+							n % 8 == 0 || n % 28 == 8 || n % 28 == 20) {
+							found = true;
+							break;
+						}
+					}
+					if (found)
+						break;
+				}
+				Debug.Assert(lettersSpec[c].i < lettersSpec[c].l.Length);  // all letters have been examined and none are appropriate.
+				letters[c] = lettersSpec[c].l[lettersSpec[c].i];
+			}
 			return letters;
 		}
 
@@ -226,7 +244,9 @@ namespace WindowsFormsApp1
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 				var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out tables);
+				lettersSpec[0].n = a;
 				lettersSpec[0].l = new byte[tables.Length];
+				lettersSpec[1].n = b;
 				lettersSpec[1].l = new byte[tables.Length];
 				for (var j = 0; j < tables.Length; j++) {
 					lettersSpec[0].l[j] = tables[j].x;
@@ -241,6 +261,7 @@ namespace WindowsFormsApp1
 					if (x > 28)
 						x -= 28;
 					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out tables);
+					lettersSpec[iInput].n = b;
 					lettersSpec[iInput].l = new byte[tables.Length];
 					for (var j = 0; j < tables.Length; j++)
 						lettersSpec[iInput].l[j] = tables[j].y;
