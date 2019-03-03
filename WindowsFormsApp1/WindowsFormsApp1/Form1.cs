@@ -124,10 +124,24 @@ namespace WindowsFormsApp1
 			public byte i;  // current letter in l
 		}
 
+		bool Lab2Cond(long n, ref int exceptionCounter)
+		{
+			if (n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
+						Diff(28, n) % 5 == 0 ||
+						Diff(56, n) % 5 == 0)
+				return true;
+			if (Diff(84, n) % 5 == 0) {
+				exceptionCounter++;
+				return true;
+			}
+			return false;
+		}
+
 		void Lab2Check(byte[] letters)
 		{
 			var len = letters.Length;
 			var mid = len / 2;
+			var exceptionCounter = 0;
 			for (var i = 0; i < mid; i++) {
 				long[] vars = {
 					letters[i] + letters[len - 1 - i],
@@ -135,9 +149,7 @@ namespace WindowsFormsApp1
 				};
 				var found = false;
 				foreach (var n in vars) {
-					if (n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
-						Diff(28, n) % 5 == 0 || SumOfDigits(Diff(28, n), false) % 5 == 0 ||
-						Diff(56, n) % 5 == 0 || SumOfDigits(Diff(56, n), false) % 5 == 0) {
+					if (Lab2Cond(n, ref exceptionCounter)) {
 						found = true;
 						break;
 					}
@@ -146,10 +158,9 @@ namespace WindowsFormsApp1
 			}
 			if (len % 2 == 1) {
 				var n = letters[mid];
-				Debug.Assert(n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
-					Diff(28, n) % 5 == 0 || SumOfDigits(Diff(28, n), false) % 5 == 0 ||
-					Diff(56, n) % 5 == 0 || SumOfDigits(Diff(56, n), false) % 5 == 0);
+				Debug.Assert(Lab2Cond(n, ref exceptionCounter));
 			}
+			Debug.Assert(exceptionCounter < 2);
 		}
 
 		byte[] FindBestLetters(LetterSpec[] lettersSpec)
