@@ -124,10 +124,41 @@ namespace WindowsFormsApp1
 			public byte i;  // current letter in l
 		}
 
+		void Lab2Check(byte[] letters)
+		{
+			var len = letters.Length;
+			var mid = len / 2;
+			for (var i = 0; i < mid; i++) {
+				long[] vars = {
+					letters[i] + letters[len - 1 - i],
+					Diff(letters[i], letters[len - 1 - i]),
+				};
+				var found = false;
+				foreach (var n in vars) {
+					if (n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
+						Diff(28, n) % 5 == 0 || SumOfDigits(Diff(28, n), false) % 5 == 0 ||
+						Diff(56, n) % 5 == 0 || SumOfDigits(Diff(56, n), false) % 5 == 0) {
+						found = true;
+						break;
+					}
+				}
+				Debug.Assert(found);
+			}
+			if (len % 2 == 1) {
+				var n = letters[mid];
+				Debug.Assert(n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
+					Diff(28, n) % 5 == 0 || SumOfDigits(Diff(28, n), false) % 5 == 0 ||
+					Diff(56, n) % 5 == 0 || SumOfDigits(Diff(56, n), false) % 5 == 0);
+			}
+		}
+
 		byte[] FindBestLetters(LetterSpec[] lettersSpec)
 		{
-			var letters = new byte[lettersSpec.Length];
-			for (var c = 0; c < letters.Length; c++) {
+			var len = lettersSpec.Length;
+			var letters = new byte[len];
+
+			// 1
+			for (var c = 0; c < len; c++) {
 				for (var found = false; lettersSpec[c].i < lettersSpec[c].l.Length; lettersSpec[c].i++) {
 					long[] vars = {
 						lettersSpec[c].l[lettersSpec[c].i] + lettersSpec[c].n,
@@ -146,6 +177,21 @@ namespace WindowsFormsApp1
 				Debug.Assert(lettersSpec[c].i < lettersSpec[c].l.Length);  // all letters have been examined and none are appropriate.
 				letters[c] = lettersSpec[c].l[lettersSpec[c].i];
 			}
+
+			// 2
+			Lab2Check(letters);
+
+			// 3
+			var l = new byte[len];
+			for (var i = 0; i < len; i++)
+				l[i] = (byte)(letters[i] + lettersSpec[i].n);
+			Lab2Check(l);
+
+			// 4
+			//for (var i = 0; i < len; i++)
+			//	l[i] = (byte) SumOfDigits(Diff(letters[i], lettersSpec[i].n));
+			//var mid = len / 2;
+
 			return letters;
 		}
 
