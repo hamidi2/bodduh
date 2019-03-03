@@ -179,18 +179,53 @@ namespace WindowsFormsApp1
 			}
 
 			// 2
-			Lab2Check(letters);
-
-			// 3
 			var l = new byte[len];
-			for (var i = 0; i < len; i++)
+			var i = 0;
+			for (; i < len; i++)
 				l[i] = (byte)(letters[i] + lettersSpec[i].n);
 			Lab2Check(l);
 
+			// 3
+			for (i = 0; i < len; i++)
+				l[i] = (byte)SumOfDigits(Diff(letters[i], lettersSpec[i].n));
+			var mid = len / 2;
+			var pattern = "+--";
+			var iPattern = 0;
+			var str = "";
+			for (i = 0; i < mid; i++) {
+				if (pattern[iPattern] == '+')
+					str += SumOfDigits(l[i] + l[len - 1 - i]);
+				else
+					str += Diff(l[i], l[len - 1 - i]);
+				iPattern++;
+				if (iPattern == pattern.Length)
+					iPattern = 0;
+			}
+			if (len % 2 != 0)
+				str += l[mid];
+			var n2 = long.Parse(str);
+			Debug.Assert(Score(n2) != 0);
+			Debug.Assert(Score(Reverse(n2)) != 0);
+
 			// 4
-			//for (var i = 0; i < len; i++)
-			//	l[i] = (byte) SumOfDigits(Diff(letters[i], lettersSpec[i].n));
-			//var mid = len / 2;
+			len = str.Length;
+			mid = len / 2;
+			foreach (var pat in new string[] { "+--", "++-" }) {
+				var str2 = "";
+				iPattern = 0;
+				if (len % 2 != 0)
+					str2 += str[mid];
+				for (i = mid - 1; i >= 0; i--) {
+					if (pat[iPattern] == '+')
+						str2 += str[i] - '0' + str[len - 1 - i] - '0';
+					else
+						str2 += Diff(str[i] - '0', str[len - 1 - i] - '0');
+					iPattern++;
+					if (iPattern == pat.Length)
+						iPattern = 0;
+				}
+				Debug.Assert(Score(long.Parse(str2)) != 0);
+			}
 
 			return letters;
 		}
