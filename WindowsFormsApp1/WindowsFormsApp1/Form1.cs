@@ -327,7 +327,8 @@ namespace WindowsFormsApp1
 				myElementalStrings.Count == 2 ||
 				myElementalStrings.Count == 4);
 			var tbOutputs = new TextBox[] {
-				tbOutput1, tbOutput2, tbOutput3, tbOutput4
+				tbOutput1, tbOutput2, tbOutput3, tbOutput4,
+				tbOutput5, tbOutput6, tbOutput7, tbOutput8,
 			};
 			for (var i = 0; i < myElementalStrings.Count; i++) {
 				var lettersSpec = new LetterSpec[len];
@@ -362,6 +363,71 @@ namespace WindowsFormsApp1
 				tbOutputs[i].Text = "";
 				for (var j = 0; j < len; j++)
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
+
+				// second method
+				lettersSpec[0].n = 1;
+				lettersSpec[1].n = 1;
+				long[] numbers;
+				Debug.Assert(len % 2 == 0);
+				var mid = len / 2;
+				for (var col = 0; col < mid; col++) {
+					// find the rightmost letter
+					var found = false;
+					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].n; lettersSpec[col].i++) {
+						var l = lettersSpec[col].l[lettersSpec[col].i];
+						numbers = new long[] {
+							Diff(Constants.Letters[tbInput.Text[col]].Abjad1, l),
+							Constants.Letters[tbInput.Text[col]].Abjad1 + l,
+						};
+						foreach (var n in numbers) {
+							if ((n == 0 && Score(l) != 0) ||
+								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+								n % 8 == 0 ||
+								n % 28 == 2 || n % 28 == 8) {
+								found = true;
+								break;  // either sum or diff matches
+							}
+						}
+						if (found)
+							break;  // stop at the found letter
+					}
+					Debug.Assert(found);
+					// find the leftmost letter
+					found = false;
+					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].n; lettersSpec[len - 1 - col].i++) {
+						var l = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
+						numbers = new long[] {
+							Diff(Constants.Letters[tbInput.Text[len - 1 - col]].Abjad1, l),
+							Constants.Letters[tbInput.Text[len - 1 - col]].Abjad1 + l,
+						};
+						foreach (var n in numbers) {
+							if ((n == 0 && Score(l) != 0) ||
+								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+								n % 8 == 0 ||
+								n % 28 == 2 || n % 28 == 8) {
+								found = true;
+								break;  // either sum or diff matches
+							}
+						}
+						if (found)
+							break;  // stop at the found letter
+					}
+					Debug.Assert(found);
+					// now we found two proper letters from first step
+					found = false;
+					numbers = new long[] {
+						Diff(lettersSpec[col].l[lettersSpec[col].i], lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i]),
+						lettersSpec[col].l[lettersSpec[col].i] + lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i],
+					};
+					foreach (var n in numbers) {
+						if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8) {
+							found = true;
+							break;  // either sum or diff matches
+						}
+					}
+					if (!found)
+						continue;
+				}
 			}
 		}
 

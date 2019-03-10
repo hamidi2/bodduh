@@ -36,6 +36,11 @@
 			this.tbOutput2 = new System.Windows.Forms.TextBox();
 			this.tbOutput3 = new System.Windows.Forms.TextBox();
 			this.tbOutput4 = new System.Windows.Forms.TextBox();
+			this.tbOutput5 = new System.Windows.Forms.TextBox();
+			this.label3 = new System.Windows.Forms.Label();
+			this.tbOutput6 = new System.Windows.Forms.TextBox();
+			this.tbOutput7 = new System.Windows.Forms.TextBox();
+			this.tbOutput8 = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -106,12 +111,59 @@
 			this.tbOutput4.Size = new System.Drawing.Size(478, 20);
 			this.tbOutput4.TabIndex = 7;
 			// 
+			// tbOutput5
+			// 
+			this.tbOutput5.Location = new System.Drawing.Point(12, 178);
+			this.tbOutput5.Name = "tbOutput5";
+			this.tbOutput5.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+			this.tbOutput5.Size = new System.Drawing.Size(478, 20);
+			this.tbOutput5.TabIndex = 8;
+			// 
+			// label3
+			// 
+			this.label3.AutoSize = true;
+			this.label3.Location = new System.Drawing.Point(499, 181);
+			this.label3.Name = "label3";
+			this.label3.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+			this.label3.Size = new System.Drawing.Size(46, 13);
+			this.label3.TabIndex = 9;
+			this.label3.Text = "روش دوم";
+			// 
+			// tbOutput6
+			// 
+			this.tbOutput6.Location = new System.Drawing.Point(12, 204);
+			this.tbOutput6.Name = "tbOutput6";
+			this.tbOutput6.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+			this.tbOutput6.Size = new System.Drawing.Size(478, 20);
+			this.tbOutput6.TabIndex = 10;
+			// 
+			// tbOutput7
+			// 
+			this.tbOutput7.Location = new System.Drawing.Point(12, 230);
+			this.tbOutput7.Name = "tbOutput7";
+			this.tbOutput7.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+			this.tbOutput7.Size = new System.Drawing.Size(478, 20);
+			this.tbOutput7.TabIndex = 11;
+			// 
+			// tbOutput8
+			// 
+			this.tbOutput8.Location = new System.Drawing.Point(12, 256);
+			this.tbOutput8.Name = "tbOutput8";
+			this.tbOutput8.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+			this.tbOutput8.Size = new System.Drawing.Size(478, 20);
+			this.tbOutput8.TabIndex = 12;
+			// 
 			// Form1
 			// 
 			this.AcceptButton = this.button1;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(547, 168);
+			this.ClientSize = new System.Drawing.Size(547, 288);
+			this.Controls.Add(this.tbOutput8);
+			this.Controls.Add(this.tbOutput7);
+			this.Controls.Add(this.tbOutput6);
+			this.Controls.Add(this.label3);
+			this.Controls.Add(this.tbOutput5);
 			this.Controls.Add(this.tbOutput4);
 			this.Controls.Add(this.tbOutput3);
 			this.Controls.Add(this.tbOutput2);
@@ -139,6 +191,11 @@
 		private System.Windows.Forms.TextBox tbOutput2;
 		private System.Windows.Forms.TextBox tbOutput3;
 		private System.Windows.Forms.TextBox tbOutput4;
+		private System.Windows.Forms.TextBox tbOutput5;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.TextBox tbOutput6;
+		private System.Windows.Forms.TextBox tbOutput7;
+		private System.Windows.Forms.TextBox tbOutput8;
 	}
 }
 
