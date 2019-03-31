@@ -127,8 +127,8 @@ namespace WindowsFormsApp1
 		bool Lab2Cond(long n, ref int exceptionCounter)
 		{
 			if (n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
-						Diff(28, n) % 5 == 0 ||
-						Diff(56, n) % 5 == 0)
+				Diff(28, n) % 5 == 0 || (28 + n) % 5 == 0 ||
+				Diff(56, n) % 5 == 0 || (56 + n) % 5 == 0)
 				return true;
 			if (Diff(84, n) % 5 == 0) {
 				exceptionCounter++;
@@ -365,14 +365,40 @@ namespace WindowsFormsApp1
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
 
 				// second method
+				// first step: remove numbers which don't match with input
 				lettersSpec[0].n = 1;
 				lettersSpec[1].n = 1;
 				long[] numbers;
-				Debug.Assert(len % 2 == 0);
+				var found = false;
+				for (var col = 0; col < len; col++) {
+					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].n;) {
+						var l = lettersSpec[col].l[lettersSpec[col].i];
+						numbers = new long[] {
+							Diff(Constants.Letters[tbInput.Text[col]].Abjad1, l),
+							Constants.Letters[tbInput.Text[col]].Abjad1 + l,
+						};
+						foreach (var n in numbers) {
+							if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
+								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+								n % 8 == 0) {
+								found = true;
+								break;  // either sum or diff matches
+							}
+						}
+						if (found) {
+							lettersSpec[col].i++;
+						} else {  // this letter can't satisfy the first condition
+							if (lettersSpec[col].i < lettersSpec[col].n - 1)
+								Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].n - lettersSpec[col].i - 1);
+							lettersSpec[col].n--;
+						}
+					}
+				}
+				// second step: find matching numbers from two sides
+				Debug.Assert(len % 2 == 0);  // not implemented yet
 				var mid = len / 2;
 				for (var col = 0; col < mid; col++) {
 					// find the rightmost letter
-					var found = false;
 					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].n; lettersSpec[col].i++) {
 						var l = lettersSpec[col].l[lettersSpec[col].i];
 						numbers = new long[] {
@@ -388,8 +414,12 @@ namespace WindowsFormsApp1
 								break;  // either sum or diff matches
 							}
 						}
-						if (found)
-							break;  // stop at the found letter
+						if (!found) {  // this letter can't satisfy the first condition
+							Debug.Assert(lettersSpec[col].i < lettersSpec[col].n - 1);  // we examined the whole letters in rightmost column #col and found no proper letter
+							lettersSpec[col].n--;
+							Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].n - lettersSpec[col].i);
+							continue;
+						}
 					}
 					Debug.Assert(found);
 					// find the leftmost letter
