@@ -401,9 +401,6 @@ namespace WindowsFormsApp1
 				}
 
 				// second step: find matching numbers from two sides
-				var mid = len / 2;
-				var pattern = "--+-+-+--";
-				var pairs = new List<Pair>();
 				// پخش میانگین رو به دست میاریم
 				int inputSum = 0;
 				for (var col = 0; col < len; col++)
@@ -415,7 +412,11 @@ namespace WindowsFormsApp1
 				for (var j = inputSum % len; j > 0; j--)
 					outputBodduhValues[len - j]++;
 				// ~پخش میانگین
+
+				var mid = len / 2;
 				for (var col = 0; col < mid; col++) {
+					var pattern = "--+-+-+--";
+					var pairs = new List<Pair>();
 					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
 						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
 							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
@@ -481,8 +482,36 @@ namespace WindowsFormsApp1
 						pairs = pairs2;
 					}
 					Debug.Assert(pairs.Count != 0);
+					if (pairs.Count > 1) {
+						// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
+						var pairs2 = new List<Pair>();
+						foreach (var pair in pairs) {
+							var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
+							if (left == 0)
+								left++;
+							var right = Diff(pair.Right, lettersSpec[col].n);
+							if (right == 0)
+								right++;
+							long[] vars = {
+								Diff(left, right) % 9,
+								(left + right) % 9,
+							};
+							foreach (var n in vars) {
+								if (n < 3) {
+									pairs2.Add(pair);
+									break;
+								}
+							}
+						}
+						pairs = pairs2;
+					}
 					Debug.Assert(pairs.Count == 1);
+					letters[len - 1 - col] = pairs[0].Left;
+					letters[col] = pairs[0].Right;
 				}
+				tbOutputs[4 + i].Text = "";
+				for (var j = 0; j < len; j++)
+					tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 			}
 		}
 
