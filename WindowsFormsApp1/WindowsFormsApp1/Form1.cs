@@ -329,10 +329,10 @@ namespace WindowsFormsApp1
 				myElementalStrings.Count == 4);
 			var tbOutputs = new TextBox[] {
 				tbOutput1, tbOutput2, tbOutput3, tbOutput4,
-				tbOutput5, tbOutput6, tbOutput7, tbOutput8,
 			};
+			var lettersSpec = new LetterSpec[len];
+			var letters = new byte[len];
 			for (var i = 0; i < myElementalStrings.Count; i++) {
-				var lettersSpec = new LetterSpec[len];
 				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
@@ -360,159 +360,167 @@ namespace WindowsFormsApp1
 					for (var j = 0; j < tables.Length; j++)
 						lettersSpec[iInput].l[j] = tables[j].y;
 				}
+				// temporarily disable first method and concentrate on the second one. in the first method i get exceptions.
+				/*
 				var letters = FindBestLetters(lettersSpec);
 				tbOutputs[i].Text = "";
 				for (var j = 0; j < len; j++)
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
+				*/
+				// instead of the above code, i temporarily use this one:
+				tbOutputs[i].Text = "";
+				for (var j = 0; j < len; j++) {
+					letters[j] = lettersSpec[j].l[0];
+					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
+				}
+			}
 
-				// second method
+			// second method
 
-				// first step: remove numbers which don't match with input
-				lettersSpec[0].count = 1;
-				lettersSpec[1].count = 1;
-				for (var col = 2; col < len; col++)
-					lettersSpec[col].count = lettersSpec[col].l.Length;
-				long[] numbers;
-				bool found;
-				for (var col = 0; col < len; col++) {
-					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count;) {
-						var l = lettersSpec[col].l[lettersSpec[col].i];
-						numbers = new long[] {
+			// first step: remove numbers which don't match with input
+			lettersSpec[0].count = 1;
+			lettersSpec[1].count = 1;
+			for (var col = 2; col < len; col++)
+				lettersSpec[col].count = lettersSpec[col].l.Length;
+			long[] numbers;
+			bool found;
+			for (var col = 0; col < len; col++) {
+				for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count;) {
+					var l = lettersSpec[col].l[lettersSpec[col].i];
+					numbers = new long[] {
 							Diff(lettersSpec[col].n, l),
 							lettersSpec[col].n + l,
 						};
-						found = false;
-						foreach (var n in numbers) {
-							if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
-								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
-								(n != 0 && n % 8 == 0)) {
-								found = true;
-								break;  // either sum or diff matches
-							}
+					found = false;
+					foreach (var n in numbers) {
+						if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
+							n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+							(n != 0 && n % 8 == 0)) {
+							found = true;
+							break;  // either sum or diff matches
 						}
-						if (found) {
-							lettersSpec[col].i++;
-						} else {  // this letter can't satisfy the first condition
-							if (lettersSpec[col].i < lettersSpec[col].count - 1)
-								Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].count - lettersSpec[col].i - 1);
-							lettersSpec[col].count--;
-						}
+					}
+					if (found) {
+						lettersSpec[col].i++;
+					} else {  // this letter can't satisfy the first condition
+						if (lettersSpec[col].i < lettersSpec[col].count - 1)
+							Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].count - lettersSpec[col].i - 1);
+						lettersSpec[col].count--;
 					}
 				}
+			}
 
-				// second step: find matching numbers from two sides
-				// پخش میانگین رو به دست میاریم
-				int inputSum = 0;
-				for (var col = 0; col < len; col++)
-					inputSum += lettersSpec[col].n;
-				inputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
-				var outputBodduhValues = new byte[len];
-				for (var col = 0; col < len; col++)
-					outputBodduhValues[col] = (byte)(inputSum / len);
-				for (var j = inputSum % len; j > 0; j--)
-					outputBodduhValues[len - j]++;
-				// ~پخش میانگین
+			// second step: find matching numbers from two sides
+			// پخش میانگین رو به دست میاریم
+			int inputSum = 0;
+			for (var col = 0; col < len; col++)
+				inputSum += lettersSpec[col].n;
+			inputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
+			var outputBodduhValues = new byte[len];
+			for (var col = 0; col < len; col++)
+				outputBodduhValues[col] = (byte)(inputSum / len);
+			for (var j = inputSum % len; j > 0; j--)
+				outputBodduhValues[len - j]++;
+			// ~پخش میانگین
 
-				var mid = len / 2;
-				for (var col = 0; col < mid; col++) {
-					var pattern = "--+-+-+--";
-					var pairs = new List<Pair>();
-					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
-						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
-							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
-							var right = lettersSpec[col].l[lettersSpec[col].i];
-							var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
-							if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8)
-								pairs.Add(new Pair { Left = left, Right = right });
-						}
+			for (var col = 0; col < len / 2; col++) {
+				var pattern = "--+-+-+--";
+				var pairs = new List<Pair>();
+				for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
+					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
+						var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
+						var right = lettersSpec[col].l[lettersSpec[col].i];
+						var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
+						if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8)
+							pairs.Add(new Pair { Left = left, Right = right });
 					}
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
-						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
-						var pattern2 = "++-+";
-						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
-							var left = Diff(outputBodduhValues[len - 1 - col], pair.Left);
-							if (left == 0)
-								left++;
-							var right = Diff(outputBodduhValues[col], pair.Right);
-							if (right == 0)
-								right++;
-							var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-							if (n % 9 == (col % 4 + 1) * 2)
-								pairs2.Add(pair);
-						}
-						pairs = pairs2;
+				}
+				Debug.Assert(pairs.Count != 0);
+				if (pairs.Count > 1) {
+					// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
+					var pattern2 = "++-+";
+					var pairs2 = new List<Pair>();
+					foreach (var pair in pairs) {
+						var left = Diff(outputBodduhValues[len - 1 - col], pair.Left);
+						if (left == 0)
+							left++;
+						var right = Diff(outputBodduhValues[col], pair.Right);
+						if (right == 0)
+							right++;
+						var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+						if (n % 9 == (col % 4 + 1) * 2)
+							pairs2.Add(pair);
 					}
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
-						// نوبت به بدوح ورودی و خروجی میرسه
-						var pattern2 = "--+++-";
-						byte[] bodduh = { 2, 6, 8, 4 };
-						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
-							long[] vars = {
+					pairs = pairs2;
+				}
+				Debug.Assert(pairs.Count != 0);
+				if (pairs.Count > 1) {
+					// نوبت به بدوح ورودی و خروجی میرسه
+					var pattern2 = "--+++-";
+					byte[] bodduh = { 2, 6, 8, 4 };
+					var pairs2 = new List<Pair>();
+					foreach (var pair in pairs) {
+						long[] vars = {
 								Diff(lettersSpec[len - 1 - col].n, pair.Left),
 								lettersSpec[len - 1 - col].n + pair.Left,
 								Diff(lettersSpec[col].n, pair.Right),
 								lettersSpec[col].n + pair.Right,
 							};
-							long[] vars2;
-							if (pattern2[col % pattern2.Length] == '-')
-								vars2 = new long[] {
+						long[] vars2;
+						if (pattern2[col % pattern2.Length] == '-')
+							vars2 = new long[] {
 									Diff(vars[0], vars[2]),
 									Diff(vars[0], vars[3]),
 									Diff(vars[1], vars[2]),
 									Diff(vars[1], vars[3]),
 								};
-							else
-								vars2 = new long[] {
+						else
+							vars2 = new long[] {
 									vars[0] + vars[2],
 									vars[0] + vars[3],
 									vars[1] + vars[2],
 									vars[1] + vars[3],
 								};
-							foreach (var n in vars2) {
-								if (n % 9 == bodduh[col % bodduh.Length]) {
-									pairs2.Add(pair);
-									break;
-								}
+						foreach (var n in vars2) {
+							if (n % 9 == bodduh[col % bodduh.Length]) {
+								pairs2.Add(pair);
+								break;
 							}
 						}
-						pairs = pairs2;
 					}
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
-						// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
-						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
-							var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
-							if (left == 0)
-								left++;
-							var right = Diff(pair.Right, lettersSpec[col].n);
-							if (right == 0)
-								right++;
-							long[] vars = {
+					pairs = pairs2;
+				}
+				Debug.Assert(pairs.Count != 0);
+				if (pairs.Count > 1) {
+					// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
+					var pairs2 = new List<Pair>();
+					foreach (var pair in pairs) {
+						var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
+						if (left == 0)
+							left++;
+						var right = Diff(pair.Right, lettersSpec[col].n);
+						if (right == 0)
+							right++;
+						long[] vars = {
 								Diff(left, right) % 9,
 								(left + right) % 9,
 							};
-							foreach (var n in vars) {
-								if (n < 3) {
-									pairs2.Add(pair);
-									break;
-								}
+						foreach (var n in vars) {
+							if (n < 3) {
+								pairs2.Add(pair);
+								break;
 							}
 						}
-						pairs = pairs2;
 					}
-					Debug.Assert(pairs.Count == 1);
-					letters[len - 1 - col] = pairs[0].Left;
-					letters[col] = pairs[0].Right;
+					pairs = pairs2;
 				}
-				tbOutputs[4 + i].Text = "";
-				for (var j = 0; j < len; j++)
-					tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
+				Debug.Assert(pairs.Count == 1);
+				letters[len - 1 - col] = pairs[0].Left;
+				letters[col] = pairs[0].Right;
 			}
+			tbOutput5.Text = "";
+			for (var j = 0; j < len; j++)
+				tbOutput5.Text += Constants.Abjad1ToLetter(letters[j]);
 		}
 
 		struct Pair
