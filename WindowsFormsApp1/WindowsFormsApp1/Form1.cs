@@ -448,7 +448,7 @@ namespace WindowsFormsApp1
 						if (right == 0)
 							right++;
 						var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-						if (n % 9 == (col % 4 + 1) * 2)
+						if (n % 9 != 0 && n % 9 % 2 == 0)
 							pairs2.Add(pair);
 					}
 					pairs = pairs2;
