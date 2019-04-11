@@ -447,8 +447,10 @@ namespace WindowsFormsApp1
 						var right = Diff(outputBodduhValues[col], pair.Right);
 						if (right == 0)
 							right++;
-						var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-						if (n % 9 != 0 && n % 9 % 2 == 0)
+						//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+						//if (n % 9 == (col % 4 + 1) * 2)
+						if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
+							(left + right) % 9 == (col % 4 + 1) * 2)
 							pairs2.Add(pair);
 					}
 					pairs = pairs2;
