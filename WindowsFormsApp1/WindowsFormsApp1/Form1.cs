@@ -393,15 +393,32 @@ namespace WindowsFormsApp1
 							lettersSpec[col].n + l,
 						};
 						found = false;
+						byte pattern = 0;  // 1 or 2 or 8 for this column
 						foreach (var n in numbers) {
-							if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
-								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
-								(n != 0 && n % 8 == 0)) {
-								found = true;
-								break;  // either sum or diff matches
+							if (n == 0) {
+								if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
+									pattern = 1;
+							} else {
+								var n28 = n % 28;
+								if (n28 == 2 || n28 == 11 || n28 == 20)
+									pattern = 2;
+								else if (n28 == 8 || n28 == 17 || n28 == 26)
+									pattern = 8;
+								else if (n28 == 0)
+									pattern = 1;
+								else {
+									var n9 = n % 9;
+									if (n9 == 1 || n9 == 2 || n9 == 8)
+										pattern = (byte)n9;
+									else {
+										var n8 = n % 8;
+										if (n8 == 0)
+											pattern = 8;
+									}
+								}
 							}
 						}
-						if (found) {
+						if (pattern != 0) {
 							lettersSpec[col].i++;
 						} else {  // this letter can't satisfy the first condition
 							if (lettersSpec[col].i < lettersSpec[col].count - 1)
