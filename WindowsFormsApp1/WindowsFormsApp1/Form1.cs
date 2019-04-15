@@ -385,49 +385,85 @@ namespace WindowsFormsApp1
 					lettersSpec[col].count = lettersSpec[col].l.Length;
 				long[] numbers;
 				bool found;
-				for (var col = 0; col < len; col++) {
-					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count;) {
-						var l = lettersSpec[col].l[lettersSpec[col].i];
-						numbers = new long[] {
-							Diff(lettersSpec[col].n, l),
-							lettersSpec[col].n + l,
-						};
-						found = false;
-						byte pattern = 0;  // 1 or 2 or 8 for this column
-						foreach (var n in numbers) {
-							if (n == 0) {
-								if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
-									pattern = 1;
-							} else {
-								var n28 = n % 28;
-								if (n28 == 2 || n28 == 11 || n28 == 20)
-									pattern = 2;
-								else if (n28 == 8 || n28 == 17 || n28 == 26)
-									pattern = 8;
-								else if (n28 == 0)
-									pattern = 1;
-								else {
-									var n9 = n % 9;
+				string[] acceptablePatterns = {
+					"28",
+					"82",
+					"2882",
+					"8228",
+					"28828228", "82282882",
+					"128", "182",
+					"218", "281",
+					"812", "821",
+					"128821", "182281",
+					"218812", "281182",
+					"812218", "821128",
+					"128812281", "182218821",
+					"218821182", "281128812",
+					"812281128", "821182218",
+				};
+				for (var direction = 0; direction < 2; direction++) {  // 0 for right to middle, 1 for left to middle
+					var matchedPatterns = acceptablePatterns.ToList();
+					for (var col = 0; col < len / 2; col++) {
+						var matchedPatterns2 = new List<string>();
+						var realCol = direction == 0 ? col : len - 1 - col;
+						for (lettersSpec[realCol].i = 0; lettersSpec[realCol].i < lettersSpec[realCol].count;) {
+							var l = lettersSpec[realCol].l[lettersSpec[realCol].i];
+							numbers = new long[] {
+								Diff(lettersSpec[realCol].n, l),
+								lettersSpec[realCol].n + l,
+							};
+							found = false;
+							var patterns = new List<byte>();  // 1 or 2 or 8 for this column
+							foreach (var n in numbers) {
+								if (n == 0) {
+									if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
+										patterns.Add(1);
+								} else {
+									var n28 = n % 28;
+									if (n28 == 2 || n28 == 11)
+										patterns.Add(2);
+									else if (n28 == 20) {
+										patterns.Add(2);
+										patterns.Add(8);
+									} else if (n28 == 8 || n28 == 17 || n28 == 26)
+										patterns.Add(8);
+									else if (n28 == 0)
+										patterns.Add(1);
+									byte n9 = (byte)(n % 9);
 									if (n9 == 1 || n9 == 2 || n9 == 8)
-										pattern = (byte)n9;
-									else {
-										var n8 = n % 8;
-										if (n8 == 0)
-											pattern = 8;
-									}
+										patterns.Add(n9);
+									var n8 = n % 8;
+									if (n8 == 0)
+										patterns.Add(8);
 								}
 							}
+							patterns = patterns.Distinct().ToList();
+							found = false;
+							if (patterns.Count != 0) {
+								foreach (var matchedPattern in matchedPatterns) {
+									var matched = false;
+									foreach (var pattern in patterns) {
+										var expectedNumber = matchedPattern[col % matchedPattern.Length] - '0';
+										if (pattern == expectedNumber) {
+											found = matched = true;
+											break;
+										}
+									}
+									if (matched)
+										matchedPatterns2.Add(matchedPattern);
+								}
+							}
+							if (found)
+								lettersSpec[realCol].i++;
+							else {  // this letter can't satisfy the first condition
+								if (lettersSpec[realCol].i < lettersSpec[realCol].count - 1)
+									Array.Copy(lettersSpec[realCol].l, lettersSpec[realCol].i + 1, lettersSpec[realCol].l, lettersSpec[realCol].i, lettersSpec[realCol].count - lettersSpec[realCol].i - 1);
+								lettersSpec[realCol].count--;
+							}
 						}
-						if (pattern != 0) {
-							lettersSpec[col].i++;
-						} else {  // this letter can't satisfy the first condition
-							if (lettersSpec[col].i < lettersSpec[col].count - 1)
-								Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].count - lettersSpec[col].i - 1);
-							lettersSpec[col].count--;
-						}
+						matchedPatterns = matchedPatterns2.Distinct().ToList();
 					}
 				}
-
 				// second step: find matching numbers from two sides
 				// پخش میانگین رو به دست میاریم
 				int inputSum = 0;
