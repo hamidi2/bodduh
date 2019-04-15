@@ -401,8 +401,9 @@ namespace WindowsFormsApp1
 					"218821182", "281128812",
 					"812281128", "821182218",
 				};
+				List<string> matchedPatterns = null;
 				for (var direction = 0; direction < 2; direction++) {  // 0 for right to middle, 1 for left to middle
-					var matchedPatterns = acceptablePatterns.ToList();
+					matchedPatterns = acceptablePatterns.ToList();
 					for (var col = 0; col < len / 2; col++) {
 						var matchedPatterns2 = new List<string>();
 						var realCol = direction == 0 ? col : len - 1 - col;
@@ -464,12 +465,17 @@ namespace WindowsFormsApp1
 						matchedPatterns = matchedPatterns2.Distinct().ToList();
 					}
 				}
-				// second step: find matching numbers from two sides
+
 				// پخش میانگین رو به دست میاریم
 				int inputSum = 0;
 				for (var col = 0; col < len; col++)
 					inputSum += lettersSpec[col].n;
-				inputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
+				var outputElementalSum = 0;
+				for (var col = 0; col < len; col++)
+					outputElementalSum += myElementalStrings[i][col];
+				var outputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
+				while (outputSum % 4 != outputElementalSum % 4)
+					outputSum += 9;
 				var outputBodduhValues = new byte[len];
 				for (var col = 0; col < len; col++)
 					outputBodduhValues[col] = (byte)(inputSum / len);
@@ -477,7 +483,9 @@ namespace WindowsFormsApp1
 					outputBodduhValues[len - j]++;
 				// ~پخش میانگین
 
+				matchedPatterns = acceptablePatterns.ToList();
 				for (var col = 0; col < len / 2; col++) {
+					// second step: find matching numbers from two sides
 					var pattern = "--+-+-+--";
 					var pairs = new List<Pair>();
 					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
