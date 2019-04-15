@@ -12,8 +12,8 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
-    public partial class Form1 : Form
-    {
+	public partial class Form1 : Form
+	{
 		void DebugFunc1()
 		{
 			int[] colsSum = new int[4];
@@ -68,21 +68,22 @@ namespace WindowsFormsApp1
 		}
 
 		public Form1()
-        {
-            InitializeComponent();
+		{
+			InitializeComponent();
 			DebugFunc3();
 		}
 
 		class Table
-        {
+		{
 			public byte x, y;
 			public int[] colsSum;
-        }
+		}
 
 		class Scores
 		{
 			public int score1, score2;
-			public static int Compare(Scores sc1, Scores sc2) {
+			public static int Compare(Scores sc1, Scores sc2)
+			{
 				if (sc1.score1 < sc2.score1)
 					return -1;
 				if (sc1.score1 > sc2.score1)
@@ -243,7 +244,7 @@ namespace WindowsFormsApp1
 		}
 
 		private void button1_Click(object sender, EventArgs e)
-        {
+		{
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
 			// 3042 3106 2918 3030 کیفحالرضمعون
 			// 2334 2454 2290 2358 کیهوزتادسرغمن
@@ -257,9 +258,9 @@ namespace WindowsFormsApp1
 				len = tbInput.Text.Length;
 			}
 			if (len < 2) {
-                MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
-                return;
-            }
+				MessageBox.Show("ورودی حداقل باید شامل دو حرف باشد");
+				return;
+			}
 			if (!Constants.ValidateString(tbInput.Text)) {
 				MessageBox.Show("ورودی شامل حروف غیر ابجد میباشد");
 				return;
@@ -329,10 +330,10 @@ namespace WindowsFormsApp1
 				myElementalStrings.Count == 4);
 			var tbOutputs = new TextBox[] {
 				tbOutput1, tbOutput2, tbOutput3, tbOutput4,
+				tbOutput5, tbOutput6, tbOutput7, tbOutput8,
 			};
-			var lettersSpec = new LetterSpec[len];
-			var letters = new byte[len];
 			for (var i = 0; i < myElementalStrings.Count; i++) {
+				var lettersSpec = new LetterSpec[len];
 				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
@@ -368,161 +369,162 @@ namespace WindowsFormsApp1
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
 				*/
 				// instead of the above code, i temporarily use this one:
+				var letters = new byte[len];
 				tbOutputs[i].Text = "";
 				for (var j = 0; j < len; j++) {
 					letters[j] = lettersSpec[j].l[0];
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
 				}
-			}
 
-			// second method
+				// second method
 
-			// first step: remove numbers which don't match with input
-			lettersSpec[0].count = 1;
-			lettersSpec[1].count = 1;
-			for (var col = 2; col < len; col++)
-				lettersSpec[col].count = lettersSpec[col].l.Length;
-			long[] numbers;
-			bool found;
-			for (var col = 0; col < len; col++) {
-				for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count;) {
-					var l = lettersSpec[col].l[lettersSpec[col].i];
-					numbers = new long[] {
+				// first step: remove numbers which don't match with input
+				lettersSpec[0].count = 1;
+				lettersSpec[1].count = 1;
+				for (var col = 2; col < len; col++)
+					lettersSpec[col].count = lettersSpec[col].l.Length;
+				long[] numbers;
+				bool found;
+				for (var col = 0; col < len; col++) {
+					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count;) {
+						var l = lettersSpec[col].l[lettersSpec[col].i];
+						numbers = new long[] {
 							Diff(lettersSpec[col].n, l),
 							lettersSpec[col].n + l,
 						};
-					found = false;
-					foreach (var n in numbers) {
-						if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
-							n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
-							(n != 0 && n % 8 == 0)) {
-							found = true;
-							break;  // either sum or diff matches
+						found = false;
+						foreach (var n in numbers) {
+							if ((n == 0 && Score(l) != 0) || Score(n) != 0 ||
+								n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
+								(n != 0 && n % 8 == 0)) {
+								found = true;
+								break;  // either sum or diff matches
+							}
+						}
+						if (found) {
+							lettersSpec[col].i++;
+						} else {  // this letter can't satisfy the first condition
+							if (lettersSpec[col].i < lettersSpec[col].count - 1)
+								Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].count - lettersSpec[col].i - 1);
+							lettersSpec[col].count--;
 						}
 					}
-					if (found) {
-						lettersSpec[col].i++;
-					} else {  // this letter can't satisfy the first condition
-						if (lettersSpec[col].i < lettersSpec[col].count - 1)
-							Array.Copy(lettersSpec[col].l, lettersSpec[col].i + 1, lettersSpec[col].l, lettersSpec[col].i, lettersSpec[col].count - lettersSpec[col].i - 1);
-						lettersSpec[col].count--;
-					}
 				}
-			}
 
-			// second step: find matching numbers from two sides
-			// پخش میانگین رو به دست میاریم
-			int inputSum = 0;
-			for (var col = 0; col < len; col++)
-				inputSum += lettersSpec[col].n;
-			inputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
-			var outputBodduhValues = new byte[len];
-			for (var col = 0; col < len; col++)
-				outputBodduhValues[col] = (byte)(inputSum / len);
-			for (var j = inputSum % len; j > 0; j--)
-				outputBodduhValues[len - j]++;
-			// ~پخش میانگین
+				// second step: find matching numbers from two sides
+				// پخش میانگین رو به دست میاریم
+				int inputSum = 0;
+				for (var col = 0; col < len; col++)
+					inputSum += lettersSpec[col].n;
+				inputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
+				var outputBodduhValues = new byte[len];
+				for (var col = 0; col < len; col++)
+					outputBodduhValues[col] = (byte)(inputSum / len);
+				for (var j = inputSum % len; j > 0; j--)
+					outputBodduhValues[len - j]++;
+				// ~پخش میانگین
 
-			for (var col = 0; col < len / 2; col++) {
-				var pattern = "--+-+-+--";
-				var pairs = new List<Pair>();
-				for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
-					for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
-						var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
-						var right = lettersSpec[col].l[lettersSpec[col].i];
-						var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
-						if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8)
-							pairs.Add(new Pair { Left = left, Right = right });
+				for (var col = 0; col < len / 2; col++) {
+					var pattern = "--+-+-+--";
+					var pairs = new List<Pair>();
+					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
+						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
+							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
+							var right = lettersSpec[col].l[lettersSpec[col].i];
+							var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
+							if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8)
+								pairs.Add(new Pair { Left = left, Right = right });
+						}
 					}
-				}
-				Debug.Assert(pairs.Count != 0);
-				if (pairs.Count > 1) {
-					// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
-					var pattern2 = "++-+";
-					var pairs2 = new List<Pair>();
-					foreach (var pair in pairs) {
-						var left = Diff(outputBodduhValues[len - 1 - col], pair.Left);
-						if (left == 0)
-							left++;
-						var right = Diff(outputBodduhValues[col], pair.Right);
-						if (right == 0)
-							right++;
-						//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-						//if (n % 9 == (col % 4 + 1) * 2)
-						if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
-							(left + right) % 9 == (col % 4 + 1) * 2)
-							pairs2.Add(pair);
+					Debug.Assert(pairs.Count != 0);
+					if (pairs.Count > 1) {
+						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
+						//var pattern2 = "++-+";
+						var pairs2 = new List<Pair>();
+						foreach (var pair in pairs) {
+							var left = Diff(outputBodduhValues[len - 1 - col], pair.Left);
+							if (left == 0)
+								left++;
+							var right = Diff(outputBodduhValues[col], pair.Right);
+							if (right == 0)
+								right++;
+							//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+							//if (n % 9 == (col % 4 + 1) * 2)
+							if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
+								(left + right) % 9 == (col % 4 + 1) * 2)
+								pairs2.Add(pair);
+						}
+						pairs = pairs2;
 					}
-					pairs = pairs2;
-				}
-				Debug.Assert(pairs.Count != 0);
-				if (pairs.Count > 1) {
-					// نوبت به بدوح ورودی و خروجی میرسه
-					var pattern2 = "--+++-";
-					byte[] bodduh = { 2, 6, 8, 4 };
-					var pairs2 = new List<Pair>();
-					foreach (var pair in pairs) {
-						long[] vars = {
+					Debug.Assert(pairs.Count != 0);
+					if (pairs.Count > 1) {
+						// نوبت به بدوح ورودی و خروجی میرسه
+						var pattern2 = "--+++-";
+						byte[] bodduh = { 2, 6, 8, 4 };
+						var pairs2 = new List<Pair>();
+						foreach (var pair in pairs) {
+							long[] vars = {
 								Diff(lettersSpec[len - 1 - col].n, pair.Left),
 								lettersSpec[len - 1 - col].n + pair.Left,
 								Diff(lettersSpec[col].n, pair.Right),
 								lettersSpec[col].n + pair.Right,
 							};
-						long[] vars2;
-						if (pattern2[col % pattern2.Length] == '-')
-							vars2 = new long[] {
+							long[] vars2;
+							if (pattern2[col % pattern2.Length] == '-')
+								vars2 = new long[] {
 									Diff(vars[0], vars[2]),
 									Diff(vars[0], vars[3]),
 									Diff(vars[1], vars[2]),
 									Diff(vars[1], vars[3]),
 								};
-						else
-							vars2 = new long[] {
+							else
+								vars2 = new long[] {
 									vars[0] + vars[2],
 									vars[0] + vars[3],
 									vars[1] + vars[2],
 									vars[1] + vars[3],
 								};
-						foreach (var n in vars2) {
-							if (n % 9 == bodduh[col % bodduh.Length]) {
-								pairs2.Add(pair);
-								break;
+							foreach (var n in vars2) {
+								if (n % 9 == bodduh[col % bodduh.Length]) {
+									pairs2.Add(pair);
+									break;
+								}
 							}
 						}
+						pairs = pairs2;
 					}
-					pairs = pairs2;
-				}
-				Debug.Assert(pairs.Count != 0);
-				if (pairs.Count > 1) {
-					// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
-					var pairs2 = new List<Pair>();
-					foreach (var pair in pairs) {
-						var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
-						if (left == 0)
-							left++;
-						var right = Diff(pair.Right, lettersSpec[col].n);
-						if (right == 0)
-							right++;
-						long[] vars = {
+					Debug.Assert(pairs.Count != 0);
+					if (pairs.Count > 1) {
+						// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
+						var pairs2 = new List<Pair>();
+						foreach (var pair in pairs) {
+							var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
+							if (left == 0)
+								left++;
+							var right = Diff(pair.Right, lettersSpec[col].n);
+							if (right == 0)
+								right++;
+							long[] vars = {
 								Diff(left, right) % 9,
 								(left + right) % 9,
 							};
-						foreach (var n in vars) {
-							if (n < 3) {
-								pairs2.Add(pair);
-								break;
+							foreach (var n in vars) {
+								if (n < 3) {
+									pairs2.Add(pair);
+									break;
+								}
 							}
 						}
+						pairs = pairs2;
 					}
-					pairs = pairs2;
+					Debug.Assert(pairs.Count == 1);
+					letters[len - 1 - col] = pairs[0].Left;
+					letters[col] = pairs[0].Right;
 				}
-				Debug.Assert(pairs.Count == 1);
-				letters[len - 1 - col] = pairs[0].Left;
-				letters[col] = pairs[0].Right;
+				tbOutputs[4 + i].Text = "";
+				for (var j = 0; j < len; j++)
+					tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 			}
-			tbOutput5.Text = "";
-			for (var j = 0; j < len; j++)
-				tbOutput5.Text += Constants.Abjad1ToLetter(letters[j]);
 		}
 
 		struct Pair
@@ -531,43 +533,43 @@ namespace WindowsFormsApp1
 		}
 
 		private void Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores, out int score1, out int score2)
-        {
-            var ar = new int[16];
-            ar[0] = ar[5] = ar[10] = ar[15] = a;
-            ar[1] = b;
-            ar[2] = x;
-            ar[3] = y;
-            ar[4] = a - b + a;
-            ar[6] = a - b + x;
-            ar[7] = a - b + y;
-            ar[8] = a - x + a;
-            ar[9] = a - x + b;
-            ar[11] = a - x + y;
-            ar[12] = a - y + a;
-            ar[13] = a - y + b;
-            ar[14] = a - y + x;
+		{
+			var ar = new int[16];
+			ar[0] = ar[5] = ar[10] = ar[15] = a;
+			ar[1] = b;
+			ar[2] = x;
+			ar[3] = y;
+			ar[4] = a - b + a;
+			ar[6] = a - b + x;
+			ar[7] = a - b + y;
+			ar[8] = a - x + a;
+			ar[9] = a - x + b;
+			ar[11] = a - x + y;
+			ar[12] = a - y + a;
+			ar[13] = a - y + b;
+			ar[14] = a - y + x;
 			var i = 0;
 			for (; i < ar.Length; i++)
 				ar[i] = (ar[i] + 27) % 28 + 1;
-            int[] r = {
-                ar[0] + ar[1] + ar[2] + ar[3],
+			int[] r = {
+				ar[0] + ar[1] + ar[2] + ar[3],
 				ar[4] + ar[5] + ar[6] + ar[7],
 				ar[8] + ar[9] + ar[10] + ar[11],
 				ar[12] + ar[13] + ar[14] + ar[15],
-            };
-            // first column is defined to be the rightmost one.
-            c = new int[] {
-                ar[0] + ar[4] + ar[8] + ar[12],
-                ar[1] + ar[5] + ar[9] + ar[13],
-                ar[2] + ar[6] + ar[10] + ar[14],
-                ar[3] + ar[7] + ar[11] + ar[15],
-            };
-            int[] rows = {
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[2], ar[1], ar[0])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[7], ar[6], ar[5], ar[4])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[11], ar[10], ar[9], ar[8])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[14], ar[13], ar[12])),
-            };
+			};
+			// first column is defined to be the rightmost one.
+			c = new int[] {
+				ar[0] + ar[4] + ar[8] + ar[12],
+				ar[1] + ar[5] + ar[9] + ar[13],
+				ar[2] + ar[6] + ar[10] + ar[14],
+				ar[3] + ar[7] + ar[11] + ar[15],
+			};
+			int[] rows = {
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[2], ar[1], ar[0])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[7], ar[6], ar[5], ar[4])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[11], ar[10], ar[9], ar[8])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[14], ar[13], ar[12])),
+			};
 			int[] rowsRev = {
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[0], ar[1], ar[2], ar[3])),
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[4], ar[5], ar[6], ar[7])),
@@ -575,17 +577,17 @@ namespace WindowsFormsApp1
 				int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[13], ar[14], ar[15])),
 			};
 			int[] cols = {
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[0], ar[4], ar[8], ar[12])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[1], ar[5], ar[9], ar[13])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[2], ar[6], ar[10], ar[14])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[7], ar[11], ar[15])),
-            };
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[0], ar[4], ar[8], ar[12])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[1], ar[5], ar[9], ar[13])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[2], ar[6], ar[10], ar[14])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[3], ar[7], ar[11], ar[15])),
+			};
 			int[] colsRev = {
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[8], ar[4], ar[0])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[13], ar[9], ar[5], ar[1])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[14], ar[10], ar[6], ar[2])),
-                int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[11], ar[7], ar[3])),
-            };
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[12], ar[8], ar[4], ar[0])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[13], ar[9], ar[5], ar[1])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[14], ar[10], ar[6], ar[2])),
+				int.Parse(string.Format("{0}{1}{2}{3}", ar[15], ar[11], ar[7], ar[3])),
+			};
 			scores = new int[36];
 
 			// 1
@@ -699,11 +701,11 @@ namespace WindowsFormsApp1
 			if (vars[0] == 2 || vars[0] == 8)
 				scores[11]++;
 			int[] sumOfDigits = {
-                SumOfDigits(c[0]),
-                SumOfDigits(c[1]),
-                SumOfDigits(c[2]),
-                SumOfDigits(c[3]),
-            };
+				SumOfDigits(c[0]),
+				SumOfDigits(c[1]),
+				SumOfDigits(c[2]),
+				SumOfDigits(c[3]),
+			};
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[1], sumOfDigits[0])), false);
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[1], sumOfDigits[2], sumOfDigits[0])), false);
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[0], sumOfDigits[1], sumOfDigits[2], sumOfDigits[3])), false);
@@ -711,8 +713,8 @@ namespace WindowsFormsApp1
 			scores[11] += Score(vars[0] * 2, false);
 			scores[11] += Score(cols[3], false);
 			scores[11] += Score(colsRev[3], false);
-		    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))), false);
-		    scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))), false);
+			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[7]), SumOfDigits(ar[11]), SumOfDigits(ar[15]))), false);
+			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[15]), SumOfDigits(ar[11]), SumOfDigits(ar[7]), SumOfDigits(ar[3]))), false);
 			scores[11] += Score(int.Parse(string.Format("{0}{1}{2}{3}", sumOfDigits[3], sumOfDigits[2], sumOfDigits[0], sumOfDigits[1])), false);
 			sumOfDigits[0] = int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[3]), SumOfDigits(ar[2]), SumOfDigits(ar[1]), SumOfDigits(ar[0])));
 			sumOfDigits[1] = int.Parse(string.Format("{0}{1}{2}{3}", SumOfDigits(ar[7]), SumOfDigits(ar[6]), SumOfDigits(ar[5]), SumOfDigits(ar[4])));
@@ -749,7 +751,7 @@ namespace WindowsFormsApp1
 
 			// 13
 			var colMul = c[0] * c[3];
-            var rowMul = r[0] * r[3];
+			var rowMul = r[0] * r[3];
 			scores[12] = Score(colMul);
 			scores[12] += Score(rowMul, colMul);
 			if (scores[12] == 0 && !bCalculateForTwoInitialLetters) {
@@ -766,9 +768,9 @@ namespace WindowsFormsApp1
 			if (Diff(r[0], r[3]) != 0)
 				scores[13] += Score((c[0] + c[3]) * Diff(r[0], r[3]));
 			if (Diff(c[0], c[3]) != 0)
-			scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]));
+				scores[13] += Score(Diff(c[0], c[3]) * (r[0] + r[3]));
 			if (Diff(c[0], c[3]) != 0 && Diff(r[0], r[3]) != 0)
-			scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]));
+				scores[13] += Score(Diff(c[0], c[3]) * Diff(r[0], r[3]));
 
 			scores[13] += Score((r[0] + c[3]) * (c[0] + r[3]));
 			if (Diff(c[0], r[3]) != 0)
@@ -778,13 +780,13 @@ namespace WindowsFormsApp1
 			if (Diff(r[0], c[3]) != 0 && Diff(c[0], r[3]) != 0)
 				scores[13] += Score(Diff(r[0], c[3]) * Diff(c[0], r[3]));
 
-            // 15
+			// 15
 			vars = new long[] {
-                Diff(rows[0], rowsRev[0]),
+				Diff(rows[0], rowsRev[0]),
 				Diff(rows[1], rowsRev[1]),
 				Diff(rows[2], rowsRev[2]),
 				Diff(rows[3], rowsRev[3]),
-            };
+			};
 			if (vars[0] == 0 && vars[1] == 0) {
 				scores[14] = 3;
 			} else {
@@ -811,11 +813,11 @@ namespace WindowsFormsApp1
 
 			// 17
 			int[] columnsMul = {
-                ar[0] * ar[4] * ar[8] * ar[12],
-                ar[1] * ar[5] * ar[9] * ar[13],
-                ar[2] * ar[6] * ar[10] * ar[14],
-                ar[3] * ar[7] * ar[11] * ar[15],
-            };
+				ar[0] * ar[4] * ar[8] * ar[12],
+				ar[1] * ar[5] * ar[9] * ar[13],
+				ar[2] * ar[6] * ar[10] * ar[14],
+				ar[3] * ar[7] * ar[11] * ar[15],
+			};
 			scores[16] = Score(columnsMul[0], columnsMul[1]);
 			scores[16] += Score(columnsMul[2]);
 			scores[16] += Score(columnsMul[3]);
@@ -823,9 +825,9 @@ namespace WindowsFormsApp1
 
 			// 18
 			scores[17] += Score(r[0], r[1]);
-            scores[17] += Score(r[0], r[2]);
+			scores[17] += Score(r[0], r[2]);
 			scores[17] += Score(r[1] + r[3]);
-            scores[17] += Score(r[0] * r[1] * r[2] * r[3]);
+			scores[17] += Score(r[0] * r[1] * r[2] * r[3]);
 			if (scores[17] == 0 && !bCalculateForTwoInitialLetters) {
 				scores[17] += Score(r[1], r[2], true);
 				if (scores[17] == 0)
@@ -867,17 +869,17 @@ namespace WindowsFormsApp1
 
 			// 21
 			vars = new long[] {
-                ar[3] * ar[6] * ar[9] * ar[12],
-                a * a * a * a,
+				ar[3] * ar[6] * ar[9] * ar[12],
+				a * a * a * a,
 				0,
 				0,
-            };
+			};
 			vars[2] = SumOfDigits(vars[0] + vars[1], false);
 			vars[3] = SumOfDigits(Diff(vars[0], vars[1]), false);
-            scores[20] = vars[2] % a == 0 ? 1 : 0;
-            scores[20] += vars[3] % a == 0 ? 1 : 0;
-            scores[20] += Score(vars[2]);
-            scores[20] += Score(vars[3] == 0 ? vars[0] : vars[3]);
+			scores[20] = vars[2] % a == 0 ? 1 : 0;
+			scores[20] += vars[3] % a == 0 ? 1 : 0;
+			scores[20] += Score(vars[2]);
+			scores[20] += Score(vars[3] == 0 ? vars[0] : vars[3]);
 			if (scores[20] == 0 && !bCalculateForTwoInitialLetters) {
 				scores[20] += vars[2] % 11 == 0 ? 1 : 0;
 				if (scores[20] == 0)
@@ -890,18 +892,18 @@ namespace WindowsFormsApp1
 			}
 
 			// 22
-            vars = new long[] {
-                Diff(rows[0], rowsRev[0]),
-                Diff(rows[1], rowsRev[1]),
-                Diff(rows[2], rowsRev[2]),
-                Diff(rows[3], rowsRev[3]),
-                0,
-                Diff(cols[3], colsRev[3]),
-                Diff(cols[2], colsRev[2]),
-                Diff(cols[1], colsRev[1]),
-                Diff(cols[0], colsRev[0]),
+			vars = new long[] {
+				Diff(rows[0], rowsRev[0]),
+				Diff(rows[1], rowsRev[1]),
+				Diff(rows[2], rowsRev[2]),
+				Diff(rows[3], rowsRev[3]),
 				0,
-            };
+				Diff(cols[3], colsRev[3]),
+				Diff(cols[2], colsRev[2]),
+				Diff(cols[1], colsRev[1]),
+				Diff(cols[0], colsRev[0]),
+				0,
+			};
 			vars[4] = vars[0] + vars[1] + vars[2] + vars[3];
 			vars[9] = vars[5] + vars[6] + vars[7] + vars[8];
 			scores[21] +=
@@ -920,11 +922,11 @@ namespace WindowsFormsApp1
 					scores[21] += Score(vars[9]);
 			}
 
-            // 23
-            scores[22] = ScoreDiff(vars[0], vars[8]);
-            scores[22] += Score(Diff(vars[0], vars[6]) + vars[7] + vars[8]);
-            scores[22] += ScoreDiff(vars[3], vars[8]);
-            scores[22] += Score(vars[2] + vars[3]);
+			// 23
+			scores[22] = ScoreDiff(vars[0], vars[8]);
+			scores[22] += Score(Diff(vars[0], vars[6]) + vars[7] + vars[8]);
+			scores[22] += ScoreDiff(vars[3], vars[8]);
+			scores[22] += Score(vars[2] + vars[3]);
 			if (scores[22] == 0 && !bCalculateForTwoInitialLetters) {
 				scores[22] += Score(vars[5], vars[8], true);
 				if (scores[22] == 0)
@@ -1354,7 +1356,7 @@ namespace WindowsFormsApp1
 				score1 += sc == 0 ? 0 : 1;
 				score2 += sc;
 			}
-        }
+		}
 
 		long Reverse(long n)
 		{
@@ -1369,32 +1371,32 @@ namespace WindowsFormsApp1
 		}
 
 		int SumOfDigits(long n, bool untilOneDigit = true)
-        {
-            while (true) {
-                int sum = 0;
-                do {
-                    sum += (byte)(n % 10);
-                    n /= 10;
-                } while (n != 0);
-                if (sum < 10 || !untilOneDigit)
-                    return sum;
-                n = sum;
-            }
-        }
+		{
+			while (true) {
+				int sum = 0;
+				do {
+					sum += (byte)(n % 10);
+					n /= 10;
+				} while (n != 0);
+				if (sum < 10 || !untilOneDigit)
+					return sum;
+				n = sum;
+			}
+		}
 
-        long Diff(long n1, long n2)
-        {
-            return Math.Abs(n1 - n2);
-        }
+		long Diff(long n1, long n2)
+		{
+			return Math.Abs(n1 - n2);
+		}
 
-        int Score(long n1, long n2, bool bEither = false)
-        {
-            int score = 0;
-            score += Score(n1 + n2);
+		int Score(long n1, long n2, bool bEither = false)
+		{
+			int score = 0;
+			score += Score(n1 + n2);
 			if (!bEither || score == 0)
 				score += ScoreDiff(n1, n2);
-            return score;
-        }
+			return score;
+		}
 
 		int ScoreDiff(long n1, long n2, bool bK9 = true)
 		{
@@ -1404,8 +1406,8 @@ namespace WindowsFormsApp1
 			return Score(diff, bK9);
 		}
 
-        int Score(long n, bool bK9 = true)
-        {
+		int Score(long n, bool bK9 = true)
+		{
 			if (n == 0)
 				return 0;
 			if (bK9) {
@@ -1414,10 +1416,10 @@ namespace WindowsFormsApp1
 					return 1;
 			}
 			n %= 28;
-            if (n == 0 || n == 2 || n == 8 || n == 11 || n == 17 || n == 20 || n == 26)
-                return 1;
-            return 0;
-        }
+			if (n == 0 || n == 2 || n == 8 || n == 11 || n == 17 || n == 20 || n == 26)
+				return 1;
+			return 0;
+		}
 
 		private void Form1_KeyDown(object sender, KeyEventArgs e)
 		{
