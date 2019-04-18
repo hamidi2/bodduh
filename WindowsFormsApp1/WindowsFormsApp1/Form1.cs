@@ -254,7 +254,7 @@ namespace WindowsFormsApp1
 			// کیفرهمابسدزشجن
 			var len = tbInput.Text.Length;
 			if (len == 0) {
-				tbInput.Text = "کیفحالرضمعون";
+				tbInput.Text = "کیفحالالرضامعالمامون";
 				len = tbInput.Text.Length;
 			}
 			if (len < 2) {
@@ -472,14 +472,14 @@ namespace WindowsFormsApp1
 					inputSum += lettersSpec[col].n;
 				var outputElementalSum = 0;
 				for (var col = 0; col < len; col++)
-					outputElementalSum += myElementalStrings[i][col];
+					outputElementalSum += myElementalStrings[i][col] + 1;
 				var outputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
 				while (outputSum % 4 != outputElementalSum % 4)
 					outputSum += 9;
 				var outputBodduhValues = new byte[len];
 				for (var col = 0; col < len; col++)
-					outputBodduhValues[col] = (byte)(inputSum / len);
-				for (var j = inputSum % len; j > 0; j--)
+					outputBodduhValues[col] = (byte)(outputSum / len);
+				for (var j = outputSum % len; j > 0; j--)
 					outputBodduhValues[len - j]++;
 				// ~پخش میانگین
 
@@ -488,15 +488,22 @@ namespace WindowsFormsApp1
 					// second step: find matching numbers from two sides
 					var pattern = "--+-+-+--";
 					var pairs = new List<Pair>();
+					var matchedPatterns2 = new List<string>();
 					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
 						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
 							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
 							var right = lettersSpec[col].l[lettersSpec[col].i];
 							var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
-							if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8)
-								pairs.Add(new Pair { Left = left, Right = right });
+							foreach (var matchedPattern in matchedPatterns) {
+								if (matchedPattern[col % matchedPattern.Length] - '0' == n % 9) {
+									pairs.Add(new Pair { Left = left, Right = right });
+									matchedPatterns2.Add(matchedPattern);
+								}
+							}
 						}
 					}
+					matchedPatterns = matchedPatterns2.Distinct().ToList();
+					pairs = pairs.Distinct().ToList();
 					Debug.Assert(pairs.Count != 0);
 					if (pairs.Count > 1) {
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
