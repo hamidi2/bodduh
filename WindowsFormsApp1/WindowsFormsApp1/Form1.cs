@@ -476,11 +476,13 @@ namespace WindowsFormsApp1
 				var outputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
 				while (outputSum % 4 != outputElementalSum % 4)
 					outputSum += 9;
-				var outputBodduhValues = new byte[len];
+				var outputBodduhValues = new byte[2, len];
 				for (var col = 0; col < len; col++)
-					outputBodduhValues[col] = (byte)(outputSum / len);
-				for (var j = outputSum % len; j > 0; j--)
-					outputBodduhValues[len - j]++;
+					outputBodduhValues[0, col] = outputBodduhValues[1, col] = (byte)(outputSum / len);
+				for (var j = 0; j < outputSum % len; j++) {
+					outputBodduhValues[0, j]++;
+					outputBodduhValues[1, len - 1 - j]++;
+				}
 				// ~پخش میانگین
 
 				matchedPatterns = acceptablePatterns.ToList();
@@ -510,17 +512,19 @@ namespace WindowsFormsApp1
 						//var pattern2 = "++-+";
 						var pairs2 = new List<Pair>();
 						foreach (var pair in pairs) {
-							var left = Diff(outputBodduhValues[len - 1 - col], pair.Left);
-							if (left == 0)
-								left++;
-							var right = Diff(outputBodduhValues[col], pair.Right);
-							if (right == 0)
-								right++;
-							//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-							//if (n % 9 == (col % 4 + 1) * 2)
-							if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
-								(left + right) % 9 == (col % 4 + 1) * 2)
-								pairs2.Add(pair);
+							for (var iOBV = 0; iOBV < 2; iOBV++) {
+								var left = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
+								if (left == 0)
+									left++;
+								var right = Diff(outputBodduhValues[iOBV, col], pair.Right);
+								if (right == 0)
+									right++;
+								//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+								//if (n % 9 == (col % 4 + 1) * 2)
+								if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
+									(left + right) % 9 == (col % 4 + 1) * 2)
+									pairs2.Add(pair);
+							}
 						}
 						pairs = pairs2;
 					}
