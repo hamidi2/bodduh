@@ -513,20 +513,27 @@ namespace WindowsFormsApp1
 						var pairs2 = new List<Pair>();
 						foreach (var pair in pairs) {
 							for (var iOBV = 0; iOBV < 2; iOBV++) {
-								var left = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
-								if (left == 0)
-									left++;
-								var right = Diff(outputBodduhValues[iOBV, col], pair.Right);
-								if (right == 0)
-									right++;
-								//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-								//if (n % 9 == (col % 4 + 1) * 2)
-								if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
-									(left + right) % 9 == (col % 4 + 1) * 2)
-									pairs2.Add(pair);
+								var lefts = new List<long>();
+								var rights = new List<long>();
+								var n = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
+								lefts.Add(n);
+								if (n == 0)
+									lefts.Add(1);
+								n = Diff(outputBodduhValues[iOBV, col], pair.Right);
+								rights.Add(n);
+								if (n == 0)
+									rights.Add(1);
+								foreach (var left in lefts)
+									foreach (var right in rights) {
+										//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+										//if (n % 9 == (col % 4 + 1) * 2)
+										if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
+											(left + right) % 9 == (col % 4 + 1) * 2)
+											pairs2.Add(pair);
+									}
 							}
 						}
-						pairs = pairs2;
+						pairs = pairs2.Distinct().ToList();
 					}
 					Debug.Assert(pairs.Count != 0);
 					if (pairs.Count > 1) {
