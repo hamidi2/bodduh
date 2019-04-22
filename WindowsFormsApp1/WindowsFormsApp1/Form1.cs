@@ -395,7 +395,7 @@ namespace WindowsFormsApp1
 
 				// second method
 
-				// first step: remove numbers which don't match with input
+				#region first step: remove numbers which don't match with input
 				lettersSpec[0].count = 1;
 				lettersSpec[1].count = 1;
 				for (var col = 2; col < len; col++)
@@ -467,8 +467,9 @@ namespace WindowsFormsApp1
 						matchedPatterns = matchedPatterns2.Distinct().ToList();
 					}
 				}
+				#endregion
 
-				// پخش میانگین رو به دست میاریم
+				#region محاسبه پخش میانگین
 				int inputSum = 0;
 				for (var col = 0; col < len; col++)
 					inputSum += lettersSpec[col].n;
@@ -485,11 +486,12 @@ namespace WindowsFormsApp1
 					outputBodduhValues[0, j]++;
 					outputBodduhValues[1, len - 1 - j]++;
 				}
-				// ~پخش میانگین
+				#endregion
 
 				matchedPatterns = acceptablePatterns.ToList();
 				for (var col = 0; col < len / 2; col++) {
-					// second step: find matching numbers from two sides
+					#region second step: find matching numbers from two sides
+					var secondStepPairs = new List<Pair>();
 					//var pattern = "--+-+-+--";
 					Debug.Write(string.Format("col={0}\nleft: ", col));
 					for (var j = 0; j < lettersSpec[len - 1 - col].count; j++)
@@ -498,7 +500,6 @@ namespace WindowsFormsApp1
 					for (var j = 0; j < lettersSpec[col].count; j++)
 						Debug.Write(string.Format("{0} ", lettersSpec[col].l[j]));
 					Debug.WriteLine("");
-					var pairs = new List<Pair>();
 					var matchedPatterns2 = new List<string>();
 					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
 						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
@@ -513,7 +514,7 @@ namespace WindowsFormsApp1
 									var list = ResultOf128(n);
 									foreach (var res in list) {
 										if (matchedPattern[col % matchedPattern.Length] - '0' == res) {
-											pairs.Add(new Pair { Left = left, Right = right });
+											secondStepPairs.Add(new Pair { Left = left, Right = right });
 											matchedPatterns2.Add(matchedPattern);
 										}
 									}
@@ -522,90 +523,88 @@ namespace WindowsFormsApp1
 						}
 					}
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
-					pairs = pairs.Distinct().ToList();
+					secondStepPairs = secondStepPairs.Distinct().ToList();
 					Debug.WriteLine("second pass pairs:");
-					foreach (var pair in pairs)
+					foreach (var pair in secondStepPairs)
 						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 					Debug.WriteLine("");
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
+					#endregion
+
+					var pairs = new List<Pair>();
+					for (var iOBV = 0; iOBV < 2; iOBV++) {
+						#region step 3: بدوح خروجی
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 						//var pattern2 = "++-+";
-						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
-							for (var iOBV = 0; iOBV < 2; iOBV++) {
-								var lefts = new List<long>();
-								var rights = new List<long>();
-								var n = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
-								lefts.Add(n);
-								if (n == 0)
-									lefts.Add(1);
-								n = Diff(outputBodduhValues[iOBV, col], pair.Right);
-								rights.Add(n);
-								if (n == 0)
-									rights.Add(1);
-								foreach (var left in lefts)
-									foreach (var right in rights) {
-										//var n2 = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-										//if (n2 % 9 == (col % 4 + 1) * 2)
-										if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
-											(left + right) % 9 == (col % 4 + 1) * 2)
-											pairs2.Add(pair);
-									}
-							}
+						var iOBVPairs = new List<Pair>();
+						foreach (var pair in secondStepPairs) {
+							var lefts = new List<long>();
+							var rights = new List<long>();
+							var n = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
+							lefts.Add(n);
+							if (n == 0)
+								lefts.Add(1);
+							n = Diff(outputBodduhValues[iOBV, col], pair.Right);
+							rights.Add(n);
+							if (n == 0)
+								rights.Add(1);
+							foreach (var left in lefts)
+								foreach (var right in rights) {
+									//var n2 = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+									//if (n2 % 9 == (col % 4 + 1) * 2)
+									if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
+										(left + right) % 9 == (col % 4 + 1) * 2)
+										iOBVPairs.Add(pair);
+								}
 						}
-						pairs = pairs2.Distinct().ToList();
-					}
-					Debug.WriteLine("third pass pairs:");
-					foreach (var pair in pairs)
-						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
-					Debug.WriteLine("");
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
-						// نوبت به بدوح ورودی و خروجی میرسه
-						var pattern2 = "--+++-";
-						byte[] bodduh = { 2, 6, 8, 4 };
+						iOBVPairs = iOBVPairs.Distinct().ToList();
+						Debug.WriteLine("third pass pairs:");
+						foreach (var pair in iOBVPairs)
+							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+						Debug.WriteLine("");
+						#endregion
+
+						#region step 4: بدوح ورودی و خروجی
+						//var pattern2 = "--+++-";
 						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
+						foreach (var pair in iOBVPairs) {
 							long[] vars = {
 								Diff(lettersSpec[len - 1 - col].n, pair.Left),
 								lettersSpec[len - 1 - col].n + pair.Left,
 								Diff(lettersSpec[col].n, pair.Right),
 								lettersSpec[col].n + pair.Right,
 							};
-							long[] vars2;
+							long[] vars2/*;
 							if (pattern2[col % pattern2.Length] == '-')
-								vars2 = new long[] {
+								vars2*/ = new long[] {
 									Diff(vars[0], vars[2]),
 									Diff(vars[0], vars[3]),
 									Diff(vars[1], vars[2]),
 									Diff(vars[1], vars[3]),
-								};
-							else
-								vars2 = new long[] {
+							//	};
+							//else
+							//	vars2 = new long[] {
 									vars[0] + vars[2],
 									vars[0] + vars[3],
 									vars[1] + vars[2],
 									vars[1] + vars[3],
 								};
 							foreach (var n in vars2) {
-								if (n % 9 == bodduh[col % bodduh.Length]) {
+								if (n % 9 != 0 && n % 9 % 2 == 0) {
 									pairs2.Add(pair);
 									break;
 								}
 							}
 						}
-						pairs = pairs2;
-					}
-					Debug.WriteLine("fourth pass pairs:");
-					foreach (var pair in pairs)
-						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
-					Debug.WriteLine("");
-					Debug.Assert(pairs.Count != 0);
-					if (pairs.Count > 1) {
-						// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
-						var pairs2 = new List<Pair>();
-						foreach (var pair in pairs) {
+						iOBVPairs = pairs2;
+						Debug.WriteLine("fourth pass pairs:");
+						foreach (var pair in iOBVPairs)
+							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+						Debug.WriteLine("");
+						#endregion
+
+						#region step 5: جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
+						pairs2 = new List<Pair>();
+						foreach (var pair in iOBVPairs) {
 							var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
 							if (left == 0)
 								left++;
@@ -623,19 +622,22 @@ namespace WindowsFormsApp1
 								}
 							}
 						}
-						pairs = pairs2;
+						iOBVPairs = pairs2;
+						Debug.WriteLine("fifth pass pairs:");
+						foreach (var pair in iOBVPairs)
+							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+						Debug.WriteLine("");
+						pairs.AddRange(iOBVPairs);
+						#endregion
 					}
-					Debug.WriteLine("fifth pass pairs:");
-					foreach (var pair in pairs)
-						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
-					Debug.WriteLine("");
+					pairs = pairs.Distinct().ToList();
 					Debug.Assert(pairs.Count == 1);
 					letters[len - 1 - col] = pairs[0].Left;
 					letters[col] = pairs[0].Right;
+					tbOutputs[4 + i].Text = "";
+					for (var j = 0; j < len; j++)
+						tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 				}
-				tbOutputs[4 + i].Text = "";
-				for (var j = 0; j < len; j++)
-					tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 			}
 		}
 
