@@ -243,6 +243,23 @@ namespace WindowsFormsApp1
 			return letters;
 		}
 
+		List<byte> ResultOf128(long n)
+		{
+			var list = new List<byte>();
+			long[] values = {
+				n % 28 % 9,
+				Diff(28, n) % 9,
+				(28 + n) % 9,
+				Diff(56, n) % 9,
+				(56 + n) % 9,
+			};
+			foreach (var v in values) {
+				if (v == 1 || v == 2 || v == 8)
+					list.Add((byte)v);
+			}
+			return list.Distinct().ToList();
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
@@ -420,22 +437,7 @@ namespace WindowsFormsApp1
 									if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
 										patterns.Add(1);
 								} else {
-									var n28 = n % 28;
-									if (n28 == 2 || n28 == 11)
-										patterns.Add(2);
-									else if (n28 == 20) {
-										patterns.Add(2);
-										patterns.Add(8);
-									} else if (n28 == 8 || n28 == 17 || n28 == 26)
-										patterns.Add(8);
-									else if (n28 == 0)
-										patterns.Add(1);
-									byte n9 = (byte)(n % 9);
-									if (n9 == 1 || n9 == 2 || n9 == 8)
-										patterns.Add(n9);
-									var n8 = n % 8;
-									if (n8 == 0)
-										patterns.Add(8);
+									patterns.AddRange(ResultOf128(n));
 								}
 							}
 							patterns = patterns.Distinct().ToList();
@@ -488,24 +490,43 @@ namespace WindowsFormsApp1
 				matchedPatterns = acceptablePatterns.ToList();
 				for (var col = 0; col < len / 2; col++) {
 					// second step: find matching numbers from two sides
-					var pattern = "--+-+-+--";
+					//var pattern = "--+-+-+--";
+					Debug.Write(string.Format("col={0}\nleft: ", col));
+					for (var j = 0; j < lettersSpec[len - 1 - col].count; j++)
+						Debug.Write(string.Format("{0} ", lettersSpec[len - 1 - col].l[j]));
+					Debug.Write("\nright: ");
+					for (var j = 0; j < lettersSpec[col].count; j++)
+						Debug.Write(string.Format("{0} ", lettersSpec[col].l[j]));
+					Debug.WriteLine("");
 					var pairs = new List<Pair>();
 					var matchedPatterns2 = new List<string>();
 					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++) {
 						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++) {
 							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
 							var right = lettersSpec[col].l[lettersSpec[col].i];
-							var n = pattern[col % pattern.Length] == '-' ? Diff(left, right) : left + right;
-							foreach (var matchedPattern in matchedPatterns) {
-								if (matchedPattern[col % matchedPattern.Length] - '0' == n % 9) {
-									pairs.Add(new Pair { Left = left, Right = right });
-									matchedPatterns2.Add(matchedPattern);
+							long[] vars = {
+								Diff(left, right),
+								left + right,
+							};
+							foreach (var n in vars) {
+								foreach (var matchedPattern in matchedPatterns) {
+									var list = ResultOf128(n);
+									foreach (var res in list) {
+										if (matchedPattern[col % matchedPattern.Length] - '0' == res) {
+											pairs.Add(new Pair { Left = left, Right = right });
+											matchedPatterns2.Add(matchedPattern);
+										}
+									}
 								}
 							}
 						}
 					}
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
 					pairs = pairs.Distinct().ToList();
+					Debug.WriteLine("second pass pairs:");
+					foreach (var pair in pairs)
+						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					Debug.WriteLine("");
 					Debug.Assert(pairs.Count != 0);
 					if (pairs.Count > 1) {
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
@@ -525,8 +546,8 @@ namespace WindowsFormsApp1
 									rights.Add(1);
 								foreach (var left in lefts)
 									foreach (var right in rights) {
-										//var n = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-										//if (n % 9 == (col % 4 + 1) * 2)
+										//var n2 = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
+										//if (n2 % 9 == (col % 4 + 1) * 2)
 										if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
 											(left + right) % 9 == (col % 4 + 1) * 2)
 											pairs2.Add(pair);
@@ -535,6 +556,10 @@ namespace WindowsFormsApp1
 						}
 						pairs = pairs2.Distinct().ToList();
 					}
+					Debug.WriteLine("third pass pairs:");
+					foreach (var pair in pairs)
+						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					Debug.WriteLine("");
 					Debug.Assert(pairs.Count != 0);
 					if (pairs.Count > 1) {
 						// نوبت به بدوح ورودی و خروجی میرسه
@@ -572,6 +597,10 @@ namespace WindowsFormsApp1
 						}
 						pairs = pairs2;
 					}
+					Debug.WriteLine("fourth pass pairs:");
+					foreach (var pair in pairs)
+						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					Debug.WriteLine("");
 					Debug.Assert(pairs.Count != 0);
 					if (pairs.Count > 1) {
 						// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
@@ -596,6 +625,10 @@ namespace WindowsFormsApp1
 						}
 						pairs = pairs2;
 					}
+					Debug.WriteLine("fifth pass pairs:");
+					foreach (var pair in pairs)
+						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					Debug.WriteLine("");
 					Debug.Assert(pairs.Count == 1);
 					letters[len - 1 - col] = pairs[0].Left;
 					letters[col] = pairs[0].Right;
