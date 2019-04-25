@@ -257,33 +257,32 @@ namespace WindowsFormsApp1
 			return letters;
 		}
 
-		struct Result128
+		class Result128
 		{
 			public byte n;  // 1, 2 or 8
 			public bool bWithInterfering28;
+			public Result128(long l, bool w) { n = (byte) l; bWithInterfering28 = w; }
 		};
 
 		List<Result128> ResultOf128(long n)
 		{
+			Debug.Assert(n != 0);
 			var list = new List<Result128>();
-			var n9 = n % 9;
-			if (n9 == 1 || n9 == 2 || n9 == 8)
-				list.Add(new Result128 { n = (byte) n9, bWithInterfering28 = false });
-			long[] values =
+			Result128[] res =
 			{
-				0,
-				Diff(28, n) % 9,
-				(28 + n) % 9,
-				Diff(56, n) % 9,
-				(56 + n) % 9,
+				new Result128(n % 9, false),
+				n < 28 ? null : new Result128(n % 28 % 9, true),
+				new Result128(Diff(28, n) % 9, true),
+				new Result128((28 + n) % 9, true),
+				new Result128(Diff(56, n) % 9, true),
+				new Result128((56 + n) % 9, true),
 			};
-			if (n > 28)
-				values[0] = n % 28 % 9;
-			foreach (var v in values)
-			{
-				if (v == 1 || v == 2 || v == 8)
-					list.Add(new Result128 { n = (byte) v, bWithInterfering28 = true });
-			}
+			foreach (var r in res)
+				if (r != null)
+				{
+					if (r.n == 1 || r.n == 2 || r.n == 8)
+						list.Add(r);
+				}
 			return list.Distinct().ToList();
 		}
 
@@ -486,7 +485,7 @@ namespace WindowsFormsApp1
 								if (n == 0)
 								{
 									if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
-										patterns.Add(new Result128 { n = 1, bWithInterfering28 = false });
+										patterns.Add(new Result128(1, false));
 								}
 								else
 								{
