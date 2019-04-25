@@ -266,17 +266,19 @@ namespace WindowsFormsApp1
 		List<Result128> ResultOf128(long n)
 		{
 			var list = new List<Result128>();
-			//var n9 = n % 9;
-			//if (n == 1 || n == 2 || n == 8)
-			//	list.Add(new Result128 { n = (byte) n9, bWithInterfering28 = false });
+			var n9 = n % 9;
+			if (n9 == 1 || n9 == 2 || n9 == 8)
+				list.Add(new Result128 { n = (byte) n9, bWithInterfering28 = false });
 			long[] values =
 			{
-				n % 28 % 9,
+				0,
 				Diff(28, n) % 9,
 				(28 + n) % 9,
 				Diff(56, n) % 9,
 				(56 + n) % 9,
 			};
+			if (n > 28)
+				values[0] = n % 28 % 9;
 			foreach (var v in values)
 			{
 				if (v == 1 || v == 2 || v == 8)
@@ -579,7 +581,7 @@ namespace WindowsFormsApp1
 									{
 										if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
 										{
-											secondStepPairs.Add(new Pair { Left = left, Right = right });
+											secondStepPairs.Add(new Pair { Left = left, Right = right, cInterfering28 = res.bWithInterfering28 ? 1 : 0 });
 											matchedPatterns2.Add(matchedPattern);
 										}
 									}
@@ -716,6 +718,7 @@ namespace WindowsFormsApp1
 		struct Pair
 		{
 			public byte Left, Right;
+			public int cInterfering28;
 		}
 
 		private void Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores, out int score1, out int score2)
