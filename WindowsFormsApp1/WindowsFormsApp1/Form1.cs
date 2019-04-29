@@ -120,14 +120,6 @@ namespace WindowsFormsApp1
 				tables[i] = list[i].Key;
 		}
 
-		struct LetterSpec
-		{
-			public byte n;  // input letter
-			public byte[] l;  // output letters sorted by scores
-			public byte i;  // current letter in l
-			public int count;  // number of letters in l which may be less than l.Length
-		}
-
 		bool Lab2Cond(long n, ref int exceptionCounter)
 		{
 			if (n % 5 == 0 || SumOfDigits(n, false) % 5 == 0 ||
@@ -179,39 +171,42 @@ namespace WindowsFormsApp1
 			// 1
 			for (var c = 0; c < len; c++)
 			{
-				for (var found = false; lettersSpec[c].i < lettersSpec[c].l.Length; lettersSpec[c].i++)
+				var inputLetter = lettersSpec[c].InputLetter;
+				var outputLetters = lettersSpec[c].OutputLetters;
+				byte foundOutputLetter = 0;
+				foreach (var outputLetter in outputLetters)
 				{
 					long[] vars =
 					{
-						lettersSpec[c].l[lettersSpec[c].i] + lettersSpec[c].n,
-						Diff(lettersSpec[c].l[lettersSpec[c].i], lettersSpec[c].n),
+						Diff(inputLetter, outputLetter.Letter),
+						inputLetter + outputLetter.Letter,
 					};
 					foreach (var n in vars)
 					{
 						if (n % 9 == 1 || n % 9 == 2 || n % 9 == 8 ||
 							n % 8 == 0 || n % 28 == 8 || n % 28 == 20)
 						{
-							found = true;
+							foundOutputLetter = outputLetter.Letter;
 							break;
 						}
 					}
-					if (found)
+					if (foundOutputLetter != 0)
 						break;
 				}
-				Debug.Assert(lettersSpec[c].i < lettersSpec[c].l.Length);  // all letters have been examined and none are appropriate.
-				letters[c] = lettersSpec[c].l[lettersSpec[c].i];
+				Debug.Assert(foundOutputLetter != 0);  // all letters have been examined and none are appropriate.
+				letters[c] = foundOutputLetter;
 			}
 
 			// 2
 			var l = new byte[len];
 			var i = 0;
 			for (; i < len; i++)
-				l[i] = (byte) (letters[i] + lettersSpec[i].n);
+				l[i] = (byte) (letters[i] + lettersSpec[i].InputLetter);
 			Lab2Check(l);
 
 			// 3
 			for (i = 0; i < len; i++)
-				l[i] = (byte) SumOfDigits(Diff(letters[i], lettersSpec[i].n));
+				l[i] = (byte) SumOfDigits(Diff(letters[i], lettersSpec[i].InputLetter));
 			var mid = len / 2;
 			var pattern = "+--";
 			var iPattern = 0;
@@ -257,6 +252,35 @@ namespace WindowsFormsApp1
 			return letters;
 		}
 
+		class OutputLetter
+		{
+			public byte Letter;
+			public List<Result128> Results128WithInput;
+			public OutputLetter(byte letter)
+			{
+				Letter = letter;
+				Results128WithInput = new List<Result128>();
+			}
+		}
+
+		struct LetterSpec
+		{
+			public byte InputLetter;
+			public List<OutputLetter> OutputLetters;
+		}
+
+		class Pair
+		{
+			public byte Left, Right;
+			public List<Result128> Results128;
+			public Pair(byte left, byte right)
+			{
+				Left = left;
+				Right = right;
+				Results128 = new List<Result128>();
+			}
+		}
+
 		class Result128
 		{
 			public byte n;  // 1, 2 or 8
@@ -271,18 +295,14 @@ namespace WindowsFormsApp1
 			Result128[] res =
 			{
 				new Result128(n % 9, false),
-				n < 28 ? null : new Result128(n % 28 % 9, true),
 				new Result128(Diff(28, n) % 9, true),
 				new Result128((28 + n) % 9, true),
 				new Result128(Diff(56, n) % 9, true),
 				new Result128((56 + n) % 9, true),
 			};
 			foreach (var r in res)
-				if (r != null)
-				{
-					if (r.n == 1 || r.n == 2 || r.n == 8)
-						list.Add(r);
-				}
+				if (r.n == 1 || r.n == 2 || r.n == 8)
+					list.Add(r);
 			return list.Distinct().ToList();
 		}
 
@@ -390,19 +410,19 @@ namespace WindowsFormsApp1
 			for (var i = 0; i < myElementalStrings.Count; i++)
 			{
 				var lettersSpec = new LetterSpec[len];
+				for (var col = 0; col < len; col++)
+					lettersSpec[col].OutputLetters = new List<OutputLetter>();
 				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
 				var b = Constants.Letters[tbInput.Text[1]].Abjad1;
 				FindBestTable(a, b, myElementalStrings[i][0], myElementalStrings[i][1], true, out tables);
-				lettersSpec[0].n = a;
-				lettersSpec[0].l = new byte[tables.Length];
-				lettersSpec[1].n = b;
-				lettersSpec[1].l = new byte[tables.Length];
+				lettersSpec[0].InputLetter = a;
+				lettersSpec[1].InputLetter = b;
 				for (var j = 0; j < tables.Length; j++)
 				{
-					lettersSpec[0].l[j] = tables[j].x;
-					lettersSpec[1].l[j] = tables[j].y;
+					lettersSpec[0].OutputLetters.Add(new OutputLetter(tables[j].x));
+					lettersSpec[1].OutputLetters.Add(new OutputLetter(tables[j].y));
 				}
 				for (iInput += 2; iInput < len; iInput++)
 				{
@@ -414,10 +434,9 @@ namespace WindowsFormsApp1
 					if (x > 28)
 						x -= 28;
 					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out tables);
-					lettersSpec[iInput].n = b;
-					lettersSpec[iInput].l = new byte[tables.Length];
+					lettersSpec[iInput].InputLetter = b;
 					for (var j = 0; j < tables.Length; j++)
-						lettersSpec[iInput].l[j] = tables[j].y;
+						lettersSpec[iInput].OutputLetters.Add(new OutputLetter(tables[j].y));
 				}
 				// temporarily disable first method and concentrate on the second one. in the first method i get exceptions.
 				/*
@@ -431,17 +450,15 @@ namespace WindowsFormsApp1
 				tbOutputs[i].Text = "";
 				for (var j = 0; j < len; j++)
 				{
-					letters[j] = lettersSpec[j].l[0];
+					letters[j] = lettersSpec[j].OutputLetters[0].Letter;
 					tbOutputs[i].Text += Constants.Abjad1ToLetter(letters[j]);
 				}
 
 				// second method
 
 				#region first step: remove numbers which don't match with input
-				lettersSpec[0].count = 1;
-				lettersSpec[1].count = 1;
-				for (var col = 2; col < len; col++)
-					lettersSpec[col].count = lettersSpec[col].l.Length;
+				lettersSpec[0].OutputLetters.RemoveRange(1, lettersSpec[0].OutputLetters.Count - 1);
+				lettersSpec[1].OutputLetters.RemoveRange(1, lettersSpec[1].OutputLetters.Count - 1);
 				long[] numbers;
 				bool found;
 				string[] acceptablePatterns =
@@ -470,39 +487,39 @@ namespace WindowsFormsApp1
 					{
 						var matchedPatterns2 = new List<string>();
 						var realCol = direction == 0 ? col : len - 1 - col;
-						for (lettersSpec[realCol].i = 0; lettersSpec[realCol].i < lettersSpec[realCol].count;)
+						var outputLetters = lettersSpec[realCol].OutputLetters.ToArray();
+						foreach (var outputLetter in outputLetters)
 						{
-							var l = lettersSpec[realCol].l[lettersSpec[realCol].i];
+							var inputLetter = lettersSpec[realCol].InputLetter;
 							numbers = new long[]
 							{
-								Diff(lettersSpec[realCol].n, l),
-								lettersSpec[realCol].n + l,
+								Diff(inputLetter, outputLetter.Letter),
+								inputLetter + outputLetter.Letter,
 							};
 							found = false;
-							var patterns = new List<Result128>();  // 1 or 2 or 8 for this column
 							foreach (var n in numbers)
 							{
 								if (n == 0)
 								{
-									if (Score(l) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
-										patterns.Add(new Result128(1, false));
+									if (Score(inputLetter) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
+										outputLetter.Results128WithInput.Add(new Result128(1, false));
 								}
 								else
 								{
-									patterns.AddRange(ResultOf128(n));
+									outputLetter.Results128WithInput.AddRange(ResultOf128(n));
 								}
 							}
-							patterns = patterns.Distinct().ToList();
+							outputLetter.Results128WithInput = outputLetter.Results128WithInput.Distinct().ToList();
 							found = false;
-							if (patterns.Count != 0)
+							if (outputLetter.Results128WithInput.Count != 0)
 							{
 								foreach (var matchedPattern in matchedPatterns)
 								{
 									var matched = false;
-									foreach (var pattern in patterns)
+									foreach (var res in outputLetter.Results128WithInput)
 									{
 										var expectedNumber = matchedPattern[col % matchedPattern.Length] - '0';
-										if (pattern.n == expectedNumber)
+										if (res.n == expectedNumber)
 										{
 											found = matched = true;
 											break;
@@ -512,14 +529,8 @@ namespace WindowsFormsApp1
 										matchedPatterns2.Add(matchedPattern);
 								}
 							}
-							if (found)
-								lettersSpec[realCol].i++;
-							else  // this letter can't satisfy the first condition
-							{
-								if (lettersSpec[realCol].i < lettersSpec[realCol].count - 1)
-									Array.Copy(lettersSpec[realCol].l, lettersSpec[realCol].i + 1, lettersSpec[realCol].l, lettersSpec[realCol].i, lettersSpec[realCol].count - lettersSpec[realCol].i - 1);
-								lettersSpec[realCol].count--;
-							}
+							if (!found)  // this letter can't satisfy the first condition
+								lettersSpec[realCol].OutputLetters.Remove(outputLetter);
 						}
 						matchedPatterns = matchedPatterns2.Distinct().ToList();
 					}
@@ -529,7 +540,7 @@ namespace WindowsFormsApp1
 				#region محاسبه پخش میانگین
 				int inputSum = 0;
 				for (var col = 0; col < len; col++)
-					inputSum += lettersSpec[col].n;
+					inputSum += lettersSpec[col].InputLetter;
 				var outputElementalSum = 0;
 				for (var col = 0; col < len; col++)
 					outputElementalSum += myElementalStrings[i][col] + 1;
@@ -553,24 +564,25 @@ namespace WindowsFormsApp1
 					var secondStepPairs = new List<Pair>();
 					//var pattern = "--+-+-+--";
 					Debug.Write(string.Format("col={0}\nleft: ", col));
-					for (var j = 0; j < lettersSpec[len - 1 - col].count; j++)
-						Debug.Write(string.Format("{0} ", lettersSpec[len - 1 - col].l[j]));
+					foreach (var outputLetter in lettersSpec[len - 1 - col].OutputLetters)
+						Debug.Write(string.Format("{0} ", outputLetter.Letter));
 					Debug.Write("\nright: ");
-					for (var j = 0; j < lettersSpec[col].count; j++)
-						Debug.Write(string.Format("{0} ", lettersSpec[col].l[j]));
+					foreach (var outputLetter in lettersSpec[col].OutputLetters)
+						Debug.Write(string.Format("{0} ", outputLetter.Letter));
 					Debug.WriteLine("");
 					var matchedPatterns2 = new List<string>();
-					for (lettersSpec[len - 1 - col].i = 0; lettersSpec[len - 1 - col].i < lettersSpec[len - 1 - col].count; lettersSpec[len - 1 - col].i++)
+					foreach (var leftLetter in lettersSpec[len - 1 - col].OutputLetters)
 					{
-						for (lettersSpec[col].i = 0; lettersSpec[col].i < lettersSpec[col].count; lettersSpec[col].i++)
+						foreach (var rightLetter in lettersSpec[col].OutputLetters)
 						{
-							var left = lettersSpec[len - 1 - col].l[lettersSpec[len - 1 - col].i];
-							var right = lettersSpec[col].l[lettersSpec[col].i];
+							var left = leftLetter.Letter;
+							var right = rightLetter.Letter;
 							long[] vars =
 							{
 								Diff(left, right),
 								left + right,
 							};
+							var pair = new Pair(left, right);
 							foreach (var n in vars)
 							{
 								foreach (var matchedPattern in matchedPatterns)
@@ -580,12 +592,14 @@ namespace WindowsFormsApp1
 									{
 										if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
 										{
-											secondStepPairs.Add(new Pair { Left = left, Right = right, cInterfering28 = res.bWithInterfering28 ? 1 : 0 });
+											pair.Results128.Add(res);
 											matchedPatterns2.Add(matchedPattern);
 										}
 									}
 								}
 							}
+							if (pair.Results128.Count != 0)
+								secondStepPairs.Add(pair);
 						}
 					}
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
@@ -639,10 +653,10 @@ namespace WindowsFormsApp1
 						{
 							long[] vars =
 							{
-								Diff(lettersSpec[len - 1 - col].n, pair.Left),
-								lettersSpec[len - 1 - col].n + pair.Left,
-								Diff(lettersSpec[col].n, pair.Right),
-								lettersSpec[col].n + pair.Right,
+								Diff(lettersSpec[len - 1 - col].InputLetter, pair.Left),
+								lettersSpec[len - 1 - col].InputLetter + pair.Left,
+								Diff(lettersSpec[col].InputLetter, pair.Right),
+								lettersSpec[col].InputLetter + pair.Right,
 							};
 							long[] vars2 = new long[]
 							{
@@ -675,10 +689,10 @@ namespace WindowsFormsApp1
 						pairs2 = new List<Pair>();
 						foreach (var pair in iOBVPairs)
 						{
-							var left = Diff(pair.Left, lettersSpec[len - 1 - col].n);
+							var left = Diff(pair.Left, lettersSpec[len - 1 - col].InputLetter);
 							if (left == 0)
 								left++;
-							var right = Diff(pair.Right, lettersSpec[col].n);
+							var right = Diff(pair.Right, lettersSpec[col].InputLetter);
 							if (right == 0)
 								right++;
 							long[] vars =
@@ -712,12 +726,6 @@ namespace WindowsFormsApp1
 						tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 				}
 			}
-		}
-
-		struct Pair
-		{
-			public byte Left, Right;
-			public int cInterfering28;
 		}
 
 		private void Score(byte a, byte b, byte x, byte y, out int[] c, bool bCalculateForTwoInitialLetters, out int[] scores, out int score1, out int score2)
