@@ -263,7 +263,7 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		struct LetterSpec
+		class LetterSpec
 		{
 			public byte InputLetter;
 			public List<OutputLetter> OutputLetters;
@@ -281,11 +281,21 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		class Result128
-		{
+		class Result128 : IEquatable<Result128>
+        {
 			public byte n;  // 1, 2 or 8
 			public bool bWithInterfering28;
 			public Result128(long l, bool w) { n = (byte) l; bWithInterfering28 = w; }
+            public bool Equals(Result128 res)
+            {
+                if (res == null)
+                    return false;
+                return (n == res.n && bWithInterfering28 == res.bWithInterfering28);
+            }
+            public override int GetHashCode()
+            {
+                return n.GetHashCode() ^ bWithInterfering28.GetHashCode();
+            }
 		};
 
 		List<Result128> ResultOf128(long n)
@@ -410,8 +420,11 @@ namespace WindowsFormsApp1
 			for (var i = 0; i < myElementalStrings.Count; i++)
 			{
 				var lettersSpec = new LetterSpec[len];
-				for (var col = 0; col < len; col++)
-					lettersSpec[col].OutputLetters = new List<OutputLetter>();
+                for (var col = 0; col < len; col++)
+                {
+                    lettersSpec[col] = new LetterSpec();
+                    lettersSpec[col].OutputLetters = new List<OutputLetter>();
+                }
 				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
