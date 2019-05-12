@@ -100,8 +100,8 @@ namespace WindowsFormsApp1
 		void FindBestTable(byte a, byte b, byte xOrXMod4, byte yMod4, bool bChangeX, out Table[] tables)
 		{
 			var scores = new Dictionary<Table, Scores>();
-			byte xFrom = bChangeX ? (byte) (xOrXMod4 + 1) : xOrXMod4, xTo = bChangeX ? (byte) 28 : xFrom;
-			byte yFrom = (byte) (yMod4 + 1), yTo = 28;
+			byte xFrom = bChangeX ? (byte)(xOrXMod4 + 1) : xOrXMod4, xTo = bChangeX ? (byte)28 : xFrom;
+			byte yFrom = (byte)(yMod4 + 1), yTo = 28;
 			for (byte x = xFrom; x <= xTo; x += 4)
 				for (byte y = yFrom; y <= yTo; y += 4)
 				{
@@ -201,12 +201,12 @@ namespace WindowsFormsApp1
 			var l = new byte[len];
 			var i = 0;
 			for (; i < len; i++)
-				l[i] = (byte) (letters[i] + lettersSpec[i].InputLetter);
+				l[i] = (byte)(letters[i] + lettersSpec[i].InputLetter);
 			Lab2Check(l);
 
 			// 3
 			for (i = 0; i < len; i++)
-				l[i] = (byte) SumOfDigits(Diff(letters[i], lettersSpec[i].InputLetter));
+				l[i] = (byte)SumOfDigits(Diff(letters[i], lettersSpec[i].InputLetter));
 			var mid = len / 2;
 			var pattern = "+--";
 			var iPattern = 0;
@@ -282,18 +282,18 @@ namespace WindowsFormsApp1
 		}
 
 		struct Result128 : IEquatable<Result128>
-        {
-			public byte n;  // 1, 2 or 8
-			public bool bWithInterfering28;
-			public Result128(long l, bool w) { n = (byte) l; bWithInterfering28 = w; }
-            public bool Equals(Result128 res)
-            {
-                return (n == res.n && bWithInterfering28 == res.bWithInterfering28);
-            }
-            public override int GetHashCode()
-            {
-                return n.GetHashCode() ^ bWithInterfering28.GetHashCode();
-            }
+		{
+			public readonly byte n;  // 1, 2 or 8
+			public readonly bool bWithInterfering28;
+			public Result128(long l, bool w) { n = (byte)l; bWithInterfering28 = w; }
+			public bool Equals(Result128 res)
+			{
+				return (n == res.n && bWithInterfering28 == res.bWithInterfering28);
+			}
+			public override int GetHashCode()
+			{
+				return n.GetHashCode() ^ bWithInterfering28.GetHashCode();
+			}
 		};
 
 		List<Result128> ResultOf128(long n)
@@ -418,8 +418,8 @@ namespace WindowsFormsApp1
 			for (var i = 0; i < myElementalStrings.Count; i++)
 			{
 				var lettersSpec = new LetterSpec[len];
-                for (var col = 0; col < len; col++)
-                    lettersSpec[col].OutputLetters = new List<OutputLetter>();
+				for (var col = 0; col < len; col++)
+					lettersSpec[col].OutputLetters = new List<OutputLetter>();
 				Table[] tables;
 				var iInput = 0;
 				var a = Constants.Letters[tbInput.Text[0]].Abjad1;
@@ -438,7 +438,7 @@ namespace WindowsFormsApp1
 					if (a > 28)
 						a -= 28;
 					b = Constants.Letters[tbInput.Text[iInput]].Abjad1;
-					var x = (byte) (tables[0].x + tables[0].y);
+					var x = (byte)(tables[0].x + tables[0].y);
 					if (x > 28)
 						x -= 28;
 					FindBestTable(a, b, x, myElementalStrings[i][iInput], false, out tables);
@@ -557,7 +557,7 @@ namespace WindowsFormsApp1
 					outputSum += 9;
 				var outputBodduhValues = new byte[2, len];
 				for (var col = 0; col < len; col++)
-					outputBodduhValues[0, col] = outputBodduhValues[1, col] = (byte) (outputSum / len);
+					outputBodduhValues[0, col] = outputBodduhValues[1, col] = (byte)(outputSum / len);
 				for (var j = 0; j < outputSum % len; j++)
 				{
 					outputBodduhValues[0, j]++;
@@ -593,25 +593,28 @@ namespace WindowsFormsApp1
 							var pair = new Pair(left, right);
 							foreach (var n in vars)
 							{
-								foreach (var matchedPattern in matchedPatterns)
+								var list = ResultOf128(n);
+								foreach (var res in list)
 								{
-									var list = ResultOf128(n);
-									foreach (var res in list)
+									found = false;
+									foreach (var matchedPattern in matchedPatterns)
 									{
 										if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
 										{
-											pair.Results128.Add(res);
 											matchedPatterns2.Add(matchedPattern);
+											found = true;  // found a pattern which match res
 										}
 									}
+									if (found)
+										pair.Results128.Add(res);
 								}
 							}
+							pair.Results128 = pair.Results128.Distinct().ToList();
 							if (pair.Results128.Count != 0)
 								secondStepPairs.Add(pair);
 						}
 					}
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
-					secondStepPairs = secondStepPairs.Distinct().ToList();
 					Debug.WriteLine("second pass pairs:");
 					foreach (var pair in secondStepPairs)
 						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
@@ -1658,7 +1661,7 @@ namespace WindowsFormsApp1
 				int sum = 0;
 				do
 				{
-					sum += (byte) (n % 10);
+					sum += (byte)(n % 10);
 					n /= 10;
 				} while (n != 0);
 				if (sum < 10 || !untilOneDigit)
