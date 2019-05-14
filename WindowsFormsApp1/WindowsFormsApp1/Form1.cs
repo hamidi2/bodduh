@@ -643,11 +643,16 @@ namespace WindowsFormsApp1
 							foreach (var left in lefts)
 								foreach (var right in rights)
 								{
-									//var n2 = pattern2[col % pattern2.Length] == '-' ? Diff(left, right) : left + right;
-									//if (n2 % 9 == (col % 4 + 1) * 2)
-									if (Diff(left, right) % 9 == (col % 4 + 1) * 2 ||
-										(left + right) % 9 == (col % 4 + 1) * 2)
-										iOBVPairs.Add(pair);
+									numbers = new long[]
+									{
+										Diff(left, right),
+										left + right,
+									};
+									foreach (var n2 in numbers)
+										pair.Results128.AddRange(ResultOf128(n2));
+									foreach (var res in pair.Results128)
+										if (res.n == (col % 4 + 1) * 2)
+											iOBVPairs.Add(pair);
 								}
 						}
 						iOBVPairs = iOBVPairs.Distinct().ToList();
