@@ -296,10 +296,15 @@ namespace WindowsFormsApp1
 			}
 		};
 
-		List<Result128> ResultOf128(long n)
+		List<Result128> ResultOf128(long n, byte letter)
 		{
-			Debug.Assert(n != 0);
 			var list = new List<Result128>();
+			if (n == 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
+			{
+				if (Score(letter) != 0)
+					list.Add(new Result128(1, false));
+				return list;
+			}
 			Result128[] res =
 			{
 				new Result128(n % 9, false),
@@ -506,17 +511,7 @@ namespace WindowsFormsApp1
 							};
 							found = false;
 							foreach (var n in numbers)
-							{
-								if (n == 0)
-								{
-									if (Score(inputLetter) != 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
-										outputLetter.Results128WithInput.Add(new Result128(1, false));
-								}
-								else
-								{
-									outputLetter.Results128WithInput.AddRange(ResultOf128(n));
-								}
-							}
+								outputLetter.Results128WithInput.AddRange(ResultOf128(n, inputLetter));
 							outputLetter.Results128WithInput = outputLetter.Results128WithInput.Distinct().ToList();
 							found = false;
 							if (outputLetter.Results128WithInput.Count != 0)
@@ -573,10 +568,18 @@ namespace WindowsFormsApp1
 					//var pattern = "--+-+-+--";
 					Debug.Write(string.Format("col={0}\nleft: ", col));
 					foreach (var outputLetter in lettersSpec[len - 1 - col].OutputLetters)
-						Debug.Write(string.Format("{0} ", outputLetter.Letter));
+					{
+						Debug.Write(string.Format("{0}: ", outputLetter.Letter));
+						foreach (var res in outputLetter.Results128WithInput)
+							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+					}
 					Debug.Write("\nright: ");
 					foreach (var outputLetter in lettersSpec[col].OutputLetters)
-						Debug.Write(string.Format("{0} ", outputLetter.Letter));
+					{
+						Debug.Write(string.Format("{0}: ", outputLetter.Letter));
+						foreach (var res in outputLetter.Results128WithInput)
+							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+					}
 					Debug.WriteLine("");
 					var matchedPatterns2 = new List<string>();
 					foreach (var leftLetter in lettersSpec[len - 1 - col].OutputLetters)
@@ -593,7 +596,7 @@ namespace WindowsFormsApp1
 							var pair = new Pair(left, right);
 							foreach (var n in vars)
 							{
-								var list = ResultOf128(n);
+								var list = ResultOf128(n, left);
 								foreach (var res in list)
 								{
 									found = false;
@@ -617,7 +620,11 @@ namespace WindowsFormsApp1
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
 					Debug.WriteLine("second pass pairs:");
 					foreach (var pair in secondStepPairs)
-						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					{
+						Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
+						foreach (var res in pair.Results128)
+							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+					}
 					Debug.WriteLine("");
 					#endregion
 
@@ -625,18 +632,19 @@ namespace WindowsFormsApp1
 					for (var iOBV = 0; iOBV < 2; iOBV++)
 					{
 						#region step 3: بدوح خروجی
-						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم. باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
+						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
+						// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 						//var pattern2 = "++-+";
 						var iOBVPairs = new List<Pair>();
 						foreach (var pair in secondStepPairs)
 						{
-							var lefts = new List<long>();
-							var rights = new List<long>();
-							var n = Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
+							var lefts = new List<byte>();
+							var rights = new List<byte>();
+							var n = (byte) Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
 							lefts.Add(n);
 							if (n == 0)
 								lefts.Add(1);
-							n = Diff(outputBodduhValues[iOBV, col], pair.Right);
+							n = (byte) Diff(outputBodduhValues[iOBV, col], pair.Right);
 							rights.Add(n);
 							if (n == 0)
 								rights.Add(1);
@@ -649,7 +657,7 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.Results128.AddRange(ResultOf128(n2));
+										pair.Results128.AddRange(ResultOf128(n2, left));
 									foreach (var res in pair.Results128)
 										if (res.n == (col % 4 + 1) * 2)
 											iOBVPairs.Add(pair);
@@ -658,7 +666,11 @@ namespace WindowsFormsApp1
 						iOBVPairs = iOBVPairs.Distinct().ToList();
 						Debug.WriteLine("third pass pairs:");
 						foreach (var pair in iOBVPairs)
-							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+						{
+							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
+							foreach (var res in pair.Results128)
+								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+						}
 						Debug.WriteLine("");
 						#endregion
 
