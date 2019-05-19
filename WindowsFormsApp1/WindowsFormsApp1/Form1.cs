@@ -281,20 +281,22 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		struct Result128 : IEquatable<Result128>
+		struct Result128
 		{
 			public readonly byte n;  // 1, 2 or 8
 			public readonly bool bWithInterfering28;
 			public Result128(long l, bool w) { n = (byte)l; bWithInterfering28 = w; }
-			public bool Equals(Result128 res)
-			{
-				return (n == res.n && bWithInterfering28 == res.bWithInterfering28);
-			}
-			public override int GetHashCode()
-			{
-				return n.GetHashCode() ^ bWithInterfering28.GetHashCode();
-			}
 		};
+
+		List<Result128> Distinct(List<Result128> list)
+		{
+			var ret = new List<Result128>();
+			foreach (var item in list)
+			{
+				if (ret.Contains())
+			}
+			return ret;
+		}
 
 		List<Result128> ResultOf128(long n, byte letter)
 		{
@@ -316,7 +318,7 @@ namespace WindowsFormsApp1
 			foreach (var r in res)
 				if (r.n == 1 || r.n == 2 || r.n == 8)
 					list.Add(r);
-			return list.Distinct().ToList();
+			return Distinct(list);
 		}
 
 		private void button1_Click(object sender, EventArgs e)
