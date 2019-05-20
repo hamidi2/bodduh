@@ -290,11 +290,19 @@ namespace WindowsFormsApp1
 
 		List<Result128> Distinct(List<Result128> list)
 		{
-			var ret = new List<Result128>();
+			int[] res = { 2, 2, 2 };
 			foreach (var item in list)
 			{
-				if (ret.Contains())
+				var index = item.n == 1 ? 0 : item.n == 2 ? 1 : 2;
+				res[index] = Math.Min(res[index], item.bWithInterfering28 ? 1 : 0);
 			}
+			var ret = new List<Result128>();
+			if (res[0] != 2)
+				ret.Add(new Result128(1, res[0] == 1 ? true : false));
+			if (res[1] != 2)
+				ret.Add(new Result128(2, res[1] == 1 ? true : false));
+			if (res[2] != 2)
+				ret.Add(new Result128(8, res[2] == 1 ? true : false));
 			return ret;
 		}
 
@@ -514,7 +522,7 @@ namespace WindowsFormsApp1
 							found = false;
 							foreach (var n in numbers)
 								outputLetter.Results128WithInput.AddRange(ResultOf128(n, inputLetter));
-							outputLetter.Results128WithInput = outputLetter.Results128WithInput.Distinct().ToList();
+							outputLetter.Results128WithInput = Distinct(outputLetter.Results128WithInput);
 							found = false;
 							if (outputLetter.Results128WithInput.Count != 0)
 							{
@@ -614,7 +622,7 @@ namespace WindowsFormsApp1
 										pair.Results128.Add(res);
 								}
 							}
-							pair.Results128 = pair.Results128.Distinct().ToList();
+							pair.Results128 = Distinct(pair.Results128);
 							if (pair.Results128.Count != 0)
 								secondStepPairs.Add(pair);
 						}
