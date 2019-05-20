@@ -269,15 +269,19 @@ namespace WindowsFormsApp1
 			public List<OutputLetter> OutputLetters;
 		}
 
-		struct Pair
+		class Pair
 		{
 			public byte Left, Right;
-			public List<Result128> Results128;
+			public List<Result128> SecondStepResults128;
+			public List<ResultBodduh> ThirdStepResultsBodduh;
+			public List<ResultBodduh> FourthStepResultsBodduh;
 			public Pair(byte left, byte right)
 			{
 				Left = left;
 				Right = right;
-				Results128 = new List<Result128>();
+				SecondStepResults128 = new List<Result128>();
+				ThirdStepResultsBodduh = new List<ResultBodduh>();
+				FourthStepResultsBodduh = new List<ResultBodduh>();
 			}
 		}
 
@@ -286,7 +290,14 @@ namespace WindowsFormsApp1
 			public readonly byte n;  // 1, 2 or 8
 			public readonly bool bWithInterfering28;
 			public Result128(long l, bool w) { n = (byte)l; bWithInterfering28 = w; }
-		};
+		}
+
+		struct ResultBodduh
+		{
+			public readonly byte n;  // 2, 4, 6 or 8
+			public readonly bool bWithInterfering28;
+			public ResultBodduh(long l, bool w) { n = (byte)l; bWithInterfering28 = w; }
+		}
 
 		List<Result128> Distinct(List<Result128> list)
 		{
@@ -303,6 +314,22 @@ namespace WindowsFormsApp1
 				ret.Add(new Result128(2, res[1] == 1 ? true : false));
 			if (res[2] != 2)
 				ret.Add(new Result128(8, res[2] == 1 ? true : false));
+			return ret;
+		}
+
+		List<ResultBodduh> Distinct(List<ResultBodduh> list)
+		{
+			int[] res = { 2, 2, 2 ,2 };
+			foreach (var item in list)
+			{
+				Debug.Assert(item.n > 0 && item.n < 9 && item.n % 2 == 0);
+				var index = item.n / 2 - 1;
+				res[index] = Math.Min(res[index], item.bWithInterfering28 ? 1 : 0);
+			}
+			var ret = new List<ResultBodduh>();
+			for (var i = 0; i < res.Length; i++)
+				if (res[i] != 2)
+					ret.Add(new ResultBodduh((i + 1) * 2, res[i] == 1 ? true : false));
 			return ret;
 		}
 
@@ -325,6 +352,24 @@ namespace WindowsFormsApp1
 			};
 			foreach (var r in res)
 				if (r.n == 1 || r.n == 2 || r.n == 8)
+					list.Add(r);
+			return Distinct(list);
+		}
+
+		List<ResultBodduh> ResultOfBodduh(long n, byte lookingFor = 0)
+		{
+			var list = new List<ResultBodduh>();
+			ResultBodduh[] res =
+			{
+				new ResultBodduh(n % 9, false),
+				new ResultBodduh(Diff(28, n) % 9, true),
+				new ResultBodduh((28 + n) % 9, true),
+				new ResultBodduh(Diff(56, n) % 9, true),
+				new ResultBodduh((56 + n) % 9, true),
+			};
+			foreach (var r in res)
+				if ((lookingFor == 0 && r.n % 9 != 0 && r.n % 9 % 2 == 0) ||
+					(lookingFor != 0 && r.n % 9 == lookingFor))
 					list.Add(r);
 			return Distinct(list);
 		}
@@ -619,11 +664,11 @@ namespace WindowsFormsApp1
 										}
 									}
 									if (found)
-										pair.Results128.Add(res);
+										pair.SecondStepResults128.Add(res);
 								}
 							}
-							pair.Results128 = Distinct(pair.Results128);
-							if (pair.Results128.Count != 0)
+							pair.SecondStepResults128 = Distinct(pair.SecondStepResults128);
+							if (pair.SecondStepResults128.Count != 0)
 								secondStepPairs.Add(pair);
 						}
 					}
@@ -632,7 +677,7 @@ namespace WindowsFormsApp1
 					foreach (var pair in secondStepPairs)
 					{
 						Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-						foreach (var res in pair.Results128)
+						foreach (var res in pair.SecondStepResults128)
 							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 					}
 					Debug.WriteLine("");
@@ -667,10 +712,10 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.Results128.AddRange(ResultOf128(n2, left));
-									foreach (var res in pair.Results128)
-										if (res.n == (col % 4 + 1) * 2)
-											iOBVPairs.Add(pair);
+										pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, (byte)((col % 4 + 1) * 2)));
+									pair.ThirdStepResultsBodduh = Distinct(pair.ThirdStepResultsBodduh);
+									if (pair.ThirdStepResultsBodduh.Count != 0)
+										iOBVPairs.Add(pair);
 								}
 						}
 						iOBVPairs = iOBVPairs.Distinct().ToList();
@@ -678,7 +723,7 @@ namespace WindowsFormsApp1
 						foreach (var pair in iOBVPairs)
 						{
 							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-							foreach (var res in pair.Results128)
+							foreach (var res in pair.ThirdStepResultsBodduh)
 								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 						}
 						Debug.WriteLine("");
@@ -708,13 +753,10 @@ namespace WindowsFormsApp1
 								vars[1] + vars[3],
 							};
 							foreach (var n in vars2)
-							{
-								if (n % 9 != 0 && n % 9 % 2 == 0)
-								{
-									pairs2.Add(pair);
-									break;
-								}
-							}
+								pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n));
+							pair.FourthStepResultsBodduh = Distinct(pair.FourthStepResultsBodduh);
+							if (pair.FourthStepResultsBodduh.Count != 0)
+								pairs2.Add(pair);
 						}
 						iOBVPairs = pairs2;
 						Debug.WriteLine("fourth pass pairs:");
