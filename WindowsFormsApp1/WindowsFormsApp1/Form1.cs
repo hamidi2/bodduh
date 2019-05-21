@@ -695,11 +695,11 @@ namespace WindowsFormsApp1
 						{
 							var lefts = new List<byte>();
 							var rights = new List<byte>();
-							var n = (byte) Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
+							var n = (byte)Diff(outputBodduhValues[iOBV, len - 1 - col], pair.Left);
 							lefts.Add(n);
 							if (n == 0)
 								lefts.Add(1);
-							n = (byte) Diff(outputBodduhValues[iOBV, col], pair.Right);
+							n = (byte)Diff(outputBodduhValues[iOBV, col], pair.Right);
 							rights.Add(n);
 							if (n == 0)
 								rights.Add(1);
@@ -761,7 +761,11 @@ namespace WindowsFormsApp1
 						iOBVPairs = pairs2;
 						Debug.WriteLine("fourth pass pairs:");
 						foreach (var pair in iOBVPairs)
-							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+						{
+							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
+							foreach (var res in pair.FourthStepResultsBodduh)
+								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+						}
 						Debug.WriteLine("");
 						#endregion
 
