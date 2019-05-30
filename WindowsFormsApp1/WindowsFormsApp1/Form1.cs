@@ -619,8 +619,6 @@ namespace WindowsFormsApp1
 				for (var col = 0; col < len / 2; col++)
 				{
 					#region second step: find matching numbers from two sides
-					var secondStepPairs = new List<Pair>();
-					//var pattern = "--+-+-+--";
 					Debug.Write(string.Format("col={0}\nleft: ", col));
 					foreach (var outputLetter in lettersSpec[len - 1 - col].OutputLetters)
 					{
@@ -636,6 +634,31 @@ namespace WindowsFormsApp1
 							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 					}
 					Debug.WriteLine("");
+					var secondStepPairs = new List<Pair>();
+					string[] patterns =
+					{
+						"-+-",
+						"--+++-",
+						"-++++-",
+						"-+++-+",
+						"-+++-+++-",
+						"--+++-++---+",
+						"--+++--+++--",
+						"-++++-++--++",
+						"-+++-++-+-++",
+						"-+++-++-+++-",
+					};
+					//var pattern = "--+-+-+--";
+					var includePlus = false;
+					var includeMinus = false;
+					foreach (var pattern in patterns)
+					{
+						var sign = pattern[col % pattern.Length];
+						if (sign == '-')
+							includeMinus = true;
+						else
+							includePlus = true;
+					}
 					var matchedPatterns2 = new List<string>();
 					foreach (var leftLetter in lettersSpec[len - 1 - col].OutputLetters)
 					{
@@ -643,11 +666,11 @@ namespace WindowsFormsApp1
 						{
 							var left = leftLetter.Letter;
 							var right = rightLetter.Letter;
-							long[] vars =
-							{
-								Diff(left, right),
-								left + right,
-							};
+							var vars = new List<long>();
+							if (includeMinus)
+								vars.Add(Diff(left, right));
+							if (includePlus)
+								vars.Add(left + right);
 							var pair = new Pair(left, right);
 							foreach (var n in vars)
 							{
