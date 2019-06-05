@@ -642,6 +642,7 @@ namespace WindowsFormsApp1
 						"-++++-",
 						"-+++-+",
 						"-+++-+++-",
+						"--+-+-+--",
 						"--+++-++---+",
 						"--+++--+++--",
 						"-++++-++--++",
@@ -735,7 +736,7 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, (byte)((col % 4 + 1) * 2)));
+										pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, col >= 4 ? (byte) 0 : (byte) ((col + 1) * 2)));
 									pair.ThirdStepResultsBodduh = Distinct(pair.ThirdStepResultsBodduh);
 									if (pair.ThirdStepResultsBodduh.Count != 0)
 										iOBVPairs.Add(pair);
