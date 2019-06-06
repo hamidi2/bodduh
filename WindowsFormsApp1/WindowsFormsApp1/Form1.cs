@@ -272,6 +272,7 @@ namespace WindowsFormsApp1
 		class Pair
 		{
 			public byte Left, Right;
+			public List<Result128> FirstStepResults128;
 			public List<Result128> SecondStepResults128;
 			public List<ResultBodduh> ThirdStepResultsBodduh;
 			public List<ResultBodduh> FourthStepResultsBodduh;
@@ -616,6 +617,21 @@ namespace WindowsFormsApp1
 				#endregion
 
 				matchedPatterns = acceptablePatterns.ToList();
+				string[] step2AcceptablePatterns =
+				{
+					"-+-",
+					"--+++-",
+					"-++++-",
+					"-+++-+",
+					"-+++-+++-",
+					"--+-+-+--",
+					"--+++-++---+",
+					"--+++--+++--",
+					"-++++-++--++",
+					"-+++-++-+-++",
+					"-+++-++-+++-",
+				};
+				var step2MatchedPatterns = new List<string>();
 				for (var col = 0; col < len / 2; col++)
 				{
 					#region second step: find matching numbers from two sides
@@ -635,24 +651,9 @@ namespace WindowsFormsApp1
 					}
 					Debug.WriteLine("");
 					var secondStepPairs = new List<Pair>();
-					string[] patterns =
-					{
-						"-+-",
-						"--+++-",
-						"-++++-",
-						"-+++-+",
-						"-+++-+++-",
-						"--+-+-+--",
-						"--+++-++---+",
-						"--+++--+++--",
-						"-++++-++--++",
-						"-+++-++-+-++",
-						"-+++-++-+++-",
-					};
-					//var pattern = "--+-+-+--";
 					var includePlus = false;
 					var includeMinus = false;
-					foreach (var pattern in patterns)
+					foreach (var pattern in step2AcceptablePatterns)
 					{
 						var sign = pattern[col % pattern.Length];
 						if (sign == '-')
@@ -693,7 +694,10 @@ namespace WindowsFormsApp1
 							}
 							pair.SecondStepResults128 = Distinct(pair.SecondStepResults128);
 							if (pair.SecondStepResults128.Count != 0)
+							{
+								pair.FirstStepResults128 = 
 								secondStepPairs.Add(pair);
+							}
 						}
 					}
 					matchedPatterns = matchedPatterns2.Distinct().ToList();
