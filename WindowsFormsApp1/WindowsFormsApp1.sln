@@ -1,18 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp1", "WindowsFormsApp1\WindowsFormsApp1.csproj", "{556820D2-6DC5-4085-B057-3CAB50E68EB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp1", "WindowsFormsApp1\WindowsFormsApp1.csproj", "{451B8D19-5437-4BED-81EB-4E74E71D4C2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{556820D2-6DC5-4085-B057-3CAB50E68EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{556820D2-6DC5-4085-B057-3CAB50E68EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{556820D2-6DC5-4085-B057-3CAB50E68EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{556820D2-6DC5-4085-B057-3CAB50E68EB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{451B8D19-5437-4BED-81EB-4E74E71D4C2B}.Debug|x86.ActiveCfg = Debug|x86
+		{451B8D19-5437-4BED-81EB-4E74E71D4C2B}.Debug|x86.Build.0 = Debug|x86
+		{451B8D19-5437-4BED-81EB-4E74E71D4C2B}.Release|x86.ActiveCfg = Release|x86
+		{451B8D19-5437-4BED-81EB-4E74E71D4C2B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
