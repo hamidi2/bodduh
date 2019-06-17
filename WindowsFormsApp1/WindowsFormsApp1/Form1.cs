@@ -272,7 +272,8 @@ namespace WindowsFormsApp1
 		class Pair
 		{
 			public byte Left, Right;
-			public List<Result128> FirstStepResults128;
+			public List<Result128> LeftLetterResults128;
+			public List<Result128> RightLetterResults128;
 			public List<Result128> SecondStepResults128;
 			public List<ResultBodduh> ThirdStepResultsBodduh;
 			public List<ResultBodduh> FourthStepResultsBodduh;
@@ -334,7 +335,8 @@ namespace WindowsFormsApp1
 			return ret;
 		}
 
-		List<Result128> ResultOf128(long n, byte letter)
+		// not providing letter indicates being sure that n is not 0
+		List<Result128> ResultOf128(long n, byte letter = 0)
 		{
 			var list = new List<Result128>();
 			if (n == 0)  // تفاضل صفر شده و عدد صاحب امتیاز بوده
@@ -530,7 +532,7 @@ namespace WindowsFormsApp1
 				lettersSpec[1].OutputLetters.RemoveRange(1, lettersSpec[1].OutputLetters.Count - 1);
 				long[] numbers;
 				bool found;
-				string[] firstAndSecondStepsAcceptable128Patterns =
+				string[] acceptable128Patterns =
 				{
 					"28",
 					"82",
@@ -547,14 +549,14 @@ namespace WindowsFormsApp1
 					"218821182", "281128812",
 					"812281128", "821182218",
 				};
-				List<string> firstAndSecondStepsMatched128Patterns = null;
+				List<string> matched128Patterns = null;
 				// 0 for right to middle, 1 for left to middle
 				for (var direction = 0; direction < 2; direction++)
 				{
-					firstAndSecondStepsMatched128Patterns = firstAndSecondStepsAcceptable128Patterns.ToList();
+					matched128Patterns = acceptable128Patterns.ToList();
 					for (var col = 0; col < len / 2; col++)
 					{
-						var matchedPatterns = new List<string>();
+						var refinedMatched128Patterns = new List<string>();
 						var realCol = direction == 0 ? col : len - 1 - col;
 						var outputLetters = lettersSpec[realCol].OutputLetters.ToArray();
 						foreach (var outputLetter in outputLetters)
@@ -572,7 +574,7 @@ namespace WindowsFormsApp1
 							found = false;
 							if (res128.Count != 0)
 							{
-								foreach (var matchedPattern in firstAndSecondStepsMatched128Patterns)
+								foreach (var matchedPattern in matched128Patterns)
 								{
 									var expectedNumber = matchedPattern[col % matchedPattern.Length] - '0';
 									var matched = false;
@@ -584,13 +586,13 @@ namespace WindowsFormsApp1
 											break;
 										}
 									if (matched)
-										matchedPatterns.Add(matchedPattern);
+										refinedMatched128Patterns.Add(matchedPattern);
 								}
 							}
 							if (!found)  // this letter can't satisfy the first condition
 								lettersSpec[realCol].OutputLetters.Remove(outputLetter);
 						}
-						firstAndSecondStepsMatched128Patterns = matchedPatterns.Distinct().ToList();
+						matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
 					}
 				}
 				#endregion
@@ -615,7 +617,7 @@ namespace WindowsFormsApp1
 				}
 				#endregion
 
-				firstAndSecondStepsMatched128Patterns = firstAndSecondStepsAcceptable128Patterns.ToList();
+				matched128Patterns = acceptable128Patterns.ToList();
 				string[] secondStepAcceptablePlusMinusPatterns =
 				{
 					"-+-",
@@ -667,39 +669,37 @@ namespace WindowsFormsApp1
 						{
 							var left = leftLetter.Letter;
 							var right = rightLetter.Letter;
-							var vars = new List<long>();
+							var list = new List<Result128>();
 							if (includeMinus)
-								vars.Add(Diff(left, right));
+								list.AddRange(ResultOf128(Diff(left, right), left));
 							if (includePlus)
-								vars.Add(left + right);
-							var pair = new Pair(left, right);
-							foreach (var n in vars)
+								list.AddRange(ResultOf128(left + right));
+							list = Distinct(list);
+							found = false;  // assume this pair won't match any existing 128 patterns
+							foreach (var res in list)
 							{
-								var list = ResultOf128(n, left);
-								foreach (var res in list)
+								foreach (var matchedPattern in matched128Patterns)
 								{
-									found = false;
-									foreach (var matchedPattern in firstAndSecondStepsMatched128Patterns)
+									if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
 									{
-										if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
-										{
-											matchedPatterns.Add(matchedPattern);
-											found = true;  // found a pattern which match res
-										}
+										matchedPatterns.Add(matchedPattern);
+										found = true;
 									}
-									if (found)
-										pair.SecondStepResults128.Add(res);
 								}
 							}
-							pair.SecondStepResults128 = Distinct(pair.SecondStepResults128);
-							if (pair.SecondStepResults128.Count != 0)
+							if (found)
 							{
-								pair.FirstStepResults128 = 
+								var pair = new Pair(left, right)
+								{
+									LeftLetterResults128 = leftLetter.Results128WithInput,
+									RightLetterResults128 = rightLetter.Results128WithInput,
+									SecondStepResults128 = list
+								};
 								secondStepPairs.Add(pair);
 							}
 						}
 					}
-					firstAndSecondStepsMatched128Patterns = matchedPatterns.Distinct().ToList();
+					matched128Patterns = matchedPatterns.Distinct().ToList();
 					Debug.WriteLine("second pass pairs:");
 					foreach (var pair in secondStepPairs)
 					{
