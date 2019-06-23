@@ -379,6 +379,20 @@ namespace WindowsFormsApp1
 			return Distinct(list);
 		}
 
+		void Add(List<Pair> pairs, Pair pair)
+		{
+			foreach (var p in pairs)
+			{
+				if (p.Left == pair.Left && p.Right == pair.Right)
+				{
+					p.SecondStepResults128.AddRange(pair.SecondStepResults128);
+					p.SecondStepResults128 = Distinct(p.SecondStepResults128);
+					return;
+				}
+			}
+			pairs.Add(pair);
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
@@ -697,7 +711,7 @@ namespace WindowsFormsApp1
 										RightLetterResults128 = rightLetter.Results128WithInput,
 										SecondStepResults128 = list
 									};
-									secondStepPairs.Add(pair);
+									Add(secondStepPairs, pair);
 									foundAPairToMatchSign = true;
 								}
 							}
@@ -740,7 +754,7 @@ namespace WindowsFormsApp1
 										RightLetterResults128 = rightLetter.Results128WithInput,
 										SecondStepResults128 = list
 									};
-									secondStepPairs.Add(pair);
+									Add(secondStepPairs, pair);
 									foundAPairToMatchSign = true;
 								}
 							}
