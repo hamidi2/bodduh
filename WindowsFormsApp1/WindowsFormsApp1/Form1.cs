@@ -275,18 +275,19 @@ namespace WindowsFormsApp1
 			public byte Left, Right;
 			public List<Result128> LeftLetterResults128;
 			public List<Result128> RightLetterResults128;
-			public List<Result128> SecondStepResults128;
-			public List<ResultBodduh> ThirdStepResultsBodduh;
-			public List<ResultBodduh> FourthStepResultsBodduh;
+			public List<Result128> SecondStepResults128 = new List<Result128>();
+			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
+			public List<ResultBodduh>[] FourthStepResultsBodduh = new List<ResultBodduh>[2];
 			public int IndirectionCount;
 			public Pair(byte left, byte right)
 			{
 				Left = left;
 				Right = right;
-				SecondStepResults128 = new List<Result128>();
-				ThirdStepResultsBodduh = new List<ResultBodduh>();
-				FourthStepResultsBodduh = new List<ResultBodduh>();
-			}
+                ThirdStepResultsBodduh[0] = new List<ResultBodduh>();
+                ThirdStepResultsBodduh[1] = new List<ResultBodduh>();
+                FourthStepResultsBodduh[0] = new List<ResultBodduh>();
+                FourthStepResultsBodduh[1] = new List<ResultBodduh>();
+            }
 		}
 
 		struct Result128
@@ -808,9 +809,9 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, col >= 4 ? (byte) 0 : (byte) ((col + 1) * 2)));
-									pair.ThirdStepResultsBodduh = Distinct(pair.ThirdStepResultsBodduh);
-									if (pair.ThirdStepResultsBodduh.Count != 0)
+										pair.ThirdStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n2, col >= 4 ? (byte) 0 : (byte) ((col + 1) * 2)));
+									pair.ThirdStepResultsBodduh[iOBV] = Distinct(pair.ThirdStepResultsBodduh[iOBV]);
+                                    if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
 										iOBVPairs.Add(pair);
 								}
 						}
@@ -819,7 +820,7 @@ namespace WindowsFormsApp1
 						foreach (var pair in iOBVPairs)
 						{
 							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-							foreach (var res in pair.ThirdStepResultsBodduh)
+                            foreach (var res in pair.ThirdStepResultsBodduh[iOBV])
 								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 						}
 						Debug.WriteLine("");
@@ -849,9 +850,9 @@ namespace WindowsFormsApp1
 								vars[1] + vars[3],
 							};
 							foreach (var n in vars2)
-								pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n));
-							pair.FourthStepResultsBodduh = Distinct(pair.FourthStepResultsBodduh);
-							if (pair.FourthStepResultsBodduh.Count != 0)
+                                pair.FourthStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n));
+                            pair.FourthStepResultsBodduh[iOBV] = Distinct(pair.FourthStepResultsBodduh[iOBV]);
+                            if (pair.FourthStepResultsBodduh[iOBV].Count != 0)
 								pairs2.Add(pair);
 						}
 						iOBVPairs = pairs2;
@@ -859,7 +860,7 @@ namespace WindowsFormsApp1
 						foreach (var pair in iOBVPairs)
 						{
 							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-							foreach (var res in pair.FourthStepResultsBodduh)
+                            foreach (var res in pair.FourthStepResultsBodduh[iOBV])
 								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 						}
 						Debug.WriteLine("");
@@ -922,11 +923,13 @@ namespace WindowsFormsApp1
 					pair.IndirectionCount++;
 				if (!IncludesDirect(pair.SecondStepResults128))
 					pair.IndirectionCount++;
-				if (!IncludesDirect(pair.ThirdStepResultsBodduh))
-					pair.IndirectionCount++;
-				if (!IncludesDirect(pair.FourthStepResultsBodduh))
-					pair.IndirectionCount++;
-			}
+                if (!IncludesDirect(pair.ThirdStepResultsBodduh[0]) &&
+					!IncludesDirect(pair.ThirdStepResultsBodduh[1]))
+                    pair.IndirectionCount++;
+                if (!IncludesDirect(pair.FourthStepResultsBodduh[0]) &&
+                    !IncludesDirect(pair.FourthStepResultsBodduh[1]))
+                    pair.IndirectionCount++;
+            }
 			var ret = pairs.ToArray();
 			Array.Sort<Pair>(ret, (x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
 			if (ret[0].IndirectionCount != ret[1].IndirectionCount)
