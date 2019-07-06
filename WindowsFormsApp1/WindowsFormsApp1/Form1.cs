@@ -278,7 +278,7 @@ namespace WindowsFormsApp1
 			public List<Result128> SecondStepResults128 = new List<Result128>();
 			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
 			public List<ResultBodduh>[] FourthStepResultsBodduh = new List<ResultBodduh>[2];
-			public int IndirectionCount;
+			public int[] IndirectionCount = new int[2];
 			public Pair(byte left, byte right)
 			{
 				Left = left;
@@ -781,7 +781,8 @@ namespace WindowsFormsApp1
 					#endregion
 
 					var pairs = new List<Pair>();
-					for (var iOBV = 0; iOBV < 2; iOBV++)
+					byte iOBV = 0;
+					for (; iOBV < 2; iOBV++)
 					{
 						#region step 3: بدوح خروجی
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
@@ -899,7 +900,7 @@ namespace WindowsFormsApp1
 						#endregion
 					}
 					pairs = pairs.Distinct().ToList();
-					pairs = Prioritize(pairs);
+					pairs = Prioritize(pairs, out iOBV);
 					Debug.Assert(pairs.Count == 1);
 					letters[len - 1 - col] = pairs[0].Left;
 					letters[col] = pairs[0].Right;
@@ -910,30 +911,35 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		List<Pair> Prioritize(List<Pair> pairs)
+		List<Pair> Prioritize(List<Pair> pairs, out byte iOBV)
 		{
 			if (pairs.Count < 2)
+			{
+				iOBV = 0;
 				return pairs;
+			}
 			foreach (var pair in pairs)
 			{
-				pair.IndirectionCount = 0;
-				if (!IncludesDirect(pair.LeftLetterResults128))
-					pair.IndirectionCount++;
-				if (!IncludesDirect(pair.RightLetterResults128))
-					pair.IndirectionCount++;
-				if (!IncludesDirect(pair.SecondStepResults128))
-					pair.IndirectionCount++;
-                if (!IncludesDirect(pair.ThirdStepResultsBodduh[0]) &&
-					!IncludesDirect(pair.ThirdStepResultsBodduh[1]))
-                    pair.IndirectionCount++;
-                if (!IncludesDirect(pair.FourthStepResultsBodduh[0]) &&
-                    !IncludesDirect(pair.FourthStepResultsBodduh[1]))
-                    pair.IndirectionCount++;
-            }
+				for (var i = 0; i < 2; i++)
+				{
+					pair.IndirectionCount[i] = 0;
+					if (!IncludesDirect(pair.LeftLetterResults128))
+						pair.IndirectionCount[i]++;
+					if (!IncludesDirect(pair.RightLetterResults128))
+						pair.IndirectionCount[i]++;
+					if (!IncludesDirect(pair.SecondStepResults128))
+						pair.IndirectionCount[i]++;
+					if (!IncludesDirect(pair.ThirdStepResultsBodduh[i]))
+						pair.IndirectionCount[i]++;
+					if (!IncludesDirect(pair.FourthStepResultsBodduh[i]))
+						pair.IndirectionCount[i]++;
+				}
+			}
 			var ret = pairs.ToArray();
-			Array.Sort<Pair>(ret, (x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
-			if (ret[0].IndirectionCount != ret[1].IndirectionCount)
+			Array.Sort<Pair>(ret, (x, y) => Math.Min(x.IndirectionCount[0], x.IndirectionCount[1]).CompareTo(Math.Min(y.IndirectionCount[0], y.IndirectionCount[1])));
+			if (Math.Min(ret[0].IndirectionCount[0], ret[0].IndirectionCount[1]) != Math.Min(ret[1].IndirectionCount[0], ret[1].IndirectionCount[1]))
 				Array.Resize(ref ret, 1);
+			iOBV = ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? (byte) 0 : (byte) 1;
 			return ret.ToList();
 		}
 
