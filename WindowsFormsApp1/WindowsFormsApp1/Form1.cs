@@ -277,17 +277,15 @@ namespace WindowsFormsApp1
 			public List<Result128> RightLetterResults128;
 			public List<Result128> SecondStepResults128 = new List<Result128>();
 			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
-			public List<ResultBodduh>[] FourthStepResultsBodduh = new List<ResultBodduh>[2];
+			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
 			public int[] IndirectionCount = new int[2];
 			public Pair(byte left, byte right)
 			{
 				Left = left;
 				Right = right;
-                ThirdStepResultsBodduh[0] = new List<ResultBodduh>();
-                ThirdStepResultsBodduh[1] = new List<ResultBodduh>();
-                FourthStepResultsBodduh[0] = new List<ResultBodduh>();
-                FourthStepResultsBodduh[1] = new List<ResultBodduh>();
-            }
+				ThirdStepResultsBodduh[0] = new List<ResultBodduh>();
+				ThirdStepResultsBodduh[1] = new List<ResultBodduh>();
+			}
 		}
 
 		struct Result128
@@ -324,7 +322,7 @@ namespace WindowsFormsApp1
 
 		List<ResultBodduh> Distinct(List<ResultBodduh> list)
 		{
-			int[] res = { 2, 2, 2 ,2 };
+			int[] res = { 2, 2, 2, 2 };
 			foreach (var item in list)
 			{
 				Debug.Assert(item.n > 0 && item.n < 9 && item.n % 2 == 0);
@@ -782,13 +780,14 @@ namespace WindowsFormsApp1
 
 					var pairs = new List<Pair>();
 					byte iOBV = 0;
+
+					#region step 3: بدوح خروجی
 					for (; iOBV < 2; iOBV++)
 					{
-						#region step 3: بدوح خروجی
+						var OBVPairs = new List<Pair>();
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
 						// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 						//var pattern2 = "++-+";
-						var iOBVPairs = new List<Pair>();
 						foreach (var pair in secondStepPairs)
 						{
 							var lefts = new List<byte>();
@@ -810,95 +809,98 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.ThirdStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n2, col >= 4 ? (byte) 0 : (byte) ((col + 1) * 2)));
+										pair.ThirdStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n2, col >= 4 ? (byte)0 : (byte)((col + 1) * 2)));
 									pair.ThirdStepResultsBodduh[iOBV] = Distinct(pair.ThirdStepResultsBodduh[iOBV]);
-                                    if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
-										iOBVPairs.Add(pair);
+									if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
+										OBVPairs.Add(pair);
 								}
 						}
-						iOBVPairs = iOBVPairs.Distinct().ToList();
-						Debug.WriteLine("third pass pairs:");
-						foreach (var pair in iOBVPairs)
+						OBVPairs = OBVPairs.Distinct().ToList();
+						Debug.WriteLine("third pass pairs, iOBV={0}:", iOBV);
+						foreach (var pair in pairs)
 						{
-							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-                            foreach (var res in pair.ThirdStepResultsBodduh[iOBV])
-								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-						}
-						Debug.WriteLine("");
-						#endregion
-
-						#region step 4: بدوح ورودی و خروجی
-						//var pattern2 = "--+++-";
-						var pairs2 = new List<Pair>();
-						foreach (var pair in iOBVPairs)
-						{
-							long[] vars =
+							if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
 							{
-								Diff(lettersSpec[len - 1 - col].InputLetter, pair.Left),
-								lettersSpec[len - 1 - col].InputLetter + pair.Left,
-								Diff(lettersSpec[col].InputLetter, pair.Right),
-								lettersSpec[col].InputLetter + pair.Right,
-							};
-							long[] vars2 = new long[]
-							{
-								Diff(vars[0], vars[2]),
-								Diff(vars[0], vars[3]),
-								Diff(vars[1], vars[2]),
-								Diff(vars[1], vars[3]),
-								vars[0] + vars[2],
-								vars[0] + vars[3],
-								vars[1] + vars[2],
-								vars[1] + vars[3],
-							};
-							foreach (var n in vars2)
-                                pair.FourthStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n));
-                            pair.FourthStepResultsBodduh[iOBV] = Distinct(pair.FourthStepResultsBodduh[iOBV]);
-                            if (pair.FourthStepResultsBodduh[iOBV].Count != 0)
-								pairs2.Add(pair);
-						}
-						iOBVPairs = pairs2;
-						Debug.WriteLine("fourth pass pairs:");
-						foreach (var pair in iOBVPairs)
-						{
-							Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-                            foreach (var res in pair.FourthStepResultsBodduh[iOBV])
-								Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-						}
-						Debug.WriteLine("");
-						#endregion
-
-						#region step 5: جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
-						pairs2 = new List<Pair>();
-						foreach (var pair in iOBVPairs)
-						{
-							var left = Diff(pair.Left, lettersSpec[len - 1 - col].InputLetter);
-							if (left == 0)
-								left++;
-							var right = Diff(pair.Right, lettersSpec[col].InputLetter);
-							if (right == 0)
-								right++;
-							long[] vars =
-							{
-								Diff(left, right) % 9,
-								(left + right) % 9,
-							};
-							foreach (var n in vars)
-							{
-								if (n < 3)
-								{
-									pairs2.Add(pair);
-									break;
-								}
+								Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
+								foreach (var res in pair.ThirdStepResultsBodduh[iOBV])
+									Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 							}
 						}
-						iOBVPairs = pairs2;
-						Debug.WriteLine("fifth pass pairs:");
-						foreach (var pair in iOBVPairs)
-							Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 						Debug.WriteLine("");
-						pairs.AddRange(iOBVPairs);
-						#endregion
+						pairs.AddRange(OBVPairs);
 					}
+					pairs = pairs.Distinct().ToList();
+					#endregion
+
+					#region step 4: بدوح ورودی و خروجی
+					//var pattern2 = "--+++-";
+					var pairs2 = new List<Pair>();
+					foreach (var pair in pairs)
+					{
+						long[] vars =
+						{
+							Diff(lettersSpec[len - 1 - col].InputLetter, pair.Left),
+							lettersSpec[len - 1 - col].InputLetter + pair.Left,
+							Diff(lettersSpec[col].InputLetter, pair.Right),
+							lettersSpec[col].InputLetter + pair.Right,
+						};
+						long[] vars2 = new long[]
+						{
+							Diff(vars[0], vars[2]),
+							Diff(vars[0], vars[3]),
+							Diff(vars[1], vars[2]),
+							Diff(vars[1], vars[3]),
+							vars[0] + vars[2],
+							vars[0] + vars[3],
+							vars[1] + vars[2],
+							vars[1] + vars[3],
+						};
+						foreach (var n in vars2)
+							pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n));
+						pair.FourthStepResultsBodduh = Distinct(pair.FourthStepResultsBodduh);
+						if (pair.FourthStepResultsBodduh.Count != 0)
+							pairs2.Add(pair);
+					}
+					pairs = pairs2;
+					Debug.WriteLine("fourth pass pairs:");
+					foreach (var pair in pairs)
+					{
+						Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
+						foreach (var res in pair.FourthStepResultsBodduh)
+							Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+					}
+					Debug.WriteLine("");
+					#endregion
+
+					#region step 5: جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
+					pairs2 = new List<Pair>();
+					foreach (var pair in pairs)
+					{
+						var left = Diff(pair.Left, lettersSpec[len - 1 - col].InputLetter);
+						if (left == 0)
+							left++;
+						var right = Diff(pair.Right, lettersSpec[col].InputLetter);
+						if (right == 0)
+							right++;
+						long[] vars =
+						{
+							Diff(left, right) % 9,
+							(left + right) % 9,
+						};
+						foreach (var n in vars)
+							if (n < 3)
+							{
+								pairs2.Add(pair);
+								break;
+							}
+					}
+					pairs = pairs2;
+					Debug.WriteLine("fifth pass pairs:");
+					foreach (var pair in pairs)
+						Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+					Debug.WriteLine("");
+					#endregion
+
 					pairs = pairs.Distinct().ToList();
 					pairs = Prioritize(pairs, out iOBV);
 					Debug.Assert(pairs.Count == 1);
@@ -931,7 +933,7 @@ namespace WindowsFormsApp1
 						pair.IndirectionCount[i]++;
 					if (!IncludesDirect(pair.ThirdStepResultsBodduh[i]))
 						pair.IndirectionCount[i]++;
-					if (!IncludesDirect(pair.FourthStepResultsBodduh[i]))
+					if (!IncludesDirect(pair.FourthStepResultsBodduh))
 						pair.IndirectionCount[i]++;
 				}
 			}
@@ -939,7 +941,7 @@ namespace WindowsFormsApp1
 			Array.Sort<Pair>(ret, (x, y) => Math.Min(x.IndirectionCount[0], x.IndirectionCount[1]).CompareTo(Math.Min(y.IndirectionCount[0], y.IndirectionCount[1])));
 			if (Math.Min(ret[0].IndirectionCount[0], ret[0].IndirectionCount[1]) != Math.Min(ret[1].IndirectionCount[0], ret[1].IndirectionCount[1]))
 				Array.Resize(ref ret, 1);
-			iOBV = ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? (byte) 0 : (byte) 1;
+			iOBV = ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? (byte)0 : (byte)1;
 			return ret.ToList();
 		}
 
