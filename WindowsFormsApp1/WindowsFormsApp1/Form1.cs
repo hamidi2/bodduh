@@ -278,7 +278,7 @@ namespace WindowsFormsApp1
 			public List<Result128> SecondStepResults128 = new List<Result128>();
 			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
 			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
-			public int IndirectionCount[2];
+			public int[] IndirectionCount = new int[2];
 			public Pair(byte left, byte right)
 			{
 				Left = left;
@@ -906,7 +906,10 @@ namespace WindowsFormsApp1
 					#endregion
 
 					pairs = pairs.Distinct().ToList();
-					pairs = Prioritize(pairs, out iOBV);
+					iOBV = finalOBV;
+					Debug.Write("iOBV: {0} --> Prioritize({1} pairs)", iOBV, pairs.Count);
+					pairs = Prioritize(pairs, ref iOBV);
+					Debug.WriteLine(" --> {0} with {1} pairs", iOBV, pairs.Count);
 					if (finalOBV == 2)
 						finalOBV = iOBV;
 					Debug.Assert(pairs.Count == 1);
@@ -919,13 +922,10 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		List<Pair> Prioritize(List<Pair> pairs, out byte iOBV)
+		List<Pair> Prioritize(List<Pair> pairs, ref byte iOBV)
 		{
 			if (pairs.Count < 2)
-			{
-				iOBV = 2;
 				return pairs;
-			}
 			foreach (var pair in pairs)
 			{
 				pair.IndirectionCount[0] = IncludesDirect(pair.ThirdStepResultsBodduh[0]);
