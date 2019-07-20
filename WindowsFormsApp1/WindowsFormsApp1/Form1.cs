@@ -279,6 +279,7 @@ namespace WindowsFormsApp1
 			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
 			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
 			public int[] IndirectionCount = new int[2];
+            public static byte finalOBV;  // به کدام پخش میانگین رسیده‌ایم: 2 یعنی هنوز مشخص نشده
 			public Pair(byte left, byte right)
 			{
 				Left = left;
@@ -650,7 +651,7 @@ namespace WindowsFormsApp1
 				};
 				var secondStepMatchedPlusMinusPatterns = secondStepAcceptablePlusMinusPatterns.ToList();
 				// OBV stands for Output Bodduh Values
-				byte finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
+				Pair.finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
 				for (var col = 0; col < len / 2; col++)
 				{
 					#region second step: find matching numbers from two sides
@@ -782,8 +783,8 @@ namespace WindowsFormsApp1
 
 					var pairs = new List<Pair>();
 					byte iOBV = 0;
-					byte iOBVFirst = finalOBV == 2 ? (byte) 0 : finalOBV;
-					byte iOBVLast = finalOBV == 2 ? (byte) 1 : finalOBV;
+                    byte iOBVFirst = Pair.finalOBV == 2 ? (byte)0 : Pair.finalOBV;
+                    byte iOBVLast = Pair.finalOBV == 2 ? (byte)1 : Pair.finalOBV;
 
 					#region step 3: بدوح خروجی
 					for (iOBV = iOBVFirst; iOBV <= iOBVLast; iOBV++)
@@ -906,12 +907,12 @@ namespace WindowsFormsApp1
 					#endregion
 
 					pairs = pairs.Distinct().ToList();
-					iOBV = finalOBV;
-					Debug.Write("iOBV: {0} --> Prioritize({1} pairs)", iOBV, pairs.Count);
-					pairs = Prioritize(pairs, ref iOBV);
+                    iOBV = Pair.finalOBV;
+					Debug.Write(string.Format("iOBV: {0} --> Prioritize({1} pairs)", iOBV, pairs.Count));
+					pairs = Prioritize(pairs);
 					Debug.WriteLine(" --> {0} with {1} pairs", iOBV, pairs.Count);
-					if (finalOBV == 2)
-						finalOBV = iOBV;
+                    if (Pair.finalOBV == 2)
+                        Pair.finalOBV = iOBV;
 					Debug.Assert(pairs.Count == 1);
 					letters[len - 1 - col] = pairs[0].Left;
 					letters[col] = pairs[0].Right;
@@ -922,28 +923,31 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		List<Pair> Prioritize(List<Pair> pairs, ref byte iOBV)
+		List<Pair> Prioritize(List<Pair> pairs)
 		{
+            //var iOBV = Pair.finalOBV;
 			if (pairs.Count < 2)
 				return pairs;
 			foreach (var pair in pairs)
 			{
-				pair.IndirectionCount[0] = IncludesDirect(pair.ThirdStepResultsBodduh[0]);
-				pair.IndirectionCount[1] = IncludesDirect(pair.ThirdStepResultsBodduh[1]);
+				pair.IndirectionCount[0] = IncludesDirect(pair.ThirdStepResultsBodduh[0]) ? 0 : 1;
+                pair.IndirectionCount[1] = IncludesDirect(pair.ThirdStepResultsBodduh[1]) ? 0 : 1;
 			}
 			var ret = pairs.ToArray();
-			Array.Sort<Pair>(ret, (x, y) => 
-				iOBV != 2 ? x.IndirectionCount[iOBV] : Math.Min(x.IndirectionCount[0], x.IndirectionCount[1])
-				.CompareTo(
-				iOBV != 2 ? y.IndirectionCount[iOBV] : Math.Min(y.IndirectionCount[0], y.IndirectionCount[1])));
-			if (iOBV != 2 ? ret[0].IndirectionCount[iOBV] : Math.Min(ret[0].IndirectionCount[0], ret[0].IndirectionCount[1]) !=
-				iOBV != 2 ? ret[1].IndirectionCount[iOBV] : Math.Min(ret[1].IndirectionCount[0], ret[1].IndirectionCount[1]))
+            pairs.Sort(delegate(Pair x, Pair y)
+            {
+                var left = Pair.finalOBV != 2 ? x.IndirectionCount[Pair.finalOBV] : Math.Min(x.IndirectionCount[0], x.IndirectionCount[1]);
+                var right = Pair.finalOBV != 2 ? y.IndirectionCount[Pair.finalOBV] : Math.Min(y.IndirectionCount[0], y.IndirectionCount[1]);
+                return left < right ? -1 : left > right ? 1 : 0;
+            });
+            if ((Pair.finalOBV != 2 ? ret[0].IndirectionCount[Pair.finalOBV] : Math.Min(ret[0].IndirectionCount[0], ret[0].IndirectionCount[1])) !=
+                (Pair.finalOBV != 2 ? ret[1].IndirectionCount[Pair.finalOBV] : Math.Min(ret[1].IndirectionCount[0], ret[1].IndirectionCount[1])))
 			{
 				Array.Resize(ref ret, 1);
-				if (iOBV == 2)
-					iOBV =
-						ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? 0 :
-						ret[0].IndirectionCount[0] > ret[0].IndirectionCount[1] ? 1 : 2;
+                if (Pair.finalOBV == 2)
+                    Pair.finalOBV =
+                        ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? (byte)0 :
+                        ret[0].IndirectionCount[0] > ret[0].IndirectionCount[1] ? (byte)1 : (byte)2;
 				return ret.ToList();
 			}
 			foreach (var pair in pairs)
