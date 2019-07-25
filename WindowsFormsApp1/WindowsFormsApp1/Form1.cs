@@ -276,16 +276,31 @@ namespace WindowsFormsApp1
 			public List<Result128> LeftLetterResults128;
 			public List<Result128> RightLetterResults128;
 			public List<Result128> SecondStepResults128 = new List<Result128>();
-			public List<ResultBodduh>[] ThirdStepResultsBodduh = new List<ResultBodduh>[2];
+			public List<ResultBodduh> ThirdStepResultsBodduh = new List<ResultBodduh>();
 			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
-			public int[] IndirectionCount = new int[2];
-            public static byte finalOBV;  // به کدام پخش میانگین رسیده‌ایم: 2 یعنی هنوز مشخص نشده
+			public int IndirectionCount;
+            public byte OBV;  // this pair belongs to what OBV? مشخص میکند که این جفت عدد متعلق به کدام پخش میانگین است
 			public Pair(byte left, byte right)
 			{
 				Left = left;
 				Right = right;
-				ThirdStepResultsBodduh[0] = new List<ResultBodduh>();
-				ThirdStepResultsBodduh[1] = new List<ResultBodduh>();
+			}
+			public Pair(Pair from)
+			{
+				Left = from.Left;
+				Right = from.Right;
+				LeftLetterResults128 = new List<Result128>();
+				LeftLetterResults128.AddRange(from.LeftLetterResults128);
+				RightLetterResults128 = new List<Result128>();
+				RightLetterResults128.AddRange(from.RightLetterResults128);
+				SecondStepResults128 = new List<Result128>();
+				SecondStepResults128.AddRange(from.SecondStepResults128);
+				ThirdStepResultsBodduh = new List<ResultBodduh>();
+				ThirdStepResultsBodduh.AddRange(from.ThirdStepResultsBodduh);
+				FourthStepResultsBodduh = new List<ResultBodduh>();
+				FourthStepResultsBodduh.AddRange(from.FourthStepResultsBodduh);
+				IndirectionCount = from.IndirectionCount;
+				OBV = from.OBV;
 			}
 		}
 
@@ -392,6 +407,8 @@ namespace WindowsFormsApp1
 			}
 			pairs.Add(pair);
 		}
+
+		byte finalOBV;  // به کدام پخش میانگین رسیده‌ایم: 2 یعنی هنوز مشخص نشده
 
 		private void button1_Click(object sender, EventArgs e)
 		{
@@ -651,7 +668,7 @@ namespace WindowsFormsApp1
 				};
 				var secondStepMatchedPlusMinusPatterns = secondStepAcceptablePlusMinusPatterns.ToList();
 				// OBV stands for Output Bodduh Values
-				Pair.finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
+				finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
 				for (var col = 0; col < len / 2; col++)
 				{
 					#region second step: find matching numbers from two sides
@@ -782,14 +799,12 @@ namespace WindowsFormsApp1
 					#endregion
 
 					var pairs = new List<Pair>();
-					byte iOBV = 0;
-                    byte iOBVFirst = Pair.finalOBV == 2 ? (byte)0 : Pair.finalOBV;
-                    byte iOBVLast = Pair.finalOBV == 2 ? (byte)1 : Pair.finalOBV;
+                    byte iOBVFirst = finalOBV == 2 ? (byte)0 : finalOBV;
+                    byte iOBVLast = finalOBV == 2 ? (byte)1 : finalOBV;
 
 					#region step 3: بدوح خروجی
-					for (iOBV = iOBVFirst; iOBV <= iOBVLast; iOBV++)
+					for (byte iOBV = iOBVFirst; iOBV <= iOBVLast; iOBV++)
 					{
-						var OBVPairs = new List<Pair>();
 						// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
 						// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 						//var pattern2 = "++-+";
@@ -814,27 +829,24 @@ namespace WindowsFormsApp1
 										left + right,
 									};
 									foreach (var n2 in numbers)
-										pair.ThirdStepResultsBodduh[iOBV].AddRange(ResultOfBodduh(n2, col >= 4 ? (byte)0 : (byte)((col + 1) * 2)));
-									pair.ThirdStepResultsBodduh[iOBV] = Distinct(pair.ThirdStepResultsBodduh[iOBV]);
-									if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
-										OBVPairs.Add(pair);
+										pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, col >= 4 ? (byte)0 : (byte)((col + 1) * 2)));
 								}
-						}
-						OBVPairs = OBVPairs.Distinct().ToList();
-						Debug.WriteLine("third pass pairs, iOBV={0}:", iOBV);
-						foreach (var pair in OBVPairs)
-						{
-							if (pair.ThirdStepResultsBodduh[iOBV].Count != 0)
-							{
-								Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
-								foreach (var res in pair.ThirdStepResultsBodduh[iOBV])
-									Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-							}
-						}
-						Debug.WriteLine("");
-						pairs.AddRange(OBVPairs);
+                            pair.ThirdStepResultsBodduh = Distinct(pair.ThirdStepResultsBodduh);
+                            if (pair.ThirdStepResultsBodduh.Count != 0)
+                            {
+								pair.OBV = iOBV;
+                                pairs.Add(new Pair(pair));
+                            }
+                        }
 					}
-					pairs = pairs.Distinct().ToList();
+                    Debug.WriteLine("third pass pairs:");
+                    foreach (var pair in pairs)
+                    {
+                        Debug.Write(string.Format("{0},{1},{2}: ", pair.Left, pair.Right, pair.OBV));
+                        foreach (var res in pair.ThirdStepResultsBodduh)
+                            Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+                    }
+                    Debug.WriteLine("");
 					#endregion
 
 					#region step 4: بدوح ورودی و خروجی
@@ -907,13 +919,9 @@ namespace WindowsFormsApp1
 					#endregion
 
 					pairs = pairs.Distinct().ToList();
-                    iOBV = Pair.finalOBV;
-					Debug.Write(string.Format("iOBV: {0} --> Prioritize({1} pairs)", iOBV, pairs.Count));
-					pairs = Prioritize(pairs);
-					Debug.WriteLine(" --> {0} with {1} pairs", iOBV, pairs.Count);
-                    if (Pair.finalOBV == 2)
-                        Pair.finalOBV = iOBV;
-					Debug.Assert(pairs.Count == 1);
+					Debug.Write(string.Format("finalOBV: {0} --> Prioritize({1} pairs)", finalOBV, pairs.Count));
+					pairs[0] = Prioritize(pairs);
+					Debug.WriteLine(" --> {0}", finalOBV);
 					letters[len - 1 - col] = pairs[0].Left;
 					letters[col] = pairs[0].Right;
 					tbOutputs[4 + i].Text = "";
@@ -923,55 +931,66 @@ namespace WindowsFormsApp1
 			}
 		}
 
-		List<Pair> Prioritize(List<Pair> pairs)
+		Pair Prioritize(List<Pair> pairs)
 		{
-            //var iOBV = Pair.finalOBV;
-			if (pairs.Count < 2)
-				return pairs;
-			foreach (var pair in pairs)
-			{
-				pair.IndirectionCount[0] = IncludesDirect(pair.ThirdStepResultsBodduh[0]) ? 0 : 1;
-                pair.IndirectionCount[1] = IncludesDirect(pair.ThirdStepResultsBodduh[1]) ? 0 : 1;
-			}
-			var ret = pairs.ToArray();
-            pairs.Sort(delegate(Pair x, Pair y)
+			// اگر تکلیف پخش میانگین مشخص شده جفت اعدادی که با آن سازگار نیستند را حذف کن
+			// TODO: آیا لازمه؟
+            if (finalOBV != 2)
             {
-                var left = Pair.finalOBV != 2 ? x.IndirectionCount[Pair.finalOBV] : Math.Min(x.IndirectionCount[0], x.IndirectionCount[1]);
-                var right = Pair.finalOBV != 2 ? y.IndirectionCount[Pair.finalOBV] : Math.Min(y.IndirectionCount[0], y.IndirectionCount[1]);
-                return left < right ? -1 : left > right ? 1 : 0;
-            });
-            if ((Pair.finalOBV != 2 ? ret[0].IndirectionCount[Pair.finalOBV] : Math.Min(ret[0].IndirectionCount[0], ret[0].IndirectionCount[1])) !=
-                (Pair.finalOBV != 2 ? ret[1].IndirectionCount[Pair.finalOBV] : Math.Min(ret[1].IndirectionCount[0], ret[1].IndirectionCount[1])))
+                var pairs2 = new List<Pair>();
+				foreach (var pair in pairs)
+					if (pair.OBV == finalOBV)
+						pairs2.Add(pair);
+				pairs = pairs2;
+            }
+			Debug.Assert(pairs.Count != 0);
+			if (pairs.Count < 2)
 			{
-				Array.Resize(ref ret, 1);
-                if (Pair.finalOBV == 2)
-                    Pair.finalOBV =
-                        ret[0].IndirectionCount[0] < ret[0].IndirectionCount[1] ? (byte)0 :
-                        ret[0].IndirectionCount[0] > ret[0].IndirectionCount[1] ? (byte)1 : (byte)2;
-				return ret.ToList();
+				finalOBV = pairs[0].OBV;
+				return pairs[0];
 			}
 			foreach (var pair in pairs)
+				pair.IndirectionCount = IncludesDirect(pair.ThirdStepResultsBodduh) ? 0 : 1;
+			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
+			var i = 1;
+			for (; i < pairs.Count; i++)
+				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
+					break;
+			if (i == 1)
 			{
-				pair.IndirectionCount[0] = 0;
+				finalOBV = pairs[0].OBV;
+				return pairs[0];
+			}
+			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
+				return pairs[0];
+			foreach (var pair in pairs)
+			{
+				pair.IndirectionCount = 0;
 				if (!IncludesDirect(pair.LeftLetterResults128))
-					pair.IndirectionCount[0]++;
+					pair.IndirectionCount++;
 				if (!IncludesDirect(pair.RightLetterResults128))
-					pair.IndirectionCount[0]++;
+					pair.IndirectionCount++;
 				if (!IncludesDirect(pair.SecondStepResults128))
-					pair.IndirectionCount[0]++;
-				//if (!IncludesDirect(pair.ThirdStepResultsBodduh[i]))
-				//    pair.IndirectionCount[i]++;
-				pair.IndirectionCount +=
-					IncludesDirect(pair.ThirdStepResultsBodduh[0]) ||
-					IncludesDirect(pair.ThirdStepResultsBodduh[1]) ? 0 : 1;
+					pair.IndirectionCount++;
+				if (!IncludesDirect(pair.ThirdStepResultsBodduh))
+				    pair.IndirectionCount++;
 				if (!IncludesDirect(pair.FourthStepResultsBodduh))
 					pair.IndirectionCount++;
 			}
-			ret = pairs.ToArray();
-			Array.Sort<Pair>(ret, (x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
-			if (ret[0].IndirectionCount != ret[1].IndirectionCount)
-				Array.Resize(ref ret, 1);
-			return ret.ToList();
+			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
+			i = 1;
+			for (; i < pairs.Count; i++)
+				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
+					break;
+			if (i == 1)
+			{
+				finalOBV = pairs[0].OBV;
+				return pairs[0];
+			}
+			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
+				return pairs[0];
+			Debug.Assert(false);
+			return null;
 		}
 
 		bool IncludesDirect(List<Result128> results)
