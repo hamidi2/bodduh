@@ -332,13 +332,13 @@ namespace WindowsFormsApp1
 			var outputSum = (inputSum + 6) / 9 * 9 + 2;  // round it to first greater or equal 9k+2
 			while (outputSum % 4 != outputElementalSum % 4)
 				outputSum += 9;
-			_outputBodduhValues = new byte[2, _len];
+			_OBV = new byte[2, _len];
 			for (var col = 0; col < _len; col++)
-				_outputBodduhValues[0, col] = _outputBodduhValues[1, col] = (byte)(outputSum / _len);
+				_OBV[0, col] = _OBV[1, col] = (byte)(outputSum / _len);
 			for (var j = 0; j < outputSum % _len; j++)
 			{
-				_outputBodduhValues[0, j]++;
-				_outputBodduhValues[1, _len - 1 - j]++;
+				_OBV[0, j]++;
+				_OBV[1, _len - 1 - j]++;
 			}
 		}
 
@@ -403,142 +403,122 @@ namespace WindowsFormsApp1
 		List<Pair> Step2()
 		{
 			var pairs = new List<Pair>();
-			var matched128Patterns = _acceptable128Patterns.ToList();
-			string[] acceptablePlusMinusPatterns =
-	{
-		"-+-",
-		"--+++-",
-		"-++++-",
-		"-+++-+",
-		"-+++-+++-",
-		"--+-+-+--",
-		"--+++-++---+",
-		"--+++--+++--",
-		"-++++-++--++",
-		"-+++-++-+-++",
-		"-+++-++-+++-",
-	};
-			var matchedPlusMinusPatterns = acceptablePlusMinusPatterns.ToList();
-			// OBV stands for Output Bodduh Values
-			for (var col = 0; col < _len / 2; col++)
+			Debug.WriteLine("col={0}\nleft: (count={1})", _col, _lettersSpec[_len - 1 - _col].OutputLetters.Count);
+			foreach (var outputLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
 			{
-				Debug.Write(string.Format("col={0}\nleft: ", col));
-				foreach (var outputLetter in _lettersSpec[_len - 1 - col].OutputLetters)
-				{
-					Debug.Write(string.Format("{0}: ", outputLetter.Letter));
-					foreach (var res in outputLetter.Results128WithInput)
-						Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-				}
-				Debug.Write("\nright: ");
-				foreach (var outputLetter in _lettersSpec[col].OutputLetters)
-				{
-					Debug.Write(string.Format("{0}: ", outputLetter.Letter));
-					foreach (var res in outputLetter.Results128WithInput)
-						Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-				}
-				Debug.WriteLine("");
-				var refinedMatchedPlusMinusPatterns = new List<string>();
-				var includePlus = false;
-				var includeMinus = false;
-				foreach (var pattern in matchedPlusMinusPatterns)
-				{
-					var sign = pattern[col % pattern.Length];
-					if (sign == '-')
-						includeMinus = true;
-					else
-						includePlus = true;
-				}
-				var refinedMatched128Patterns = new List<string>();
-				if (includeMinus)
-				{
-					var foundAPairToMatchSign = false;
-					foreach (var leftLetter in _lettersSpec[_len - 1 - col].OutputLetters)
-					{
-						foreach (var rightLetter in _lettersSpec[col].OutputLetters)
-						{
-							var left = leftLetter.Letter;
-							var right = rightLetter.Letter;
-							var list = ResultOf128(Diff(left, right), left);
-							var found = false;  // assume this pair won't match any existing 128 patterns
-							foreach (var res in list)
-							{
-								foreach (var matchedPattern in matched128Patterns)
-								{
-									if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
-									{
-										refinedMatched128Patterns.Add(matchedPattern);
-										found = true;
-									}
-								}
-							}
-							if (found)
-							{
-								var pair = new Pair(left, right)
-								{
-									LeftLetterResults128 = leftLetter.Results128WithInput,
-									RightLetterResults128 = rightLetter.Results128WithInput,
-									SecondStepResults128 = list
-								};
-								Add(pairs, pair);
-								foundAPairToMatchSign = true;
-							}
-						}
-					}
-					if (foundAPairToMatchSign)
-						foreach (var pattern in matchedPlusMinusPatterns)
-						{
-							var sign = pattern[col % pattern.Length];
-							if (sign == '-')
-								refinedMatchedPlusMinusPatterns.Add(pattern);
-						}
-				}
-				if (includePlus)
-				{
-					var foundAPairToMatchSign = false;
-					foreach (var leftLetter in _lettersSpec[_len - 1 - col].OutputLetters)
-					{
-						foreach (var rightLetter in _lettersSpec[col].OutputLetters)
-						{
-							var left = leftLetter.Letter;
-							var right = rightLetter.Letter;
-							var list = ResultOf128(left + right);
-							var found = false;  // assume this pair won't match any existing 128 patterns
-							foreach (var res in list)
-							{
-								foreach (var matchedPattern in matched128Patterns)
-								{
-									if (matchedPattern[col % matchedPattern.Length] - '0' == res.n)
-									{
-										refinedMatched128Patterns.Add(matchedPattern);
-										found = true;
-									}
-								}
-							}
-							if (found)
-							{
-								var pair = new Pair(left, right)
-								{
-									LeftLetterResults128 = leftLetter.Results128WithInput,
-									RightLetterResults128 = rightLetter.Results128WithInput,
-									SecondStepResults128 = list
-								};
-								Add(pairs, pair);
-								foundAPairToMatchSign = true;
-							}
-						}
-					}
-					if (foundAPairToMatchSign)
-						foreach (var pattern in matchedPlusMinusPatterns)
-						{
-							var sign = pattern[col % pattern.Length];
-							if (sign == '+')
-								refinedMatchedPlusMinusPatterns.Add(pattern);
-						}
-				}
-				matchedPlusMinusPatterns = refinedMatchedPlusMinusPatterns;
-				matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
+				Debug.Write(string.Format("{0}: ", outputLetter.Letter));
+				foreach (var res in outputLetter.Results128WithInput)
+					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
-			Debug.WriteLine("second pass pairs:");
+			Debug.WriteLine("\nright: (count={0})", _lettersSpec[_col].OutputLetters.Count);
+			foreach (var outputLetter in _lettersSpec[_col].OutputLetters)
+			{
+				Debug.Write(string.Format("{0}: ", outputLetter.Letter));
+				foreach (var res in outputLetter.Results128WithInput)
+					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+			}
+			Debug.WriteLine("");
+			var refinedMatchedPlusMinusPatterns = new List<string>();
+			var includePlus = false;
+			var includeMinus = false;
+			foreach (var pattern in _step2matchedPlusMinusPatterns)
+			{
+				var sign = pattern[_col % pattern.Length];
+				if (sign == '-')
+					includeMinus = true;
+				else
+					includePlus = true;
+			}
+			var refinedMatched128Patterns = new List<string>();
+			if (includeMinus)
+			{
+				var foundAPairToMatchSign = false;
+				foreach (var leftLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
+				{
+					foreach (var rightLetter in _lettersSpec[_col].OutputLetters)
+					{
+						var left = leftLetter.Letter;
+						var right = rightLetter.Letter;
+						var list = ResultOf128(Diff(left, right), left);
+						var found = false;  // assume this pair won't match any existing 128 patterns
+						foreach (var res in list)
+						{
+							foreach (var matchedPattern in _step2matched128Patterns)
+							{
+								if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
+								{
+									refinedMatched128Patterns.Add(matchedPattern);
+									found = true;
+								}
+							}
+						}
+						if (found)
+						{
+							var pair = new Pair(left, right)
+							{
+								LeftLetterResults128 = leftLetter.Results128WithInput,
+								RightLetterResults128 = rightLetter.Results128WithInput,
+								SecondStepResults128 = list
+							};
+							Add(pairs, pair);
+							foundAPairToMatchSign = true;
+						}
+					}
+				}
+				if (foundAPairToMatchSign)
+					foreach (var pattern in _step2matchedPlusMinusPatterns)
+					{
+						var sign = pattern[_col % pattern.Length];
+						if (sign == '-')
+							refinedMatchedPlusMinusPatterns.Add(pattern);
+					}
+			}
+			if (includePlus)
+			{
+				var foundAPairToMatchSign = false;
+				foreach (var leftLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
+				{
+					foreach (var rightLetter in _lettersSpec[_col].OutputLetters)
+					{
+						var left = leftLetter.Letter;
+						var right = rightLetter.Letter;
+						var list = ResultOf128(left + right);
+						var found = false;  // assume this pair won't match any existing 128 patterns
+						foreach (var res in list)
+						{
+							foreach (var matchedPattern in _step2matched128Patterns)
+							{
+								if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
+								{
+									refinedMatched128Patterns.Add(matchedPattern);
+									found = true;
+								}
+							}
+						}
+						if (found)
+						{
+							var pair = new Pair(left, right)
+							{
+								LeftLetterResults128 = leftLetter.Results128WithInput,
+								RightLetterResults128 = rightLetter.Results128WithInput,
+								SecondStepResults128 = list
+							};
+							Add(pairs, pair);
+							foundAPairToMatchSign = true;
+						}
+					}
+				}
+				if (foundAPairToMatchSign)
+					foreach (var pattern in _step2matchedPlusMinusPatterns)
+					{
+						var sign = pattern[_col % pattern.Length];
+						if (sign == '+')
+							refinedMatchedPlusMinusPatterns.Add(pattern);
+					}
+			}
+			_step2matchedPlusMinusPatterns = refinedMatchedPlusMinusPatterns;
+			_step2matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
+			Debug.WriteLine("second pass pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 			{
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
@@ -549,6 +529,8 @@ namespace WindowsFormsApp1
 			return pairs;
 		}
 
+		// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
+		// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 		List<Pair> Step3(List<Pair> pairs)
 		{
 			var pairs2 = new List<Pair>();
@@ -556,18 +538,16 @@ namespace WindowsFormsApp1
 			byte iOBVLast = _finalOBV == 2 ? (byte)1 : _finalOBV;
 			for (byte iOBV = iOBVFirst; iOBV <= iOBVLast; iOBV++)
 			{
-				// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
-				// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 				//var pattern2 = "++-+";
 				foreach (var pair in pairs)
 				{
 					var lefts = new List<byte>();
 					var rights = new List<byte>();
-					var n = (byte)Diff(_outputBodduhValues[iOBV, _len - 1 - _col], pair.Left);
+					var n = (byte)Diff(_OBV[iOBV, _len - 1 - _col], pair.Left);
 					lefts.Add(n);
 					if (n == 0)
 						lefts.Add(1);
-					n = (byte)Diff(_outputBodduhValues[iOBV, _col], pair.Right);
+					n = (byte)Diff(_OBV[iOBV, _col], pair.Right);
 					rights.Add(n);
 					if (n == 0)
 						rights.Add(1);
@@ -591,7 +571,7 @@ namespace WindowsFormsApp1
 				}
 			}
 			pairs = pairs2;
-			Debug.WriteLine("third pass pairs:");
+			Debug.WriteLine("third pass pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 			{
 				Debug.Write(string.Format("{0},{1},{2}: ", pair.Left, pair.Right, pair.OBV));
@@ -602,31 +582,31 @@ namespace WindowsFormsApp1
 			return pairs;
 		}
 
+		// بدوح ورودی و خروجی
 		List<Pair> Step4(List<Pair> pairs)
 		{
-			#region step 4: بدوح ورودی و خروجی
 			//var pattern2 = "--+++-";
 			var pairs2 = new List<Pair>();
 			foreach (var pair in pairs)
 			{
 				long[] vars =
-						{
-							Diff(_lettersSpec[_len - 1 - _col].InputLetter, pair.Left),
-							_lettersSpec[_len - 1 - _col].InputLetter + pair.Left,
-							Diff(_lettersSpec[_col].InputLetter, pair.Right),
-							_lettersSpec[_col].InputLetter + pair.Right,
-						};
+				{
+					Diff(_lettersSpec[_len - 1 - _col].InputLetter, pair.Left),
+					_lettersSpec[_len - 1 - _col].InputLetter + pair.Left,
+					Diff(_lettersSpec[_col].InputLetter, pair.Right),
+					_lettersSpec[_col].InputLetter + pair.Right,
+				};
 				long[] vars2 = new long[]
-						{
-							Diff(vars[0], vars[2]),
-							Diff(vars[0], vars[3]),
-							Diff(vars[1], vars[2]),
-							Diff(vars[1], vars[3]),
-							vars[0] + vars[2],
-							vars[0] + vars[3],
-							vars[1] + vars[2],
-							vars[1] + vars[3],
-						};
+				{
+					Diff(vars[0], vars[2]),
+					Diff(vars[0], vars[3]),
+					Diff(vars[1], vars[2]),
+					Diff(vars[1], vars[3]),
+					vars[0] + vars[2],
+					vars[0] + vars[3],
+					vars[1] + vars[2],
+					vars[1] + vars[3],
+				};
 				foreach (var n in vars2)
 					pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n));
 				pair.FourthStepResultsBodduh = Distinct(pair.FourthStepResultsBodduh);
@@ -634,7 +614,7 @@ namespace WindowsFormsApp1
 					pairs2.Add(pair);
 			}
 			pairs = pairs2;
-			Debug.WriteLine("fourth pass pairs:");
+			Debug.WriteLine("fourth pass pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 			{
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
@@ -642,14 +622,12 @@ namespace WindowsFormsApp1
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
 			Debug.WriteLine("");
-			#endregion
 			return pairs;
 		}
 
+		// جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
 		List<Pair> Step5(List<Pair> pairs)
 		{
-
-			#region step 5: جمع یا تفاضل طرفینی تفاضل ورودی و خروجی باید صفر یا یک یا دو باشد
 			var pairs2 = new List<Pair>();
 			foreach (var pair in pairs)
 			{
@@ -660,23 +638,22 @@ namespace WindowsFormsApp1
 				if (right == 0)
 					right++;
 				long[] vars =
-						{
-							Diff(left, right) % 9,
-							(left + right) % 9,
-						};
+				{
+					Diff(left, right) % 9,
+					(left + right) % 9,
+				};
 				foreach (var n in vars)
-					if (n < 3)
-					{
-						pairs2.Add(pair);
-						break;
-					}
+				if (n < 3)
+				{
+					pairs2.Add(pair);
+					break;
+				}
 			}
 			pairs = pairs2;
-			Debug.WriteLine("fifth pass pairs:");
+			Debug.WriteLine("fifth pass pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 			Debug.WriteLine("");
-			#endregion
 			return pairs;
 		}
 
@@ -781,7 +758,7 @@ namespace WindowsFormsApp1
 				tbOutput1, tbOutput2, tbOutput3, tbOutput4,
 				tbOutput5, tbOutput6, tbOutput7, tbOutput8,
 			};
-			for (var i = 0; i < _myElementalStrings.Count; i++)
+			for (byte i = 0; i < _myElementalStrings.Count; i++)
 			{
 				_lettersSpec = new LetterSpec[_len];
 				for (var col = 0; col < _len; col++)
@@ -832,23 +809,29 @@ namespace WindowsFormsApp1
 
 				Step1();
 
+				CalculateOBVs(i);
 				_finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
 
-				var pairs = Step2();
-				pairs = Step4(pairs);
-				pairs = Step5(pairs);
-				pairs = Step3(pairs);
+				_step2matched128Patterns = _acceptable128Patterns.ToList();
+				_step2matchedPlusMinusPatterns = _step2acceptablePlusMinusPatterns.ToList();
+				for (_col = 0; _col < _len / 2; _col++)
+				{
+					List<Pair> pairs = null;
+					pairs = Step2();
+					pairs = Step5(pairs);
+					pairs = Step4(pairs);
+					pairs = Step3(pairs);
 
-
-				pairs = pairs.Distinct().ToList();
-				Debug.Write(string.Format("finalOBV: {0} --> Prioritize({1} pairs)", _finalOBV, pairs.Count));
-				pairs[0] = Prioritize(pairs);
-				Debug.WriteLine(" --> {0}", _finalOBV);
-				letters[_len - 1 - _col] = pairs[0].Left;
-				letters[_col] = pairs[0].Right;
-				tbOutputs[4 + i].Text = "";
-				for (var j = 0; j < _len; j++)
-					tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
+					pairs = pairs.Distinct().ToList();
+					Debug.Write(string.Format("finalOBV: {0} --> Prioritize({1} pairs)", _finalOBV, pairs.Count));
+					pairs[0] = Prioritize(pairs);
+					Debug.WriteLine(" --> {0}, {1},{2}", _finalOBV, pairs[0].Left, pairs[0].Right);
+					letters[_len - 1 - _col] = pairs[0].Left;
+					letters[_col] = pairs[0].Right;
+					tbOutputs[4 + i].Text = "";
+					for (var j = 0; j < _len; j++)
+						tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
+				}
 			}
 		}
 

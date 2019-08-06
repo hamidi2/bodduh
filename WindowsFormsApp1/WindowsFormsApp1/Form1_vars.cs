@@ -32,12 +32,28 @@ namespace WindowsFormsApp1
 			"218821182", "281128812",
 			"812281128", "821182218",
 		};
+		// OBV stands for Output Bodduh Values
 		byte _finalOBV;  // به کدام پخش میانگین رسیده‌ایم: 2 یعنی هنوز مشخص نشده
 		LetterSpec[] _lettersSpec;
 		int _len, _col;
 		List<byte[]> _myElementalStrings;
-		byte[,] _outputBodduhValues;
-
+		byte[,] _OBV;
+		List<string> _step2matched128Patterns;
+		string[] _step2acceptablePlusMinusPatterns =
+		{
+			"-+-",
+			"--+++-",
+			"-++++-",
+			"-+++-+",
+			"-+++-+++-",
+			"--+-+-+--",
+			"--+++-++---+",
+			"--+++--+++--",
+			"-++++-++--++",
+			"-+++-++-+-++",
+			"-+++-++-+++-",
+		};
+		List<string> _step2matchedPlusMinusPatterns;
 	}
 }
 
