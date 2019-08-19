@@ -513,22 +513,25 @@ namespace WindowsFormsApp1
 					rights.Add(n);
 					if (n == 0)
 						rights.Add(1);
+					var res = new List<ResultBodduh>();
 					foreach (var left in lefts)
 						foreach (var right in rights)
 						{
 							var numbers = new long[]
-									{
-										Diff(left, right),
-										left + right,
-									};
+							{
+								Diff(left, right),
+								left + right,
+							};
 							foreach (var n2 in numbers)
-								pair.ThirdStepResultsBodduh.AddRange(ResultOfBodduh(n2, _col >= 4 ? (byte)0 : (byte)((_col + 1) * 2)));
+								res.AddRange(ResultOfBodduh(n2, _col >= 4 ? (byte)0 : (byte)((_col + 1) * 2)));
 						}
-					pair.ThirdStepResultsBodduh = Distinct(pair.ThirdStepResultsBodduh);
-					if (pair.ThirdStepResultsBodduh.Count != 0)
+					if (res.Count != 0)
 					{
-						pair.OBV = iOBV;
-						pairs2.Add(new Pair(pair));
+						res = Distinct(res);
+						var p = new Pair(pair);
+						p.OBV = iOBV;
+						p.ThirdStepResultsBodduh = res;
+						pairs2.Add(p);
 					}
 				}
 			}
@@ -787,7 +790,7 @@ namespace WindowsFormsApp1
 					pairs = pairs.Distinct().ToList();
 					Debug.Write(string.Format("finalOBV: {0} --> Prioritize({1} pairs)", _finalOBV, pairs.Count));
 					pairs[0] = Prioritize(pairs);
-					Debug.WriteLine(" --> {0}, {1},{2}", _finalOBV, pairs[0].Left, pairs[0].Right);
+					Debug.WriteLine(" --> {0}, {1},{2}\n", _finalOBV, pairs[0].Left, pairs[0].Right);
 					letters[_len - 1 - _col] = pairs[0].Left;
 					letters[_col] = pairs[0].Right;
 					tbOutputs[4 + i].Text = "";
