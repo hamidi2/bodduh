@@ -13,6 +13,17 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
+	public static class Form1Ext
+	{
+		public static void Add(this List<Form1.ByteWithDirection> list, byte n, bool bWithInterfering28 = false)
+		{
+			var item = new Form1.ByteWithDirection();
+			item.n = n;
+			item.bWithInterfering28 = bWithInterfering28;
+			list.Add(item);
+		}
+	}
+
 	public partial class Form1 : Form
 	{
 		void DebugFunc1()
@@ -480,15 +491,15 @@ namespace WindowsFormsApp1
 				}
 			_step2matchedPlusMinusPatterns = refinedMatchedPlusMinusPatterns;
 			_step2matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
-			Debug.WriteLine("second pass pairs: (count={0})", pairs.Count);
-			foreach (var pair in pairs)
+			Debug.WriteLine("second pass pairs: (count={0})", pairs2.Count);
+			foreach (var pair in pairs2)
 			{
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
 				foreach (var res in pair.SecondStepResults128)
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+				Debug.WriteLine("");
 			}
-			Debug.WriteLine("");
-			return pairs;
+			return pairs2;
 		}
 
 		// از دو سر اونهایی که جمع یا تفاضلشون یک یا دو یا هشت نمیشده رو حذف کرده‌ایم
@@ -503,47 +514,60 @@ namespace WindowsFormsApp1
 				//var pattern2 = "++-+";
 				foreach (var pair in pairs)
 				{
-					var lefts = new List<byte>();
-					var rights = new List<byte>();
+					var lefts = new List<ByteWithDirection>();
+					var rights = new List<ByteWithDirection>();
 					var n = (byte)Diff(_OBV[iOBV, _len - 1 - _col], pair.Left);
 					lefts.Add(n);
-					if (n == 0)
-						lefts.Add(1);
+					if (n == 0 && Score(pair.Left) != 0)
+						lefts.Add(1, true);
 					n = (byte)Diff(_OBV[iOBV, _col], pair.Right);
 					rights.Add(n);
-					if (n == 0)
-						rights.Add(1);
-					var res = new List<ResultBodduh>();
+					if (n == 0 && Score(pair.Right) != 0)
+						rights.Add(1, true);
+					bool bAcceptable = false;
+					int minIndirectionCount = 4;
 					foreach (var left in lefts)
 						foreach (var right in rights)
 						{
+							var res = new List<ResultBodduh>();
 							var numbers = new long[]
 							{
-								Diff(left, right),
-								left + right,
+								Diff(left.n, right.n),
+								left.n + right.n,
 							};
 							foreach (var n2 in numbers)
 								res.AddRange(ResultOfBodduh(n2, _col >= 4 ? (byte)0 : (byte)((_col + 1) * 2)));
+							res = Distinct(res);
+							if (res.Count == 0)
+								continue;
+							var indirectionCount = 3;
+							foreach (var r in res)
+								if (r.bWithInterfering28 == false)
+								{
+									indirectionCount--;
+									break;
+								}
+							if (left.bWithInterfering28 == false)
+								indirectionCount--;
+							if (right.bWithInterfering28 == false)
+								indirectionCount--;
+							if (indirectionCount < minIndirectionCount)
+								minIndirectionCount = indirectionCount;
 						}
-					if (res.Count != 0)
+					if (minIndirectionCount != 4)
 					{
-						res = Distinct(res);
 						var p = new Pair(pair);
 						p.OBV = iOBV;
-						p.ThirdStepResultsBodduh = res;
+						p.ThirdStepIndirectionCount = minIndirectionCount;
 						pairs2.Add(p);
 					}
 				}
 			}
 			pairs = pairs2;
+			pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
 			Debug.WriteLine("third pass pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
-			{
-				Debug.Write(string.Format("{0},{1},{2}: ", pair.Left, pair.Right, pair.OBV));
-				foreach (var res in pair.ThirdStepResultsBodduh)
-					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-			}
-			Debug.WriteLine("");
+				Debug.WriteLine(string.Format("{0},{1},{2}: {3}", pair.Left, pair.Right, pair.OBV, pair.ThirdStepIndirectionCount));
 			return pairs;
 		}
 
@@ -585,8 +609,8 @@ namespace WindowsFormsApp1
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
 				foreach (var res in pair.FourthStepResultsBodduh)
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
+				Debug.WriteLine("");
 			}
-			Debug.WriteLine("");
 			return pairs;
 		}
 
@@ -819,7 +843,7 @@ namespace WindowsFormsApp1
 				return pairs[0];
 			}
 			foreach (var pair in pairs)
-				pair.IndirectionCount = IncludesDirect(pair.ThirdStepResultsBodduh) ? 0 : 1;
+				pair.IndirectionCount += pair.ThirdStepIndirectionCount;
 			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
 			var i = 1;
 			for (; i < pairs.Count; i++)
@@ -841,8 +865,7 @@ namespace WindowsFormsApp1
 					pair.IndirectionCount++;
 				if (!IncludesDirect(pair.SecondStepResults128))
 					pair.IndirectionCount++;
-				if (!IncludesDirect(pair.ThirdStepResultsBodduh))
-					pair.IndirectionCount++;
+				pair.IndirectionCount += pair.ThirdStepIndirectionCount;
 				if (!IncludesDirect(pair.FourthStepResultsBodduh))
 					pair.IndirectionCount++;
 			}
@@ -858,6 +881,9 @@ namespace WindowsFormsApp1
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
+			Debug.WriteLine("sorted pairs:");
+			foreach (var pair in pairs)
+				Debug.WriteLine("{0},{1},{2}\t{3}", pair.Left, pair.Right, pair.OBV, pair.IndirectionCount);
 			Debug.Assert(false);
 			return null;
 		}
@@ -1325,7 +1351,7 @@ namespace WindowsFormsApp1
 			{
 				// 50: rowsSum[0], 30: rowsSum[3]
 				// 58: colsSum[3], 46: colsSum[2], 34: colsSum[1], 38: colsSum[0]
-                long.Parse(string.Format("{0}{1}{2}{3}", c[3], c[2], c[1], c[0])),  // 0. 58463438
+				long.Parse(string.Format("{0}{1}{2}{3}", c[3], c[2], c[1], c[0])),  // 0. 58463438
 				long.Parse(string.Format("{0}{1}{2}{3}", c[0], c[1], c[2], c[3])),  // 1. 38344658
 				long.Parse(string.Format("{0}{1}{2}{3}", r[3], c[3], r[0], c[0])),  // 2. 30585038
 				long.Parse(string.Format("{0}{1}{2}{3}", r[0], c[3], r[3], c[0])),  // 3. 50583038

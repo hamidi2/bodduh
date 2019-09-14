@@ -61,7 +61,7 @@ namespace WindowsFormsApp1
 			public List<Result128> LeftLetterResults128;
 			public List<Result128> RightLetterResults128;
 			public List<Result128> SecondStepResults128 = new List<Result128>();
-			public List<ResultBodduh> ThirdStepResultsBodduh = new List<ResultBodduh>();
+			public int ThirdStepIndirectionCount;
 			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
 			public int IndirectionCount;
 			public byte OBV;  // this pair belongs to what OBV? مشخص میکند که این جفت عدد متعلق به کدام پخش میانگین است
@@ -80,13 +80,18 @@ namespace WindowsFormsApp1
 				RightLetterResults128.AddRange(from.RightLetterResults128);
 				SecondStepResults128 = new List<Result128>();
 				SecondStepResults128.AddRange(from.SecondStepResults128);
-				ThirdStepResultsBodduh = new List<ResultBodduh>();
-				ThirdStepResultsBodduh.AddRange(from.ThirdStepResultsBodduh);
+				ThirdStepIndirectionCount = from.ThirdStepIndirectionCount;
 				FourthStepResultsBodduh = new List<ResultBodduh>();
 				FourthStepResultsBodduh.AddRange(from.FourthStepResultsBodduh);
 				IndirectionCount = from.IndirectionCount;
 				OBV = from.OBV;
 			}
+		}
+
+		public struct ByteWithDirection
+		{
+			public byte n;
+			public bool bWithInterfering28;
 		}
 
 		struct Result128
