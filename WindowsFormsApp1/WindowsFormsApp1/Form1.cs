@@ -412,7 +412,14 @@ namespace WindowsFormsApp1
 
 		List<Pair> AllPairs()
 		{
-			Debug.WriteLine("col={0}\nleft: (count={1})", _col, _lettersSpec[_len - 1 - _col].OutputLetters.Count);
+			Debug.WriteLine("col={0}", _col);
+			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
+			foreach (var str in _step2matched128Patterns)
+				Debug.WriteLine(str);
+			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
+			foreach (var str in _step2matchedPlusMinusPatterns)
+				Debug.WriteLine(str);
+			Debug.WriteLine("left: (count={0})", _lettersSpec[_len - 1 - _col].OutputLetters.Count);
 			foreach (var outputLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
 			{
 				Debug.Write(string.Format("{0}: ", outputLetter.Letter));
@@ -455,7 +462,7 @@ namespace WindowsFormsApp1
 			}
 			var refinedMatched128Patterns = new List<string>();
 			var pairs2 = new List<Pair>();
-				var foundAPairToMatchSign = false;
+			var foundAPairToMatchSign = false;
 			foreach (var pair in pairs)
 			{
 				var left = pair.Left;
@@ -491,14 +498,20 @@ namespace WindowsFormsApp1
 				}
 			_step2matchedPlusMinusPatterns = refinedMatchedPlusMinusPatterns;
 			_step2matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
-			Debug.WriteLine("second pass pairs: (count={0})", pairs2.Count);
+			Debug.WriteLine("step 2 pairs: (count={0})", pairs2.Count);
 			foreach (var pair in pairs2)
 			{
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
 				foreach (var res in pair.SecondStepResults128)
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-				Debug.WriteLine("");
 			}
+			Debug.WriteLine("");
+			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
+			foreach (var str in _step2matched128Patterns)
+				Debug.WriteLine(str);
+			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
+			foreach (var str in _step2matchedPlusMinusPatterns)
+				Debug.WriteLine(str);
 			return pairs2;
 		}
 
@@ -564,10 +577,11 @@ namespace WindowsFormsApp1
 				}
 			}
 			pairs = pairs2;
-			pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
-			Debug.WriteLine("third pass pairs: (count={0})", pairs.Count);
+			//pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
+			Debug.WriteLine("step 3 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
-				Debug.WriteLine(string.Format("{0},{1},{2}: {3}", pair.Left, pair.Right, pair.OBV, pair.ThirdStepIndirectionCount));
+				Debug.Write(string.Format("{0},{1},{2}: {3} ", pair.Left, pair.Right, pair.OBV, pair.ThirdStepIndirectionCount));
+			Debug.WriteLine("");
 			return pairs;
 		}
 
@@ -603,14 +617,14 @@ namespace WindowsFormsApp1
 					pairs2.Add(pair);
 			}
 			pairs = pairs2;
-			Debug.WriteLine("fourth pass pairs: (count={0})", pairs.Count);
+			Debug.WriteLine("step 4 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 			{
 				Debug.Write(string.Format("{0},{1}: ", pair.Left, pair.Right));
 				foreach (var res in pair.FourthStepResultsBodduh)
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
-				Debug.WriteLine("");
 			}
+			Debug.WriteLine("");
 			return pairs;
 		}
 
@@ -639,7 +653,7 @@ namespace WindowsFormsApp1
 				}
 			}
 			pairs = pairs2;
-			Debug.WriteLine("fifth pass pairs: (count={0})", pairs.Count);
+			Debug.WriteLine("step 5 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 			Debug.WriteLine("");
@@ -817,10 +831,86 @@ namespace WindowsFormsApp1
 					Debug.WriteLine(" --> {0}, {1},{2}\n", _finalOBV, pairs[0].Left, pairs[0].Right);
 					letters[_len - 1 - _col] = pairs[0].Left;
 					letters[_col] = pairs[0].Right;
+					RefineStep2Matches(pairs[0]);
 					tbOutputs[4 + i].Text = "";
 					for (var j = 0; j < _len; j++)
 						tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
 				}
+			}
+		}
+
+		void RefineStep2Matches(Pair pair)
+		{
+			var refinedMatchedPlusMinusPatterns = new List<string>();
+			var includePlus = false;
+			var includeMinus = false;
+			foreach (var pattern in _step2matchedPlusMinusPatterns)
+			{
+				var sign = pattern[_col % pattern.Length];
+				if (sign == '-')
+					includeMinus = true;
+				else
+					includePlus = true;
+			}
+
+			var left = pair.Left;
+			var right = pair.Right;
+			var minusMatches128Patterns = 2;  // 2: no match, 0: matches directly, 1: matches indirectly
+			var plusMatches128Patterns = 2;  // 2: no match, 0: matches directly, 1: matches indirectly
+			var minusRefinedMatched128Patterns = new List<string>();
+			var plusRefinedMatched128Patterns = new List<string>();
+			var list = new List<Result128>();
+			if (includeMinus)
+			{
+				list = ResultOf128(Diff(left, right), left);
+				foreach (var res in list)
+					foreach (var matchedPattern in _step2matched128Patterns)
+						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
+						{
+							minusMatches128Patterns = Math.Min(minusMatches128Patterns, res.bWithInterfering28 ? 1 : 0);
+							minusRefinedMatched128Patterns.Add(matchedPattern);
+						}
+			}
+			if (includePlus)
+			{
+				list = ResultOf128(left + right);
+				foreach (var res in list)
+					foreach (var matchedPattern in _step2matched128Patterns)
+						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
+						{
+							plusMatches128Patterns = Math.Min(minusMatches128Patterns, res.bWithInterfering28 ? 1 : 0);
+							plusRefinedMatched128Patterns.Add(matchedPattern);
+						}
+			}
+
+			if (minusMatches128Patterns < plusMatches128Patterns)  // if so, prefer minus
+			{
+				_step2matched128Patterns = minusRefinedMatched128Patterns;
+				var patterns = new List<string>();
+				foreach (var pattern in _step2matchedPlusMinusPatterns)
+				{
+					var sign = pattern[_col % pattern.Length];
+					if (sign == '-')
+						patterns.Add(pattern);
+				}
+				_step2matchedPlusMinusPatterns = patterns;
+			}
+			else if (minusMatches128Patterns > plusMatches128Patterns)
+			{
+				_step2matched128Patterns = plusRefinedMatched128Patterns;
+				var patterns = new List<string>();
+				foreach (var pattern in _step2matchedPlusMinusPatterns)
+				{
+					var sign = pattern[_col % pattern.Length];
+					if (sign == '+')
+						patterns.Add(pattern);
+				}
+				_step2matchedPlusMinusPatterns = patterns;
+			}
+			else  // are equal
+			{
+				_step2matched128Patterns = minusRefinedMatched128Patterns;
+				_step2matched128Patterns.AddRange(plusRefinedMatched128Patterns);
 			}
 		}
 
