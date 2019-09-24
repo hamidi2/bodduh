@@ -449,7 +449,6 @@ namespace WindowsFormsApp1
 		// find matching numbers from two sides
 		List<Pair> Step2(List<Pair> pairs)
 		{
-			var refinedMatchedPlusMinusPatterns = new List<string>();
 			var includePlus = false;
 			var includeMinus = false;
 			foreach (var pattern in _step2matchedPlusMinusPatterns)
@@ -460,9 +459,7 @@ namespace WindowsFormsApp1
 				else
 					includePlus = true;
 			}
-			var refinedMatched128Patterns = new List<string>();
 			var pairs2 = new List<Pair>();
-			var foundAPairToMatchSign = false;
 			foreach (var pair in pairs)
 			{
 				var left = pair.Left;
@@ -473,31 +470,16 @@ namespace WindowsFormsApp1
 				if (includePlus)
 					list.AddRange(ResultOf128(left + right));
 				list = Distinct(list);
-				var found = false;  // assume this pair won't match any existing 128 patterns
 				foreach (var res in list)
 					foreach (var matchedPattern in _step2matched128Patterns)
 						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
-						{
 							pair.SecondStepResults128.Add(res);
-							refinedMatched128Patterns.Add(matchedPattern);
-							found = true;
-						}
-				if (found)
+				if (pair.SecondStepResults128.Count != 0)
 				{
 					pair.SecondStepResults128 = Distinct(pair.SecondStepResults128);
 					Add(pairs2, pair);
-					foundAPairToMatchSign = true;
 				}
 			}
-			if (foundAPairToMatchSign)
-				foreach (var pattern in _step2matchedPlusMinusPatterns)
-				{
-					var sign = pattern[_col % pattern.Length];
-					if (sign == '-')
-						refinedMatchedPlusMinusPatterns.Add(pattern);
-				}
-			_step2matchedPlusMinusPatterns = refinedMatchedPlusMinusPatterns;
-			_step2matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
 			Debug.WriteLine("step 2 pairs: (count={0})", pairs2.Count);
 			foreach (var pair in pairs2)
 			{
@@ -506,12 +488,6 @@ namespace WindowsFormsApp1
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
 			Debug.WriteLine("");
-			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
-			foreach (var str in _step2matched128Patterns)
-				Debug.WriteLine(str);
-			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
-			foreach (var str in _step2matchedPlusMinusPatterns)
-				Debug.WriteLine(str);
 			return pairs2;
 		}
 
@@ -971,7 +947,7 @@ namespace WindowsFormsApp1
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
-			Debug.WriteLine("sorted pairs:");
+			Debug.WriteLine("\nsorted pairs:");
 			foreach (var pair in pairs)
 				Debug.WriteLine("{0},{1},{2}\t{3}", pair.Left, pair.Right, pair.OBV, pair.IndirectionCount);
 			Debug.Assert(false);
