@@ -361,14 +361,66 @@ namespace WindowsFormsApp1
 			long[] numbers;
 			bool found;
 
-			List<string> matched128Patterns = null;
+			var matched128Patterns = new List<string>[2];
 			// 0 for right to middle, 1 for left to middle
 			for (var direction = 0; direction < 2; direction++)
 			{
-				matched128Patterns = _acceptable128Patterns.ToList();
+				//Debug.WriteLine(string.Format("from {0}:", direction == 0 ? "right" : "left"));
+				matched128Patterns[direction] = _acceptable128Patterns.ToList();
 				for (var col = 0; col < _len / 2; col++)
 				{
+					//Debug.WriteLine("col={0} count={1}", col, matched128Patterns[direction].Count);
+					//foreach (var pattern in matched128Patterns[direction])
+					//    Debug.WriteLine(pattern);
+					//Debug.WriteLine("");
 					var refinedMatched128Patterns = new List<string>();
+					var realCol = direction == 0 ? col : _len - 1 - col;
+					var outputLetters = _lettersSpec[realCol].OutputLetters.ToArray();
+					foreach (var outputLetter in outputLetters)
+					{
+						var inputLetter = _lettersSpec[realCol].InputLetter;
+						numbers = new long[]
+						{
+							Diff(inputLetter, outputLetter.Letter),
+							inputLetter + outputLetter.Letter,
+						};
+						var res128 = new List<Result128>();
+						foreach (var n in numbers)
+							res128.AddRange(ResultOf128(n, inputLetter));
+						res128 = Distinct(res128);
+						var keepOutputLetter = false;
+						if (res128.Count != 0)
+						{
+							foreach (var matchedPattern in matched128Patterns[direction])
+							{
+								var expectedNumber = matchedPattern[col % matchedPattern.Length] - '0';
+								var keepPattern = false;
+								foreach (var res in res128)
+									if (res.n == expectedNumber)
+									{
+										keepPattern = true;
+										keepOutputLetter = true;
+										break;
+									}
+								if (keepPattern)
+									refinedMatched128Patterns.Add(matchedPattern);
+							}
+						}
+						if (!keepOutputLetter) // this letter can't satisfy the first condition
+							_lettersSpec[realCol].OutputLetters.Remove(outputLetter);
+					}
+					matched128Patterns[direction] = refinedMatched128Patterns.Distinct().ToList();
+				}
+			}
+			var commonPatterns = matched128Patterns[0].Intersect(matched128Patterns[1]).ToList();
+			Debug.WriteLine("Step 1 Patterns: (count={0})", commonPatterns.Count);
+			foreach (var pattern in commonPatterns)
+				Debug.WriteLine(pattern);
+			Debug.WriteLine("");
+			for (var direction = 0; direction < 2; direction++)
+			{
+				for (var col = 0; col < _len / 2; col++)
+				{
 					var realCol = direction == 0 ? col : _len - 1 - col;
 					var outputLetters = _lettersSpec[realCol].OutputLetters.ToArray();
 					foreach (var outputLetter in outputLetters)
@@ -385,27 +437,22 @@ namespace WindowsFormsApp1
 						res128 = Distinct(res128);
 						if (res128.Count != 0)
 						{
-							foreach (var matchedPattern in matched128Patterns)
+							foreach (var matchedPattern in commonPatterns)
 							{
 								var expectedNumber = matchedPattern[col % matchedPattern.Length] - '0';
-								var matched = false;
 								foreach (var res in res128)
 									if (res.n == expectedNumber)
 									{
-										matched = true;
 										outputLetter.Results128WithInput.Add(res);
 										break;
 									}
-								if (matched)
-									refinedMatched128Patterns.Add(matchedPattern);
 							}
 						}
-						if (outputLetter.Results128WithInput.Count == 0) // this letter can't satisfy the first condition
+						if (outputLetter.Results128WithInput.Count == 0)  // this letter can't satisfy the first condition
 							_lettersSpec[realCol].OutputLetters.Remove(outputLetter);
 						else
 							outputLetter.Results128WithInput = Distinct(outputLetter.Results128WithInput);
 					}
-					matched128Patterns = refinedMatched128Patterns.Distinct().ToList();
 				}
 			}
 		}
