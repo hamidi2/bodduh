@@ -375,7 +375,7 @@ namespace WindowsFormsApp1
 					res128 = Distinct(res128);
 					if (res128.Count != 0)
 					{
-						foreach (var matchedPattern in _step1matched128Patterns[direction])
+						foreach (var matchedPattern in _step1matched128Patterns)
 						{
 							var expectedNumber = matchedPattern[_col % matchedPattern.Length] - '0';
 							foreach (var res in res128)
@@ -397,6 +397,9 @@ namespace WindowsFormsApp1
 		List<Pair> AllPairs()
 		{
 			Debug.WriteLine("col={0}", _col);
+			Debug.WriteLine("step1 128 patterns: (count={0})", _step1matched128Patterns.Count);
+			foreach (var str in _step1matched128Patterns)
+				Debug.WriteLine(str);
 			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
 			foreach (var str in _step2matched128Patterns)
 				Debug.WriteLine(str);
@@ -774,10 +777,7 @@ namespace WindowsFormsApp1
 				_finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
 				_lettersSpec[0].OutputLetters.RemoveRange(1, _lettersSpec[0].OutputLetters.Count - 1);
 				_lettersSpec[1].OutputLetters.RemoveRange(1, _lettersSpec[1].OutputLetters.Count - 1);
-				_step1matched128Patterns = new List<string>[2];
-				// 0 for right, 1 for left
-				_step1matched128Patterns[0] = _acceptable128Patterns.ToList();
-				_step1matched128Patterns[1] = _acceptable128Patterns.ToList();
+				_step1matched128Patterns = _acceptable128Patterns.ToList();
 				_step2matched128Patterns = _acceptable128Patterns.ToList();
 				_step2matchedPlusMinusPatterns = _step2acceptablePlusMinusPatterns.ToList();
 				for (_col = 0; _col < _len / 2; _col++)
@@ -824,7 +824,7 @@ namespace WindowsFormsApp1
 				res128 = Distinct(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
-				foreach (var matchedPattern in _step1matched128Patterns[direction])
+				foreach (var matchedPattern in _step1matched128Patterns)
 				{
 					var expectedNumber = matchedPattern[_col % matchedPattern.Length] - '0';
 					var keepPattern = false;
@@ -837,7 +837,7 @@ namespace WindowsFormsApp1
 					if (keepPattern)
 						refinedMatched128Patterns.Add(matchedPattern);
 				}
-				_step1matched128Patterns[direction] = refinedMatched128Patterns;
+				_step1matched128Patterns = refinedMatched128Patterns;
 			}
 		}
 
