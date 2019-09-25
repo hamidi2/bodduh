@@ -157,35 +157,3 @@ sorted pairs:
 19,5,0	3
 15,13,0	3
 11,5,0	3
----- DEBUG ASSERTION FAILED ----
----- Assert Short Message ----
-
----- Assert Long Message ----
-
-   at WindowsFormsApp1.Form1.Prioritize(List`1 pairs) in C:\Users\hamidi\Documents\Visual Studio 2010\Projects\bodduh\WindowsFormsApp1\WindowsFormsApp1\Form1.cs:line 1000
-   at WindowsFormsApp1.Form1.button1_Click(Object sender, EventArgs e) in C:\Users\hamidi\Documents\Visual Studio 2010\Projects\bodduh\WindowsFormsApp1\WindowsFormsApp1\Form1.cs:line 853
-   at System.Windows.Forms.Control.OnClick(EventArgs e)
-   at System.Windows.Forms.Button.OnClick(EventArgs e)
-   at System.Windows.Forms.Button.PerformClick()
-   at System.Windows.Forms.Form.ProcessDialogKey(Keys keyData)
-   at System.Windows.Forms.TextBoxBase.ProcessDialogKey(Keys keyData)
-   at System.Windows.Forms.Control.PreProcessMessage(Message& msg)
-   at System.Windows.Forms.Control.PreProcessControlMessageInternal(Control target, Message& msg)
-   at System.Windows.Forms.Application.ThreadContext.PreTranslateMessage(MSG& msg)
-   at System.Windows.Forms.Application.ThreadContext.System.Windows.Forms.UnsafeNativeMethods.IMsoComponent.FPreTranslateMessage(MSG& msg)
-   at System.Windows.Forms.Application.ComponentManager.System.Windows.Forms.UnsafeNativeMethods.IMsoComponentManager.FPushMessageLoop(IntPtr dwComponentID, Int32 reason, Int32 pvLoopData)
-   at System.Windows.Forms.Application.ThreadContext.RunMessageLoopInner(Int32 reason, ApplicationContext context)
-   at System.Windows.Forms.Application.ThreadContext.RunMessageLoop(Int32 reason, ApplicationContext context)
-   at System.Windows.Forms.Application.Run(Form mainForm)
-   at WindowsFormsApp1.Program.Main() in C:\Users\hamidi\Documents\Visual Studio 2010\Projects\bodduh\WindowsFormsApp1\WindowsFormsApp1\Program.cs:line 19
-   at System.AppDomain._nExecuteAssembly(RuntimeAssembly assembly, String[] args)
-   at System.AppDomain.ExecuteAssembly(String assemblyFile, Evidence assemblySecurity, String[] args)
-   at Microsoft.VisualStudio.HostingProcess.HostProc.RunUsersAssembly()
-   at System.Threading.ThreadHelper.ThreadStart_Context(Object state)
-   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
-   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
-   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
-   at System.Threading.ThreadHelper.ThreadStart()
-
-The program '[3200] WindowsFormsApp1.vshost.exe: Program Trace' has exited with code 0 (0x0).
-The program '[3200] WindowsFormsApp1.vshost.exe: Managed (v4.0.30319)' has exited with code 1 (0x1).

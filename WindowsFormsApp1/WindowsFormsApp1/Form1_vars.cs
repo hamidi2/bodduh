@@ -38,6 +38,7 @@ namespace WindowsFormsApp1
 		int _len, _col;
 		List<byte[]> _myElementalStrings;
 		byte[,] _OBV;
+		List<string>[] _step1matched128Patterns;
 		List<string> _step2matched128Patterns;
 		string[] _step2acceptablePlusMinusPatterns =
 		{
