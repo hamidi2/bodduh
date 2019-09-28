@@ -540,7 +540,7 @@ namespace WindowsFormsApp1
 				}
 			}
 			pairs = pairs2;
-			//pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
+			pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
 			Debug.WriteLine("step 3 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 				Debug.Write(string.Format("{0},{1},{2}: {3} ", pair.Left, pair.Right, pair.OBV, pair.ThirdStepIndirectionCount));
