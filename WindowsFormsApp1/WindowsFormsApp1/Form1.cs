@@ -808,6 +808,70 @@ namespace WindowsFormsApp1
 			}
 		}
 
+		bool CanSatisfyStep1Matches(Pair pair)
+		{
+			var step1matched128Patterns = new List<string>[2];
+			step1matched128Patterns[0] = _step1matched128Patterns[0];
+			step1matched128Patterns[1] = _step1matched128Patterns[1];
+			// 0 for right, 1 for left
+			for (var direction = 0; direction < 2; direction++)
+			{
+				var realCol = direction == 0 ? _col : _len - 1 - _col;
+				var inputLetter = _lettersSpec[realCol].InputLetter;
+				var outputLetter = direction == 0 ? pair.Right : pair.Left;
+				var numbers = new long[]
+				{
+					Diff(inputLetter, outputLetter),
+					inputLetter + outputLetter,
+				};
+				var res128 = new List<Result128>();
+				foreach (var n in numbers)
+					res128.AddRange(ResultOf128(n, inputLetter));
+				res128 = Distinct(res128);
+				res128 = PreferDirect(res128);
+				Debug.Assert(res128.Count != 0);
+				var refinedMatched128Patterns = new List<string>();
+				foreach (var matchedPattern in step1matched128Patterns[direction])
+				{
+					var expectedNumber = matchedPattern[_col % matchedPattern.Length] - '0';
+					var keepPattern = false;
+					foreach (var res in res128)
+						if (res.n == expectedNumber)
+						{
+							keepPattern = true;
+							break;
+						}
+					if (keepPattern)
+						refinedMatched128Patterns.Add(matchedPattern);
+				}
+				step1matched128Patterns[direction] = refinedMatched128Patterns;
+			}
+			return ConcordStep1LeftAndRight128Matches(step1matched128Patterns);
+		}
+
+		bool ConcordStep1LeftAndRight128Matches(List<string>[] step1matched128Patterns)
+		{
+			// اگر چپ سه تایی نداره از راست حذف کن و بالعکس
+			bool[] includesOne = { false, false };
+			for (var direction = 0; direction < 2; direction++)
+				foreach (var match in step1matched128Patterns[direction])
+					if (match.Contains('1'))
+					{
+						includesOne[direction] = true;
+						break;
+					}
+			if (includesOne[0] != includesOne[1])
+			{
+				var i = includesOne[0] == true ? 0 : 1;
+				var matches = new List<string>();
+				foreach (var match in step1matched128Patterns[i])
+					if (!match.Contains('1'))
+						matches.Add(match);
+				step1matched128Patterns[i] = matches;
+			}
+			return step1matched128Patterns[0].Count != 0 && step1matched128Patterns[1].Count != 0;
+		}
+
 		// update _step1matched128Patterns based on the found pair
 		void RefineStep1Matches(Pair pair)
 		{
@@ -826,6 +890,7 @@ namespace WindowsFormsApp1
 				foreach (var n in numbers)
 					res128.AddRange(ResultOf128(n, inputLetter));
 				res128 = Distinct(res128);
+				res128 = PreferDirect(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
 				foreach (var matchedPattern in _step1matched128Patterns[direction])
@@ -843,6 +908,46 @@ namespace WindowsFormsApp1
 				}
 				_step1matched128Patterns[direction] = refinedMatched128Patterns;
 			}
+			ConcordStep1LeftAndRight128Matches();
+		}
+
+		List<Result128> PreferDirect(List<Result128> res128)
+		{
+			var includesDirect = false;
+			foreach (var res in res128)
+				if (!res.bWithInterfering28)
+				{
+					includesDirect = true;
+					break;
+				}
+			if (!includesDirect)
+				return res128;
+			var list = new List<Result128>();
+			foreach (var res in res128)
+				if (!res.bWithInterfering28)
+					list.Add(res);
+			return list;
+		}
+
+		void ConcordStep1LeftAndRight128Matches()
+		{
+			// اگر چپ سه تایی نداره از راست حذف کن و بالعکس
+			bool[] includesOne = { false, false };
+			for (var direction = 0; direction < 2; direction++)
+				foreach (var match in _step1matched128Patterns[direction])
+					if (match.Contains('1'))
+					{
+						includesOne[direction] = true;
+						break;
+					}
+			if (includesOne[0] == includesOne[1])
+				return;
+			var i = includesOne[0] == true ? 0 : 1;
+			var matches = new List<string>();
+			foreach (var match in _step1matched128Patterns[i])
+				if (!match.Contains('1'))
+					matches.Add(match);
+			_step1matched128Patterns[i] = matches;
 		}
 
 		// update _step2matched128Patterns and _step2matchedPlusMinusPatterns based on the found pair
@@ -925,9 +1030,9 @@ namespace WindowsFormsApp1
 		{
 			// اگر تکلیف پخش میانگین مشخص شده جفت اعدادی که با آن سازگار نیستند را حذف کن
 			// TODO: آیا لازمه؟
+			var pairs2 = new List<Pair>();
 			if (_finalOBV != 2)
 			{
-				var pairs2 = new List<Pair>();
 				foreach (var pair in pairs)
 					if (pair.OBV == _finalOBV)
 						pairs2.Add(pair);
@@ -977,6 +1082,14 @@ namespace WindowsFormsApp1
 				return pairs[0];
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
+				return pairs[0];
+			pairs.RemoveRange(i, pairs.Count - i);
+			pairs2 = new List<Pair>();
+			foreach (var pair in pairs)
+				if (CanSatisfyStep1Matches(pair))
+					pairs2.Add(pair);
+			pairs = pairs2;
+			if (pairs.Count == 1)
 				return pairs[0];
 			Debug.WriteLine("\nsorted pairs:");
 			foreach (var pair in pairs)
