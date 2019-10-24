@@ -356,6 +356,45 @@ namespace WindowsFormsApp1
 		// first step: remove numbers which don't match with input
 		void Step1()
 		{
+			if (_col % 3 == 0)
+			{
+				if (_col == 0)
+				{
+					_step1IncludesPatternsIncludingOne = true;
+					_step1IncludesPatternsNotIncludingOne = true;
+				}
+				else
+				{
+					bool[] includeOne = {false, false};
+					bool[] notIncludeOne = {false, false};
+					for (var direction = 0; direction < 2; direction++)
+					{
+						foreach (var pattern in _step1matched128Patterns[direction])
+						{
+							if (pattern.Contains('1'))
+								includeOne[direction] = true;
+							else
+								notIncludeOne[direction] = true;
+						}
+					}
+					_step1IncludesPatternsIncludingOne = includeOne[0] && includeOne[1];
+					_step1IncludesPatternsNotIncludingOne = notIncludeOne[0] && notIncludeOne[1];
+					Debug.Assert(_step1IncludesPatternsIncludingOne || _step1IncludesPatternsNotIncludingOne);
+				}
+				_step1matched128Patterns[0] = new List<string>();
+				if (_step1IncludesPatternsIncludingOne)
+					_step1matched128Patterns[0].AddRange(_acceptable128Patterns.Take(6));
+				if (_step1IncludesPatternsNotIncludingOne)
+					_step1matched128Patterns[0].AddRange(_acceptable128Patterns.Skip(6).Take(6));
+				_step1matched128Patterns[1] = new List<string>();
+				_step1matched128Patterns[1].AddRange(_step1matched128Patterns[0]);
+			}
+			for (var direction = 0; direction < 2; direction++)
+			{
+				Debug.WriteLine("step1 128 patterns {0}: (count={1})", direction == 0 ? "right" : "left", _step1matched128Patterns[direction].Count);
+				foreach (var str in _step1matched128Patterns[direction])
+					Debug.WriteLine(str);
+			}
 			// 0 for right, 1 for left
 			for (var direction = 0; direction < 2; direction++)
 			{
@@ -397,18 +436,6 @@ namespace WindowsFormsApp1
 		List<Pair> AllPairs()
 		{
 			Debug.WriteLine("col={0}", _col);
-			Debug.WriteLine("step1 128 patterns right: (count={0})", _step1matched128Patterns[0].Count);
-			foreach (var str in _step1matched128Patterns[0])
-				Debug.WriteLine(str);
-			Debug.WriteLine("step1 128 patterns left: (count={0})", _step1matched128Patterns[1].Count);
-			foreach (var str in _step1matched128Patterns[1])
-				Debug.WriteLine(str);
-			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
-			foreach (var str in _step2matched128Patterns)
-				Debug.WriteLine(str);
-			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
-			foreach (var str in _step2matchedPlusMinusPatterns)
-				Debug.WriteLine(str);
 			Debug.WriteLine("left: (count={0})", _lettersSpec[_len - 1 - _col].OutputLetters.Count);
 			foreach (var outputLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
 			{
@@ -439,6 +466,14 @@ namespace WindowsFormsApp1
 		// find matching numbers from two sides
 		List<Pair> Step2(List<Pair> pairs)
 		{
+			if (_col % 3 == 0)
+				_step2matched128Patterns = _acceptable128Patterns.ToList().Take(6).ToList();
+			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
+			foreach (var str in _step2matched128Patterns)
+				Debug.WriteLine(str);
+			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
+			foreach (var str in _step2matchedPlusMinusPatterns)
+				Debug.WriteLine(str);
 			var includePlus = false;
 			var includeMinus = false;
 			foreach (var pattern in _step2matchedPlusMinusPatterns)
@@ -780,9 +815,6 @@ namespace WindowsFormsApp1
 				_finalOBV = 2;  // نشان دهنده این است که تکلیف ما از بابت پخش میانگین که کدام را انتخاب کنیم هنوز مشخص نیست
 				_lettersSpec[0].OutputLetters.RemoveRange(1, _lettersSpec[0].OutputLetters.Count - 1);
 				_lettersSpec[1].OutputLetters.RemoveRange(1, _lettersSpec[1].OutputLetters.Count - 1);
-				_step1matched128Patterns[0] = _acceptable128Patterns.ToList();
-				_step1matched128Patterns[1] = _acceptable128Patterns.ToList();
-				_step2matched128Patterns = _acceptable128Patterns.ToList();
 				_step2matchedPlusMinusPatterns = _step2acceptablePlusMinusPatterns.ToList();
 				for (_col = 0; _col < _len / 2; _col++)
 				{
@@ -908,7 +940,7 @@ namespace WindowsFormsApp1
 				}
 				_step1matched128Patterns[direction] = refinedMatched128Patterns;
 			}
-			ConcordStep1LeftAndRight128Matches();
+			//ConcordStep1LeftAndRight128Matches();
 		}
 
 		List<Result128> PreferDirect(List<Result128> res128)
@@ -929,26 +961,26 @@ namespace WindowsFormsApp1
 			return list;
 		}
 
-		void ConcordStep1LeftAndRight128Matches()
-		{
-			// اگر چپ سه تایی نداره از راست حذف کن و بالعکس
-			bool[] includesOne = { false, false };
-			for (var direction = 0; direction < 2; direction++)
-				foreach (var match in _step1matched128Patterns[direction])
-					if (match.Contains('1'))
-					{
-						includesOne[direction] = true;
-						break;
-					}
-			if (includesOne[0] == includesOne[1])
-				return;
-			var i = includesOne[0] == true ? 0 : 1;
-			var matches = new List<string>();
-			foreach (var match in _step1matched128Patterns[i])
-				if (!match.Contains('1'))
-					matches.Add(match);
-			_step1matched128Patterns[i] = matches;
-		}
+		//void ConcordStep1LeftAndRight128Matches()
+		//{
+		//    // اگر چپ سه تایی نداره از راست حذف کن و بالعکس
+		//    bool[] includesOne = { false, false };
+		//    for (var direction = 0; direction < 2; direction++)
+		//        foreach (var match in _step1matched128Patterns[direction])
+		//            if (match.Contains('1'))
+		//            {
+		//                includesOne[direction] = true;
+		//                break;
+		//            }
+		//    if (includesOne[0] == includesOne[1])
+		//        return;
+		//    var i = includesOne[0] == true ? 0 : 1;
+		//    var matches = new List<string>();
+		//    foreach (var match in _step1matched128Patterns[i])
+		//        if (!match.Contains('1'))
+		//            matches.Add(match);
+		//    _step1matched128Patterns[i] = matches;
+		//}
 
 		// update _step2matched128Patterns and _step2matchedPlusMinusPatterns based on the found pair
 		void RefineStep2Matches(Pair pair)

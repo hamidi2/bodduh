@@ -17,20 +17,11 @@ namespace WindowsFormsApp1
 	{
 		string[] _acceptable128Patterns =
 		{
-			"28",
-			"82",
-			"2882",
-			"8228",
-			"28828228", "82282882",
 			"128", "182",
 			"218", "281",
 			"812", "821",
-			"128821", "182281",
-			"218812", "281182",
-			"812218", "821128",
-			"128812281", "182218821",
-			"218821182", "281128812",
-			"812281128", "821182218",
+			"228", "282", "822",
+			"882", "828", "288",
 		};
 		// OBV stands for Output Bodduh Values
 		byte _finalOBV;  // به کدام پخش میانگین رسیده‌ایم: 2 یعنی هنوز مشخص نشده
@@ -39,6 +30,8 @@ namespace WindowsFormsApp1
 		List<byte[]> _myElementalStrings;
 		byte[,] _OBV;
 		List<string>[] _step1matched128Patterns = new List<string>[2];
+		bool _step1IncludesPatternsIncludingOne;
+		bool _step1IncludesPatternsNotIncludingOne;
 		List<string> _step2matched128Patterns;
 		string[] _step2acceptablePlusMinusPatterns =
 		{
