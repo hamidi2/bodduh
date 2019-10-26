@@ -299,7 +299,7 @@ namespace WindowsFormsApp1
 			return Distinct(list);
 		}
 
-		List<ResultBodduh> ResultOfBodduh(long n)
+		List<ResultBodduh> ResultOfBodduh(long n, byte mask)
 		{
 			var list = new List<ResultBodduh>();
 			ResultBodduh[] res =
@@ -314,10 +314,10 @@ namespace WindowsFormsApp1
 			{
 				var m = r.n % 9;
 				for (var i = 0; i < 4; i++)
-					if (m == 2 * (i + 1) && (_step3Mask & (0x01 << i)) != 0)
+					if (m == 2 * (i + 1))
 					{
-						list.Add(r);
-						_step3Mask &= (byte)~(0x01 << i);
+						if ((mask & (0x01 << i)) != 0)
+							list.Add(r);
 						break;
 					}
 			}
@@ -566,7 +566,7 @@ namespace WindowsFormsApp1
 								left.n + right.n,
 							};
 							foreach (var n2 in numbers)
-								res.AddRange(ResultOfBodduh(n2));
+								res.AddRange(ResultOfBodduh(n2, _step3Mask));
 							res = Distinct(res);
 							if (res.Count == 0)
 								continue;
