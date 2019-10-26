@@ -299,7 +299,7 @@ namespace WindowsFormsApp1
 			return Distinct(list);
 		}
 
-		List<ResultBodduh> ResultOfBodduh(long n, byte lookingFor = 0)
+		List<ResultBodduh> ResultOfBodduh(long n)
 		{
 			var list = new List<ResultBodduh>();
 			ResultBodduh[] res =
@@ -311,9 +311,16 @@ namespace WindowsFormsApp1
 				new ResultBodduh((56 + n) % 9, true),
 			};
 			foreach (var r in res)
-				if ((lookingFor == 0 && r.n % 9 != 0 && r.n % 9 % 2 == 0) ||
-					(lookingFor != 0 && r.n % 9 == lookingFor))
-					list.Add(r);
+			{
+				var m = r.n % 9;
+				for (var i = 0; i < 4; i++)
+					if (m == 2 * (i + 1) && (_step3Mask & (0x01 << i)) != 0)
+					{
+						list.Add(r);
+						_step3Mask &= (byte)~(0x01 << i);
+						break;
+					}
+			}
 			return Distinct(list);
 		}
 
@@ -525,6 +532,10 @@ namespace WindowsFormsApp1
 		// باز رسیده‌ایم به بیش از یک جفت عدد. حالا نوبت بدوح خروجیه
 		List<Pair> Step3(List<Pair> pairs)
 		{
+			if (_col < 4)
+				_step3Mask = (byte)(1 << _col);
+			else if (_col % 4 == 0)
+				_step3Mask = 0x0F;
 			var pairs2 = new List<Pair>();
 			byte iOBVFirst = _finalOBV == 2 ? (byte)0 : _finalOBV;
 			byte iOBVLast = _finalOBV == 2 ? (byte)1 : _finalOBV;
@@ -555,7 +566,7 @@ namespace WindowsFormsApp1
 								left.n + right.n,
 							};
 							foreach (var n2 in numbers)
-								res.AddRange(ResultOfBodduh(n2, _col >= 4 ? (byte)0 : (byte)((_col + 1) * 2)));
+								res.AddRange(ResultOfBodduh(n2));
 							res = Distinct(res);
 							if (res.Count == 0)
 								continue;
