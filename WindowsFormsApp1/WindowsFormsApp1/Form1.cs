@@ -313,13 +313,8 @@ namespace WindowsFormsApp1
 			foreach (var r in res)
 			{
 				var m = r.n % 9;
-				for (var i = 0; i < 4; i++)
-					if (m == 2 * (i + 1))
-					{
-						if ((mask & (0x01 << i)) != 0)
-							list.Add(r);
-						break;
-					}
+				if (m != 0 && m % 2 == 0 && (mask & (0x01 << (m / 2 - 1))) != 0)
+					list.Add(r);
 			}
 			return Distinct(list);
 		}
@@ -628,7 +623,7 @@ namespace WindowsFormsApp1
 					vars[1] + vars[3],
 				};
 				foreach (var n in vars2)
-					pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n));
+					pair.FourthStepResultsBodduh.AddRange(ResultOfBodduh(n, 0x0F));
 				pair.FourthStepResultsBodduh = Distinct(pair.FourthStepResultsBodduh);
 				if (pair.FourthStepResultsBodduh.Count != 0)
 					pairs2.Add(pair);
