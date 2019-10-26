@@ -48,6 +48,7 @@ namespace WindowsFormsApp1
 			"-+++-++-+++-",
 		};
 		List<string> _step2matchedPlusMinusPatterns;
+		Pair _previousColumnAnswer; // used for step 6
 	}
 }
 

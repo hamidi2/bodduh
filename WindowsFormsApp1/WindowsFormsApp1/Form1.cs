@@ -389,12 +389,14 @@ namespace WindowsFormsApp1
 				_step1matched128Patterns[1] = new List<string>();
 				_step1matched128Patterns[1].AddRange(_step1matched128Patterns[0]);
 			}
+/*
 			for (var direction = 0; direction < 2; direction++)
 			{
 				Debug.WriteLine("step1 128 patterns {0}: (count={1})", direction == 0 ? "right" : "left", _step1matched128Patterns[direction].Count);
 				foreach (var str in _step1matched128Patterns[direction])
 					Debug.WriteLine(str);
 			}
+*/
 			// 0 for right, 1 for left
 			for (var direction = 0; direction < 2; direction++)
 			{
@@ -471,9 +473,11 @@ namespace WindowsFormsApp1
 			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
 			foreach (var str in _step2matched128Patterns)
 				Debug.WriteLine(str);
+/*
 			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
 			foreach (var str in _step2matchedPlusMinusPatterns)
 				Debug.WriteLine(str);
+*/
 			var includePlus = false;
 			var includeMinus = false;
 			foreach (var pattern in _step2matchedPlusMinusPatterns)
@@ -495,6 +499,7 @@ namespace WindowsFormsApp1
 				if (includePlus)
 					list.AddRange(ResultOf128(left + right));
 				list = Distinct(list);
+				list = PreferDirect(list);
 				foreach (var res in list)
 					foreach (var matchedPattern in _step2matched128Patterns)
 						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
@@ -661,6 +666,41 @@ namespace WindowsFormsApp1
 			return pairs;
 		}
 
+		List<Pair> Step6(List<Pair> pairs)
+		{
+			if (_col == 0)
+				return pairs;
+			var pairs2 = new List<Pair>();
+			foreach (var pair in pairs)
+			{
+				long[] n1 =
+				{
+					(pair.Left + _previousColumnAnswer.Left) % 28,
+					Diff(pair.Left, _previousColumnAnswer.Left),
+					(pair.Right + _previousColumnAnswer.Right) % 28,
+					Diff(pair.Right, _previousColumnAnswer.Right),
+				};
+				long[] n2 =
+				{
+					n1[0] + n1[2], Diff(n1[0], n1[2]),
+					n1[0] + n1[3], Diff(n1[0], n1[3]),
+					n1[1] + n1[2], Diff(n1[1], n1[2]),
+					n1[1] + n1[3], Diff(n1[1], n1[3]),
+				};
+				foreach (var n in n2)
+					if (n % 5 == 0)
+					{
+						pairs2.Add(pair);
+						break;
+					}
+			}
+			Debug.WriteLine("step 6 pairs: (count={0})", pairs2.Count);
+			foreach (var pair in pairs2)
+				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+			Debug.WriteLine("");
+			return pairs2;
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
@@ -824,11 +864,13 @@ namespace WindowsFormsApp1
 					pairs = Step2(pairs);
 					pairs = Step4(pairs);
 					pairs = Step3(pairs);
+					pairs = Step6(pairs);
 
 					pairs = pairs.Distinct().ToList();
 					Debug.Write(string.Format("finalOBV: {0} --> Prioritize({1} pairs)", _finalOBV, pairs.Count));
 					pairs[0] = Prioritize(pairs);
 					Debug.WriteLine(" --> {0}, {1},{2}\n", _finalOBV, pairs[0].Left, pairs[0].Right);
+					_previousColumnAnswer = pairs[0];
 					letters[_len - 1 - _col] = pairs[0].Left;
 					letters[_col] = pairs[0].Right;
 					RefineStep1Matches(pairs[0]);
@@ -940,7 +982,6 @@ namespace WindowsFormsApp1
 				}
 				_step1matched128Patterns[direction] = refinedMatched128Patterns;
 			}
-			//ConcordStep1LeftAndRight128Matches();
 		}
 
 		List<Result128> PreferDirect(List<Result128> res128)
@@ -960,27 +1001,6 @@ namespace WindowsFormsApp1
 					list.Add(res);
 			return list;
 		}
-
-		//void ConcordStep1LeftAndRight128Matches()
-		//{
-		//    // اگر چپ سه تایی نداره از راست حذف کن و بالعکس
-		//    bool[] includesOne = { false, false };
-		//    for (var direction = 0; direction < 2; direction++)
-		//        foreach (var match in _step1matched128Patterns[direction])
-		//            if (match.Contains('1'))
-		//            {
-		//                includesOne[direction] = true;
-		//                break;
-		//            }
-		//    if (includesOne[0] == includesOne[1])
-		//        return;
-		//    var i = includesOne[0] == true ? 0 : 1;
-		//    var matches = new List<string>();
-		//    foreach (var match in _step1matched128Patterns[i])
-		//        if (!match.Contains('1'))
-		//            matches.Add(match);
-		//    _step1matched128Patterns[i] = matches;
-		//}
 
 		// update _step2matched128Patterns and _step2matchedPlusMinusPatterns based on the found pair
 		void RefineStep2Matches(Pair pair)
@@ -1007,6 +1027,7 @@ namespace WindowsFormsApp1
 			if (includeMinus)
 			{
 				list = ResultOf128(Diff(left, right), left);
+				list = PreferDirect(list);
 				foreach (var res in list)
 					foreach (var matchedPattern in _step2matched128Patterns)
 						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
@@ -1018,11 +1039,12 @@ namespace WindowsFormsApp1
 			if (includePlus)
 			{
 				list = ResultOf128(left + right);
+				list = PreferDirect(list);
 				foreach (var res in list)
 					foreach (var matchedPattern in _step2matched128Patterns)
 						if (matchedPattern[_col % matchedPattern.Length] - '0' == res.n)
 						{
-							plusMatches128Patterns = Math.Min(minusMatches128Patterns, res.bWithInterfering28 ? 1 : 0);
+							plusMatches128Patterns = Math.Min(plusMatches128Patterns, res.bWithInterfering28 ? 1 : 0);
 							plusRefinedMatched128Patterns.Add(matchedPattern);
 						}
 			}
