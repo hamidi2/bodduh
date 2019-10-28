@@ -440,6 +440,7 @@ namespace WindowsFormsApp1
 		List<Pair> AllPairs()
 		{
 			Debug.WriteLine("col={0}", _col);
+/*
 			Debug.WriteLine("left: (count={0})", _lettersSpec[_len - 1 - _col].OutputLetters.Count);
 			foreach (var outputLetter in _lettersSpec[_len - 1 - _col].OutputLetters)
 			{
@@ -455,6 +456,7 @@ namespace WindowsFormsApp1
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
 			Debug.WriteLine("");
+*/
 			var pairs = new List<Pair>();
 			foreach (var left in _lettersSpec[_len - 1 - _col].OutputLetters)
 				foreach (var right in _lettersSpec[_col].OutputLetters)
@@ -472,9 +474,11 @@ namespace WindowsFormsApp1
 		{
 			if (_col % 3 == 0)
 				_step2matched128Patterns = _acceptable128Patterns.ToList().Take(6).ToList();
+/*
 			Debug.WriteLine("step2 128 patterns: (count={0})", _step2matched128Patterns.Count);
 			foreach (var str in _step2matched128Patterns)
 				Debug.WriteLine(str);
+*/
 /*
 			Debug.WriteLine("step2 +- patterns: (count={0})", _step2matchedPlusMinusPatterns.Count);
 			foreach (var str in _step2matchedPlusMinusPatterns)
@@ -512,6 +516,7 @@ namespace WindowsFormsApp1
 					Add(pairs2, pair);
 				}
 			}
+/*
 			Debug.WriteLine("step 2 pairs: (count={0})", pairs2.Count);
 			foreach (var pair in pairs2)
 			{
@@ -520,6 +525,7 @@ namespace WindowsFormsApp1
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
 			Debug.WriteLine("");
+*/
 			return pairs2;
 		}
 
@@ -549,8 +555,8 @@ namespace WindowsFormsApp1
 					rights.Add(n);
 					if (n == 0 && Score(pair.Right) != 0)
 						rights.Add(1, true);
-					bool bAcceptable = false;
 					int minIndirectionCount = 4;
+					var resBodduhOfMinDirectionCount = new List<ResultBodduh>();
 					foreach (var left in lefts)
 						foreach (var right in rights)
 						{
@@ -563,6 +569,7 @@ namespace WindowsFormsApp1
 							foreach (var n2 in numbers)
 								res.AddRange(ResultOfBodduh(n2, _step3Mask));
 							res = Distinct(res);
+							res = PreferDirect(res);
 							if (res.Count == 0)
 								continue;
 							var indirectionCount = 3;
@@ -577,23 +584,29 @@ namespace WindowsFormsApp1
 							if (right.bWithInterfering28 == false)
 								indirectionCount--;
 							if (indirectionCount < minIndirectionCount)
+							{
 								minIndirectionCount = indirectionCount;
+								resBodduhOfMinDirectionCount = res;
+							}
 						}
 					if (minIndirectionCount != 4)
 					{
 						var p = new Pair(pair);
 						p.OBV = iOBV;
 						p.ThirdStepIndirectionCount = minIndirectionCount;
+						p.ThirdStepResultsBodduh = resBodduhOfMinDirectionCount;
 						pairs2.Add(p);
 					}
 				}
 			}
 			pairs = pairs2;
 			pairs.Sort((x, y) => x.ThirdStepIndirectionCount.CompareTo(y.ThirdStepIndirectionCount));
+/*
 			Debug.WriteLine("step 3 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 				Debug.Write(string.Format("{0},{1},{2}: {3} ", pair.Left, pair.Right, pair.OBV, pair.ThirdStepIndirectionCount));
 			Debug.WriteLine("");
+*/
 			return pairs;
 		}
 
@@ -629,6 +642,7 @@ namespace WindowsFormsApp1
 					pairs2.Add(pair);
 			}
 			pairs = pairs2;
+/*
 			Debug.WriteLine("step 4 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 			{
@@ -637,6 +651,7 @@ namespace WindowsFormsApp1
 					Debug.Write(string.Format("{0}{1} ", res.n, res.bWithInterfering28 ? "" : "d"));
 			}
 			Debug.WriteLine("");
+*/
 			return pairs;
 		}
 
@@ -665,10 +680,12 @@ namespace WindowsFormsApp1
 				}
 			}
 			pairs = pairs2;
+/*
 			Debug.WriteLine("step 5 pairs: (count={0})", pairs.Count);
 			foreach (var pair in pairs)
 				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 			Debug.WriteLine("");
+*/
 			return pairs;
 		}
 
@@ -700,10 +717,12 @@ namespace WindowsFormsApp1
 						break;
 					}
 			}
+/*
 			Debug.WriteLine("step 6 pairs: (count={0})", pairs2.Count);
 			foreach (var pair in pairs2)
 				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 			Debug.WriteLine("");
+*/
 			return pairs2;
 		}
 
@@ -881,6 +900,7 @@ namespace WindowsFormsApp1
 					letters[_col] = pairs[0].Right;
 					RefineStep1Matches(pairs[0]);
 					RefineStep2Matches(pairs[0]);
+					RefineStep3Matches(pairs[0]);
 					tbOutputs[4 + i].Text = "";
 					for (var j = 0; j < _len; j++)
 						tbOutputs[4 + i].Text += Constants.Abjad1ToLetter(letters[j]);
@@ -1008,6 +1028,24 @@ namespace WindowsFormsApp1
 			return list;
 		}
 
+		List<ResultBodduh> PreferDirect(List<ResultBodduh> res)
+		{
+			var includesDirect = false;
+			foreach (var r in res)
+				if (!r.bWithInterfering28)
+				{
+					includesDirect = true;
+					break;
+				}
+			if (!includesDirect)
+				return res;
+			var list = new List<ResultBodduh>();
+			foreach (var r in res)
+				if (!r.bWithInterfering28)
+					list.Add(r);
+			return list;
+		}
+
 		// update _step2matched128Patterns and _step2matchedPlusMinusPatterns based on the found pair
 		void RefineStep2Matches(Pair pair)
 		{
@@ -1084,6 +1122,13 @@ namespace WindowsFormsApp1
 				_step2matched128Patterns = minusRefinedMatched128Patterns;
 				_step2matched128Patterns.AddRange(plusRefinedMatched128Patterns);
 			}
+		}
+
+		// update _step3Mask based on the found pair
+		void RefineStep3Matches(Pair pair)
+		{
+			Debug.Assert(pair.ThirdStepResultsBodduh.Count == 1);
+			_step3Mask &= (byte)~(0x01 << (pair.ThirdStepResultsBodduh[0].n / 2 - 1));
 		}
 
 		Pair Prioritize(List<Pair> pairs)

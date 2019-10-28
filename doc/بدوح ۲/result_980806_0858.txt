@@ -1,0 +1,29 @@
+col=0
+finalOBV: 2 --> Prioritize(3 pairs) --> 2, 12,13
+
+col=1
+finalOBV: 2 --> Prioritize(10 pairs) --> 0, 2,16
+
+col=2
+finalOBV: 0 --> Prioritize(8 pairs) --> 0, 7,1
+
+col=3
+finalOBV: 0 --> Prioritize(20 pairs) --> 0, 10,19
+
+col=4
+finalOBV: 0 --> Prioritize(9 pairs) --> 0, 22,3
+
+col=5
+finalOBV: 0 --> Prioritize(13 pairs) --> 0, 20,6
+
+col=6
+finalOBV: 0 --> Prioritize(20 pairs) --> 0, 21,19
+
+col=7
+finalOBV: 0 --> Prioritize(10 pairs) --> 0, 8,1
+
+col=8
+finalOBV: 0 --> Prioritize(12 pairs) --> 0, 21,14
+
+col=9
+finalOBV: 0 --> Prioritize(24 pairs) --> 0, 19,9

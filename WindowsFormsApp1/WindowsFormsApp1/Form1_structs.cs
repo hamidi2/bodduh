@@ -62,6 +62,7 @@ namespace WindowsFormsApp1
 			public List<Result128> RightLetterResults128;
 			public List<Result128> SecondStepResults128 = new List<Result128>();
 			public int ThirdStepIndirectionCount;
+			public List<ResultBodduh> ThirdStepResultsBodduh = new List<ResultBodduh>();
 			public List<ResultBodduh> FourthStepResultsBodduh = new List<ResultBodduh>();
 			public int IndirectionCount;
 			public byte OBV;  // this pair belongs to what OBV? مشخص میکند که این جفت عدد متعلق به کدام پخش میانگین است
