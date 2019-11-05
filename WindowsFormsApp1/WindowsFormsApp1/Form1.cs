@@ -730,6 +730,10 @@ namespace WindowsFormsApp1
 					if (pair.Left + pair.Right <= _maxPairSum)
 						pairs2.Add(pair);
 			}
+			Debug.WriteLine("step 7 pairs: (count={0})", pairs2.Count);
+			foreach (var pair in pairs2)
+				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
+			Debug.WriteLine("");
 			return pairs2;
 		}
 
