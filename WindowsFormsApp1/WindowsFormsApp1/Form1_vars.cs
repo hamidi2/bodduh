@@ -29,6 +29,7 @@ namespace WindowsFormsApp1
 		int _len, _col;
 		List<byte[]> _myElementalStrings;
 		byte[,] _OBV;
+		int _outputSum, _maxPairSum, _foundPairsSum;
 		List<string>[] _step1matched128Patterns = new List<string>[2];
 		bool _step1IncludesPatternsIncludingOne;
 		bool _step1IncludesPatternsNotIncludingOne;
