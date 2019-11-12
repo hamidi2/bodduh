@@ -527,6 +527,7 @@ namespace WindowsFormsApp1
 				_step3Mask = (byte)(1 << _col);
 			else if (_col % 4 == 0)
 				_step3Mask = 0x0F;
+			Debug.WriteLine("step3 mask: 0x0{0:X}", _step3Mask);
 			var pairs2 = new List<Pair>();
 			byte iOBVFirst = _finalOBV == 2 ? (byte)0 : _finalOBV;
 			byte iOBVLast = _finalOBV == 2 ? (byte)1 : _finalOBV;
@@ -547,38 +548,48 @@ namespace WindowsFormsApp1
 						rights.Add(1, true);
 					int minIndirectionCount = 4;
 					var resBodduhOfMinDirectionCount = new List<ResultBodduh>();
-					foreach (var left in lefts)
-						foreach (var right in rights)
-						{
-							var res = new List<ResultBodduh>();
-							var numbers = new long[]
+					if (lefts[0].n == 11 && rights[0].n == 9 ||
+						lefts[0].n == 9 && rights[0].n == 11)
+					{
+						Debug.Assert((_step3Mask & 0x08) != 0);
+						minIndirectionCount = 0;
+						resBodduhOfMinDirectionCount.Add(new ResultBodduh(8, false));
+					}
+					else
+					{
+						foreach (var left in lefts)
+							foreach (var right in rights)
 							{
-								Diff(left.n, right.n),
-								left.n + right.n,
-							};
-							foreach (var n2 in numbers)
-								res.AddRange(ResultOfBodduh(n2, _step3Mask));
-							res = Distinct(res);
-							res = PreferDirect(res);
-							if (res.Count == 0)
-								continue;
-							var indirectionCount = 3;
-							foreach (var r in res)
-								if (r.bWithInterfering28 == false)
+								var res = new List<ResultBodduh>();
+								var numbers = new long[]
 								{
+									Diff(left.n, right.n),
+									left.n + right.n,
+								};
+								foreach (var n2 in numbers)
+									res.AddRange(ResultOfBodduh(n2, _step3Mask));
+								res = Distinct(res);
+								res = PreferDirect(res);
+								if (res.Count == 0)
+									continue;
+								var indirectionCount = 3;
+								foreach (var r in res)
+									if (r.bWithInterfering28 == false)
+									{
+										indirectionCount--;
+										break;
+									}
+								if (left.bWithInterfering28 == false)
 									indirectionCount--;
-									break;
+								if (right.bWithInterfering28 == false)
+									indirectionCount--;
+								if (indirectionCount < minIndirectionCount)
+								{
+									minIndirectionCount = indirectionCount;
+									resBodduhOfMinDirectionCount = res;
 								}
-							if (left.bWithInterfering28 == false)
-								indirectionCount--;
-							if (right.bWithInterfering28 == false)
-								indirectionCount--;
-							if (indirectionCount < minIndirectionCount)
-							{
-								minIndirectionCount = indirectionCount;
-								resBodduhOfMinDirectionCount = res;
 							}
-						}
+					}
 					if (minIndirectionCount != 4)
 					{
 						var p = new Pair(pair);
