@@ -952,7 +952,7 @@ namespace WindowsFormsApp1
 				foreach (var n in numbers)
 					res128.AddRange(ResultOf128(n, inputLetter));
 				res128 = Distinct(res128);
-				res128 = PreferDirect(res128);
+				//res128 = PreferDirect(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
 				foreach (var matchedPattern in step1matched128Patterns[direction])
@@ -1157,7 +1157,7 @@ namespace WindowsFormsApp1
 
 		Pair Prioritize(List<Pair> pairs)
 		{
-            Debug.WriteLine("prioritizing...\npairs:");
+            Debug.WriteLine("\nprioritizing...\npairs:");
             foreach (var pair in pairs)
                 Debug.WriteLine("{0},{1} ", pair.Left, pair.Right);
             // اگر تکلیف پخش میانگین مشخص شده جفت اعدادی که با آن سازگار نیستند را حذف کن
@@ -1181,7 +1181,7 @@ namespace WindowsFormsApp1
 			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
             Debug.WriteLine("ordering pairs by step3 score");
             foreach (var pair in pairs)
-                Debug.WriteLine("{0},{1} ", pair.Left, pair.Right);
+                Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             var i = 1;
 			for (; i < pairs.Count; i++)
 				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
@@ -1209,7 +1209,7 @@ namespace WindowsFormsApp1
 			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
             Debug.WriteLine("ordering pairs by total score");
             foreach (var pair in pairs)
-                Debug.WriteLine("{0},{1} ", pair.Left, pair.Right);
+				Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             i = 1;
 			for (; i < pairs.Count; i++)
 				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
@@ -1224,7 +1224,7 @@ namespace WindowsFormsApp1
 			pairs.RemoveRange(i, pairs.Count - i);
             Debug.WriteLine("removing pairs with higher scores");
             foreach (var pair in pairs)
-                Debug.WriteLine("{0},{1} ", pair.Left, pair.Right);
+                Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             pairs2 = new List<Pair>();
 			foreach (var pair in pairs)
 				if (CanSatisfyStep1Matches(pair))
@@ -1232,7 +1232,7 @@ namespace WindowsFormsApp1
 			pairs = pairs2;
             Debug.WriteLine("after applying CanSatisfyStep1Matches");
             foreach (var pair in pairs)
-                Debug.WriteLine("{0},{1} ", pair.Left, pair.Right);
+                Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             if (pairs.Count == 1)
 				return pairs[0];
 			Debug.WriteLine("\nremained pairs:");
