@@ -414,7 +414,6 @@ namespace WindowsFormsApp1
 					foreach (var n in numbers)
 						res128.AddRange(ResultOf128(n, inputLetter));
 					res128 = Distinct(res128);
-					res128 = PreferDirect(res128);
 					if (res128.Count != 0)
 					{
 						foreach (var matchedPattern in _step1matched128Patterns[direction])
@@ -953,6 +952,8 @@ namespace WindowsFormsApp1
 				foreach (var n in numbers)
 					res128.AddRange(ResultOf128(n, inputLetter));
 				res128 = Distinct(res128);
+				if (!_step1IncludesPatternsIncludingOne)
+					res128 = RemoveOne(res128);
 				res128 = PreferDirect(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
@@ -1069,6 +1070,15 @@ namespace WindowsFormsApp1
 				if (!r.bWithInterfering28)
 					list.Add(r);
 			return list;
+		}
+
+		List<Result128> RemoveOne(List<Result128> res)
+		{
+			var ret = new List<Result128>();
+			foreach (var r in res)
+				if (r.n != 1)
+					ret.Add(r);
+			return ret;
 		}
 
 		// update _step2matched128Patterns and _step2matchedPlusMinusPatterns based on the found pair
