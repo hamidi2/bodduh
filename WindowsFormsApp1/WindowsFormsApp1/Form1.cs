@@ -414,6 +414,7 @@ namespace WindowsFormsApp1
 					foreach (var n in numbers)
 						res128.AddRange(ResultOf128(n, inputLetter));
 					res128 = Distinct(res128);
+					res128 = PreferDirect(res128);
 					if (res128.Count != 0)
 					{
 						foreach (var matchedPattern in _step1matched128Patterns[direction])
@@ -952,7 +953,7 @@ namespace WindowsFormsApp1
 				foreach (var n in numbers)
 					res128.AddRange(ResultOf128(n, inputLetter));
 				res128 = Distinct(res128);
-				//res128 = PreferDirect(res128);
+				res128 = PreferDirect(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
 				foreach (var matchedPattern in step1matched128Patterns[direction])
