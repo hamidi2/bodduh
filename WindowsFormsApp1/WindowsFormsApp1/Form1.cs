@@ -1204,6 +1204,7 @@ namespace WindowsFormsApp1
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
+	
 			pairs.RemoveRange(i, pairs.Count - i);
 			foreach (var pair in pairs)
 			{
@@ -1222,8 +1223,7 @@ namespace WindowsFormsApp1
             Debug.WriteLine("ordering pairs by total score");
             foreach (var pair in pairs)
 				Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
-            i = 1;
-			for (; i < pairs.Count; i++)
+			for (i = 1; i < pairs.Count; i++)
 				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
 					break;
 			if (i == 1)
@@ -1233,8 +1233,9 @@ namespace WindowsFormsApp1
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
+
 			pairs.RemoveRange(i, pairs.Count - i);
-            Debug.WriteLine("removing pairs with higher scores");
+            Debug.WriteLine("removing pairs with lower scores");
             foreach (var pair in pairs)
                 Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             pairs2 = new List<Pair>();
@@ -1247,6 +1248,28 @@ namespace WindowsFormsApp1
                 Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
             if (pairs.Count == 1)
 				return pairs[0];
+
+			foreach (var pair in pairs)
+			{
+				pair.IndirectionCount = 0;
+				if (!IncludesDirect(pair.SecondStepResults128))
+					pair.IndirectionCount++;
+			}
+			pairs.Sort((x, y) => x.IndirectionCount.CompareTo(y.IndirectionCount));
+			Debug.WriteLine("ordering pairs by step 2 score");
+			foreach (var pair in pairs)
+				Debug.WriteLine("{0},{1}\t{2}", pair.Left, pair.Right, pair.IndirectionCount);
+			for (i = 1; i < pairs.Count; i++)
+				if (pairs[i].IndirectionCount != pairs[0].IndirectionCount)
+					break;
+			if (i == 1)
+			{
+				_finalOBV = pairs[0].OBV;
+				return pairs[0];
+			}
+			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
+				return pairs[0];
+	
 			Debug.WriteLine("\nremained pairs:");
 			foreach (var pair in pairs)
 				Debug.WriteLine("{0},{1},{2}\t{3}", pair.Left, pair.Right, pair.OBV, pair.IndirectionCount);
