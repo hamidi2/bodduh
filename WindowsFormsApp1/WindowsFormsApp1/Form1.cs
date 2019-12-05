@@ -1269,6 +1269,7 @@ namespace WindowsFormsApp1
 			}
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
+			pairs.RemoveRange(i, pairs.Count - i);
 	
 			Debug.WriteLine("\nremained pairs:");
 			foreach (var pair in pairs)
