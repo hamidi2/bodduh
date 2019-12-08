@@ -387,7 +387,7 @@ namespace WindowsFormsApp1
 				if (_step1IncludesPatternsIncludingOne)
 					_step1matched128Patterns[0].AddRange(_acceptable128Patterns.Take(6));
 				if (_step1IncludesPatternsNotIncludingOne)
-					_step1matched128Patterns[0].AddRange(_acceptable128Patterns.Skip(6).Take(6));
+					_step1matched128Patterns[0].AddRange(_acceptable128Patterns.Skip(6));
 				_step1matched128Patterns[1] = new List<string>();
 				_step1matched128Patterns[1].AddRange(_step1matched128Patterns[0]);
 			}
@@ -745,6 +745,31 @@ namespace WindowsFormsApp1
 			foreach (var pair in pairs2)
 				Debug.Write(string.Format("{0},{1} ", pair.Left, pair.Right));
 			Debug.WriteLine("");
+			return pairs2;
+		}
+
+		List<Pair> Step9(List<Pair> pairs)
+		{
+			var pairs2 = new List<Pair>();
+			foreach (var pair in pairs)
+			{
+				// I didn't add an extra variable to Pair and use this as a variable to hold number of 2 in left and right of step 1.
+				pair.IndirectionCount = 0;
+				foreach (var res in pair.LeftLetterResults128)
+					if (res.n == 2)
+					{
+						pair.IndirectionCount++;
+						break;
+					}
+				foreach (var res in pair.RightLetterResults128)
+					if (res.n == 2)
+					{
+						pair.IndirectionCount++;
+						break;
+					}
+				if (pair.IndirectionCount == 2)
+					pairs2.Add(pair);
+			}
 			return pairs2;
 		}
 
@@ -1249,6 +1274,7 @@ namespace WindowsFormsApp1
             if (pairs.Count == 1)
 				return pairs[0];
 
+			// step 8
 			foreach (var pair in pairs)
 			{
 				pair.IndirectionCount = 0;
@@ -1270,7 +1296,17 @@ namespace WindowsFormsApp1
 			if (i == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
 			pairs.RemoveRange(i, pairs.Count - i);
-	
+			// ~step 8
+
+			pairs = Step9(pairs);
+			if (pairs.Count == 1)
+			{
+				_finalOBV = pairs[0].OBV;
+				return pairs[0];
+			}
+			if (pairs.Count == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
+				return pairs[0];
+
 			Debug.WriteLine("\nremained pairs:");
 			foreach (var pair in pairs)
 				Debug.WriteLine("{0},{1},{2}\t{3}", pair.Left, pair.Right, pair.OBV, pair.IndirectionCount);
