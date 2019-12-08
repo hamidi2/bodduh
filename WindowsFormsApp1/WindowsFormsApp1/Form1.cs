@@ -724,7 +724,10 @@ namespace WindowsFormsApp1
 			var pairs2 = new List<Pair>();
 			if (_col == 0)
 			{
-				_maxPairSum = (_outputSum / _len) * 3;
+				var d = (_outputSum / (double)_len) * 3;
+				_maxPairSum = (int) d;
+				if (_maxPairSum != d)
+					_maxPairSum++;  // round up
 				_foundPairsSum = 0;
 			}
 			if (_col == _len / 2 - 1)
@@ -1041,6 +1044,8 @@ namespace WindowsFormsApp1
 				foreach (var n in numbers)
 					res128.AddRange(ResultOf128(n, inputLetter));
 				res128 = Distinct(res128);
+				if (!_step1IncludesPatternsIncludingOne)
+					res128 = RemoveOne(res128);
 				res128 = PreferDirect(res128);
 				Debug.Assert(res128.Count != 0);
 				var refinedMatched128Patterns = new List<string>();
@@ -1299,6 +1304,10 @@ namespace WindowsFormsApp1
 			// ~step 8
 
 			pairs = Step9(pairs);
+			// TODO: is temp, remove it later.
+			if (_col == 6)
+				pairs.RemoveRange(0, 1);
+			// ~TODO
 			if (pairs.Count == 1)
 			{
 				_finalOBV = pairs[0].OBV;
