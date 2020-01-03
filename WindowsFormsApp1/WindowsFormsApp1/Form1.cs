@@ -776,6 +776,40 @@ namespace WindowsFormsApp1
 			return pairs2;
 		}
 
+		List<Pair> Step10(List<Pair> pairs)
+		{
+			// TODO: فعلاً فرض رو بر این میذاریم که تا مشخص شدن اینکه کدام پخش میانگین برای ما قابل قبول است نیازی به فیلتر کردن خروجی‌ها بر اساس گام دهم نداریم. اگر بعداً دیدیم لازم شد بیاییم و پیاده سازیش رو انجام بدیم.
+			if (_finalOBV == 2)
+				return pairs;
+			var pairs2 = new List<Pair>();
+			foreach (var pair in pairs)
+			{
+				long[] numbers =
+				{
+					pair.Left + _OBV[_finalOBV, _col],
+					Diff(pair.Left, _OBV[_finalOBV, _col]),
+					pair.Right + _OBV[_finalOBV, _len - 1 - _col],
+					Diff(pair.Right, _OBV[_finalOBV, _len - 1 - _col]),
+				};
+				var match = 0;
+				for (var i = 0; i < 4; i += 2)
+				{
+					for (var j = 0; j < 2; j++)
+					{
+						var m = numbers[i + j] % 9;
+						if (m < 3 || m >= 7)
+						{
+							match++;
+							break;
+						}
+					}
+				}
+				if (match == 2)
+					pairs2.Add(pair);
+			}
+			return pairs2;
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
 			// 4077 4117 3953 4069 کیفحالالرضامعالمامون
@@ -1304,10 +1338,6 @@ namespace WindowsFormsApp1
 			// ~step 8
 
 			pairs = Step9(pairs);
-			// TODO: is temp, remove it later.
-			if (_col == 6)
-				pairs.RemoveRange(0, 1);
-			// ~TODO
 			if (pairs.Count == 1)
 			{
 				_finalOBV = pairs[0].OBV;
@@ -1315,6 +1345,13 @@ namespace WindowsFormsApp1
 			}
 			if (pairs.Count == 2 && pairs[0].Left == pairs[1].Left && pairs[0].Right == pairs[1].Right)
 				return pairs[0];
+
+			if (_finalOBV != 2)  // فرض رو بر این میذاریم که گام دهم به بعد وقتی نیاز میشه که تکلیف پخش میانگین مشخص شده باشه
+			{
+				pairs = Step10(pairs);
+				if (pairs.Count == 1)
+					return pairs[0];
+			}
 
 			Debug.WriteLine("\nremained pairs:");
 			foreach (var pair in pairs)
